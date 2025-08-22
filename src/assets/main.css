@@ -1,0 +1,114 @@
+@import './base.css';
+@import 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css';
+
+@font-face {
+  font-family: 'Univia Pro';
+  src: url('./UniviaPro-MediumItalic.otf') format('opentype');
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'GT Pressura';
+  src: url('./GT-Pressura-Pro-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-weight: normal;
+}
+
+body {
+  font-family: sans-serif;
+}
+
+.fade-in {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.login-button-microsoft {
+  color: var(--color-text) !important;
+  background-color: var(--color-button) !important;
+}
+.navigation-buttons-fixed {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.5rem;
+}
+button {
+    padding: 0.5rem 1rem;
+    font-family: 'GT Pressura';
+    text-transform: uppercase;
+    text-shadow: 0.1rem;
+    font-size: 1rem;
+    border: none;
+    color: var(--color-text) !important;
+    background-color: var(--color-button) !important;
+    /* border-radius: 0.5rem; */
+    cursor: pointer;
+}
+button:hover {
+    background-color: var(--color-button-hover) !important;
+    color: var(--color-text-inverted) !important;
+}
+
+h1 {
+  font-size: 4rem;
+  font-weight: bold;
+  font-family: "Univia Pro", sans-serif;
+  color: var(--color-heading);
+  opacity: 0;
+  transform: translateX(-50px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.shadow-line {
+  border: 0;
+  height: 1rem;
+  background: transparent;
+  margin: 0.5rem 0;
+  /*box-shadow: 0 0.2rem 0.2rem rgba(0,0,0,0.25);*/
+}
+
+main {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    grid-template-rows: auto auto auto;
+    gap: 2 2rem;
+}
+
+p {
+  font-family: "GT Pressura";  
+  font-size: 1.2rem;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
+}
+
+@media (min-width: 1024px) and (pointer: fine) {
+  body {
+    display: flex;
+    place-items: center;
+  }
+}
+
+input {
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+}
+
+input:focus {
+  outline: none;
+  box-shadow: 0 0 6px 0px var(--color-button);
+}
