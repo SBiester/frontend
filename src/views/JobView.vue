@@ -5,13 +5,17 @@
     </div>
     
     <div :class="{ 'fade-in': showWorkArea }" class="new-div">
-        <BaseData :ju="ju" />
+        <BaseData v-if="activeComponent === 'BaseData'" @show-equip="activeComponent = 'EquipData'" />
+        <EquipData v-else />
     </div>
 </template>
 
 <script setup>
-    import { onMounted, ref, reactive } from 'vue';
+    import { onMounted, ref } from 'vue';
     import BaseData from './JobView/BaseData.vue';
+    import EquipData from './JobView/EquipData.vue';
+
+    const activeComponent = ref('BaseData');
 
     const showHeadLine = ref(false);
     const showWorkArea = ref(false);
@@ -24,18 +28,6 @@
         }, 200);
     });
 
-    const ju = reactive({
-    employerType: true,
-    updateType: null,
-    itUserName: null,
-    vorname: null,
-    nachname: null,
-    bereich: null,
-    funktion: null,
-    vorgesetzt: null,
-    eintritt: null,
-    frist: null,
-  })
 </script>
 
 <style scoped>

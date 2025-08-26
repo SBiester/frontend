@@ -3,11 +3,18 @@ import { defineStore } from 'pinia';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    role: null // Hier wird die Rolle aus dem AD gespeichert
+    role: 'fach'
   }),
   actions: {
     setUserRole(role) {
       this.role = role;
+    },
+    switchRole() {
+      if (this.role === 'fach') {
+        this.role = 'pm';
+      } else {
+        this.role = 'fach';
+      }
     }
   }
 });
