@@ -27,6 +27,9 @@
 			<hr class="shadow-line" />
 		</div>
 
+		<!-- <div v-else>
+			<p>Keine Hardware für dieses Profil gefunden.</p>
+		</div> -->
 		
 		<div class="hardware-selection">
 			<div class="selection-header">
@@ -143,6 +146,7 @@ const additionalHardwareList = ref([]);
 const categories = ref([]);
 const selectedCategory = ref(null);
 
+// API Funktion zum Laden der Hardware
 const fetchHardwareForProfile = async (profileName: string) => {
 	loading.value = true;
 	try {
@@ -160,8 +164,10 @@ const fetchHardwareForProfile = async (profileName: string) => {
 	}
 };
 
+// Watch für Änderungen am Referenzprofil
 watch(() => juStore.ju.refprofil, (newProfiles) => {
 	if (newProfiles && newProfiles.length > 0) {
+		// Verwende das erste ausgewählte Profil
 		const profileName = newProfiles[0].name;
 		fetchHardwareForProfile(profileName);
 	} else {
@@ -169,6 +175,7 @@ watch(() => juStore.ju.refprofil, (newProfiles) => {
 	}
 }, { immediate: true });
 
+// API Funktion zum Laden der Kategorien
 const fetchCategories = async () => {
 	try {
 		const response = await fetch('/api/hardware/categories');
@@ -183,6 +190,7 @@ const fetchCategories = async () => {
 	}
 };
 
+// API Funktion zum Laden der Hardware für eine Kategorie
 const fetchHardwareByCategory = async (category: string) => {
 	try {
 		const response = await fetch(`/api/hardware/category?category=${encodeURIComponent(category)}`);
@@ -197,6 +205,7 @@ const fetchHardwareByCategory = async (category: string) => {
 	}
 };
 
+// Kategorie-Auswahl
 const selectCategory = async (category: string) => {
 	selectedCategory.value = category;
 	await fetchHardwareByCategory(category);
@@ -204,6 +213,7 @@ const selectCategory = async (category: string) => {
 	removeSelectedItemsFromSource();
 };
 
+// Hilfsfunktion zum Entfernen bereits ausgewählter Items aus der sourceList
 const removeSelectedItemsFromSource = () => {
 	additionalHardwareList.value.forEach(hardwareItem => {
 		const index = sourceHardwareList.value.findIndex(item => item.id === hardwareItem.id);
@@ -213,6 +223,7 @@ const removeSelectedItemsFromSource = () => {
 	});
 };
 
+// Hardware Drag & Drop Event Handler
 const onHardwareListChange = (event: any) => {
 	if (event.added) {
 		console.log(`Hardware hinzugefügt: ${event.added.element.name}`);
@@ -220,6 +231,7 @@ const onHardwareListChange = (event: any) => {
 	if (event.removed) {
 		console.log(`Hardware entfernt: ${event.removed.element.name}`);
 	}
+	// Speichere zusätzliche Hardware im Store
 	if (!juStore.ju.additionalHardware) {
 		juStore.ju.additionalHardware = [];
 	}
@@ -228,6 +240,7 @@ const onHardwareListChange = (event: any) => {
 };
 
 const onHardwareAdd = (event: any) => {
+	// Entferne Item aus der sourceList wenn es zur targetList hinzugefügt wird
 	juStore.ju.additionalHardware = [...additionalHardwareList.value];
 	saveAdditionalHardwareToCookie(additionalHardwareList.value);
 };
@@ -236,17 +249,20 @@ const removeHardware = (index: number) => {
 	if (index > -1) {
 		const [removedItem] = additionalHardwareList.value.splice(index, 1);
 		sourceHardwareList.value.push(removedItem);
+		// Update Store
 		juStore.ju.additionalHardware = [...additionalHardwareList.value];
 		saveAdditionalHardwareToCookie(additionalHardwareList.value);
 	}
 };
 
 const addHardwareItem = (item: any) => {
+	// Finde Item in sourceList und entferne es
 	const sourceIndex = sourceHardwareList.value.findIndex(sourceItem => sourceItem.id === item.id);
 	if (sourceIndex > -1) {
 		const [movedItem] = sourceHardwareList.value.splice(sourceIndex, 1);
 		additionalHardwareList.value.push(movedItem);
 		
+		// Update Store und Cookie
 		if (!juStore.ju.additionalHardware) {
 			juStore.ju.additionalHardware = [];
 		}
@@ -257,6 +273,7 @@ const addHardwareItem = (item: any) => {
 	}
 };
 
+// Cookie-System für zusätzliche Hardware
 const saveAdditionalHardwareToCookie = (hardware) => {
 	const expires = new Date();
 	expires.setTime(expires.getTime() + (3 * 24 * 60 * 60 * 1000));
@@ -283,6 +300,7 @@ const loadAdditionalHardwareFromCookie = () => {
 	return [];
 };
 
+// Initialize saved hardware from cookie
 const initializeSavedHardware = () => {
 	const savedAdditionalHardware = loadAdditionalHardwareFromCookie();
 	if (savedAdditionalHardware && savedAdditionalHardware.length > 0) {
@@ -302,15 +320,19 @@ const initializeSavedHardware = () => {
 };
 
 onMounted(async () => {
+	// Initialize saved hardware first
 	initializeSavedHardware();
 	
+	// Lade Hardware wenn bereits ein Profil ausgewählt ist
 	if (juStore.ju.refprofil && juStore.ju.refprofil.length > 0) {
 		const profileName = juStore.ju.refprofil[0].name;
 		fetchHardwareForProfile(profileName);
 	}
 	
+	// Lade Kategorien für Auswahl
 	await fetchCategories();
 	
+	// Try again after a short delay in case store sync is needed
 	setTimeout(() => {
 		if (additionalHardwareList.value.length === 0) {
 			initializeSavedHardware();
@@ -356,6 +378,7 @@ onMounted(async () => {
 	}
 }
 
+/* Hardware Styles */
 .hardware-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -426,6 +449,7 @@ onMounted(async () => {
 	border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
+/* Hardware Selection Styles */
 .hardware-selection {
 	margin-top: 2rem;
 }
@@ -445,6 +469,7 @@ onMounted(async () => {
 	font-size: 0.9rem;
 }
 
+/* Category Selection Styles */
 .category-selection {
 	margin-bottom: 2rem;
 }
@@ -605,6 +630,7 @@ onMounted(async () => {
 	border-radius: 0.25rem;
 }
 
+/* Navigation Buttons - BaseData Design */
 .navigation-buttons {
 	display: flex;
 	justify-content: space-between;

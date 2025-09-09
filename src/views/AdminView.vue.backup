@@ -1,5 +1,6 @@
 <template>
     <div class="navigation-buttons-fixed">
+        <!-- <router-link v-if="userStore.role === 'admin' || userStore.role === 'pm'" to="/job"><button>Job Page</button></router-link> -->
         <router-link to="/job"><button>Job-Update</button></router-link>
         <router-link to="/user"><button>Mitarbeitendenportal</button></router-link>
     </div>

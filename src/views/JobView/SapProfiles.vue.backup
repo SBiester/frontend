@@ -62,6 +62,7 @@
             <p>Keine SAP Profile gefunden.</p>
         </div>
         
+        <!-- Selected Profiles Summary -->
         <div v-if="selectedProfiles.length > 0" class="selected-summary">
             <h3>Ausgewählte SAP Profile</h3>
             <div class="selected-profiles-list">
@@ -101,11 +102,13 @@ import { useJuStore } from '@/stores/ju';
 const juStore = useJuStore();
 const emit = defineEmits(['go-back', 'show-options']);
 
+// State
 const profileGroups = ref([]);
 const selectedProfiles = ref([]);
 const loading = ref(false);
-const expandedGroups = ref(new Set());
+const expandedGroups = ref(new Set()); // Track which groups are expanded
 
+// API Funktion zum Laden der SAP Profile Gruppen
 const fetchSapProfiles = async () => {
     loading.value = true;
     try {
@@ -123,6 +126,7 @@ const fetchSapProfiles = async () => {
     }
 };
 
+// Profile Selection Logic
 const isProfileSelected = (profile) => {
     return selectedProfiles.value.some(p => p.id === profile.id);
 };
@@ -135,6 +139,7 @@ const toggleProfile = (profile) => {
         selectedProfiles.value.push(profile);
     }
     
+    // Update store
     juStore.ju.sapProfiles = [...selectedProfiles.value];
     saveSapProfilesToCookie();
 };
@@ -148,6 +153,7 @@ const removeProfile = (profile) => {
     }
 };
 
+// Group Collapse/Expand Logic
 const toggleGroup = (groupId) => {
     if (expandedGroups.value.has(groupId)) {
         expandedGroups.value.delete(groupId);
@@ -160,6 +166,7 @@ const isGroupExpanded = (groupId) => {
     return expandedGroups.value.has(groupId);
 };
 
+// Cookie Management
 const saveSapProfilesToCookie = () => {
     const expires = new Date();
     expires.setTime(expires.getTime() + (3 * 24 * 60 * 60 * 1000));
@@ -186,6 +193,7 @@ const loadSapProfilesFromCookie = () => {
     return [];
 };
 
+// Navigation
 const goBack = () => {
     emit('go-back');
 };
@@ -194,9 +202,11 @@ const continueToOptions = () => {
     emit('show-options');
 };
 
+// Initialize
 onMounted(async () => {
     await fetchSapProfiles();
     
+    // Load saved profiles
     const savedProfiles = loadSapProfilesFromCookie();
     if (savedProfiles && savedProfiles.length > 0) {
         selectedProfiles.value = savedProfiles;
@@ -475,6 +485,7 @@ onMounted(async () => {
     font-style: italic;
 }
 
+/* Navigation Buttons */
 .navigation-buttons {
     display: flex;
     justify-content: space-between;

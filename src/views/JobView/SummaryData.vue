@@ -5,7 +5,6 @@
 		<div class="warning-container">
 			<p class="warning">Vergewissere dich noch einmal, dass alle von dir eingegebenen Daten korrekt sind.</p>
 		</div>
-		<!-- Mitarbeiter Basisdaten -->
 		<div class="summary-section" v-if="hasBasicData">
 			<h4>Mitarbeiter:in</h4>
 			<div class="summary-content">
@@ -57,7 +56,6 @@
 			</div>
 		</div>
 
-		<!-- Referenzprofile -->
 		<div class="summary-section" v-if="ju.refprofil && ju.refprofil.length > 0">
 			<h4>Ausgewählte Referenzprofile</h4>
 			<div class="summary-content">
@@ -66,7 +64,6 @@
 						{{ profil.name }}
 					</div>
 					
-					<!-- Hardware vom Referenzprofil -->
 					<div v-if="profileHardware[profil.name] && profileHardware[profil.name].length > 0" class="profile-items">
 						<h5>Hardware aus diesem Profil:</h5>
 						<div class="profile-item-list">
@@ -77,7 +74,6 @@
 						</div>
 					</div>
 
-					<!-- Software vom Referenzprofil -->
 					<div v-if="profileSoftware[profil.name] && profileSoftware[profil.name].length > 0" class="profile-items">
 						<h5>Software aus diesem Profil:</h5>
 						<div class="profile-item-list">
@@ -91,7 +87,6 @@
 			</div>
 		</div>
 
-		<!-- Zusätzliche Hardware -->
 		<div class="summary-section" v-if="ju.additionalHardware && ju.additionalHardware.length > 0">
 			<h4>Zusätzlich ausgewählte Hardware</h4>
 			<div class="summary-content">
@@ -102,7 +97,6 @@
 			</div>
 		</div>
 
-		<!-- Zusätzliche Software -->
 		<div class="summary-section" v-if="ju.additionalSoftware && ju.additionalSoftware.length > 0">
 			<h4>Zusätzlich ausgewählte Software</h4>
 			<div class="summary-content">
@@ -113,7 +107,6 @@
 			</div>
 		</div>
 
-		<!-- SAP Profile -->
 		<div class="summary-section" v-if="ju.sapProfiles && ju.sapProfiles.length > 0">
 			<h4>Ausgewählte SAP Profile</h4>
 			<div class="summary-content">
@@ -144,7 +137,6 @@
 			</div>
 		</div>
 
-		<!-- Zusätzliche Optionen -->
 		<div class="summary-section" v-if="ju.additionalOptions && hasSelectedOptions">
 			<h4>Zusätzliche Services</h4>
 			<div class="summary-content">
@@ -200,7 +192,6 @@ const ju = computed(() => juStore.ju);
 
 const emit = defineEmits(['go-back', 'submit', 'back-to-navigation']);
 
-// Profile-specific hardware and software
 const profileHardware = ref({});
 const profileSoftware = ref({});
 
@@ -229,20 +220,17 @@ const formatDate = (dateString) => {
 	return date.toLocaleDateString('de-DE');
 };
 
-// Fetch hardware and software for selected profiles
 const fetchProfileData = async () => {
 	if (!ju.value.refprofil || ju.value.refprofil.length === 0) return;
 
 	for (const profil of ju.value.refprofil) {
 		try {
-			// Fetch hardware for this profile
 			const hardwareResponse = await fetch(`/api/hardware/profile?profile=${encodeURIComponent(profil.name)}`);
 			if (hardwareResponse.ok) {
 				const hardwareData = await hardwareResponse.json();
 				profileHardware.value[profil.name] = hardwareData.hardware || [];
 			}
 
-			// Fetch software for this profile
 			const softwareResponse = await fetch(`/api/software/profile?profile=${encodeURIComponent(profil.name)}`);
 			if (softwareResponse.ok) {
 				const softwareData = await softwareResponse.json();
@@ -254,17 +242,15 @@ const fetchProfileData = async () => {
 	}
 };
 
-// Get telefon type name by ID
 const getTelefonTypeName = (typeId) => {
 	if (typeId === 'standard') return 'Standard';
 	if (typeId === 'komfort') return 'Komfort';
-	return typeId; // fallback
+	return typeId;
 };
 
-// Funktion zum Löschen aller Cookies
 const clearAllJobUpdateCookies = () => {
 	const cookieNames = [
-		'juStore',              // Basisdaten Cookie aus useStoreCookieSync
+		'juStore',
 		'refprofil',
 		'additionalHardware',
 		'additionalSoftware',
@@ -280,7 +266,6 @@ const clearAllJobUpdateCookies = () => {
 	console.log('Alle Job-Update Cookies gelöscht');
 };
 
-// Funktion zum Zurücksetzen des Stores
 const clearJobUpdateStore = () => {
 	juStore.ju = {
 		vorname: '',
@@ -335,12 +320,10 @@ const submitJobUpdate = async () => {
 			console.log('Job-Update erfolgreich übermittelt:', result);
 			alert(`Job-Update erfolgreich übermittelt!\nTicket-ID: ${result.ticket_id}`);
 			
-			// Cookies und Store nach erfolgreichem Abschluss löschen
-			clearAllJobUpdateCookies();
+				clearAllJobUpdateCookies();
 			clearJobUpdateStore();
 			
 			emit('submit');
-			// Nach erfolgreicher Übermittlung zurück zur Navigation
 			setTimeout(() => {
 				emit('back-to-navigation');
 			}, 100);
@@ -354,7 +337,6 @@ const submitJobUpdate = async () => {
 	}
 };
 
-// Load profile data when component mounts
 onMounted(() => {
 	fetchProfileData();
 });
@@ -459,7 +441,6 @@ onMounted(() => {
 	transform: translateY(-1px);
 }
 
-/* Profile container styles */
 .profile-container {
 	margin-bottom: 2rem;
 }
@@ -507,7 +488,6 @@ onMounted(() => {
 	padding-bottom: 0.3rem;
 }
 
-/* SAP Profile Styles */
 .sap-profile-item {
 	background: var(--color-background-mute);
 	border-left-color: var(--color-button);

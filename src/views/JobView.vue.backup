@@ -1,4 +1,8 @@
 <template>
+    <!-- <div class="cell-wide">
+        <h1 :class="{ 'fade-in': showHeadLine }">Job-Update</h1>
+        <p>Erfasse hier &Auml;nderungen zu Rolle, Team oder Software und Hardware von Mitarbeitenden.</p>
+    </div> -->
     <div :class="{ 'fade-in': showWorkArea }" class="new-div">
         <BaseData v-if="activeComponent === 'BaseData'" @show-ref="activeComponent = 'RefProfileData'" />
         <RefProfileData v-if="activeComponent === 'RefProfileData'" 
@@ -38,7 +42,9 @@ import SummaryData from './JobView/SummaryData.vue';
 
 const activeComponent = ref('BaseData');
 
+// Navigation logic for Options go-back button
 const handleOptionsGoBack = () => {
+    // Check if SAP was selected by looking at cookie or checking if we came from SAP profiles
     const cookies = document.cookie.split(';');
     let sapWasSelected = false;
     
@@ -50,6 +56,7 @@ const handleOptionsGoBack = () => {
         }
     }
     
+    // Navigate back to SapProfiles if SAP was selected, otherwise to SoftwareData
     activeComponent.value = sapWasSelected ? 'SapProfiles' : 'SoftwareData';
 };
 
@@ -76,6 +83,10 @@ onMounted(() => {
     margin-left: -1.2rem !important;
     padding-left: 1.2rem !important;
     padding-right: 12rem !important;
+    /* grid-column: 1 / 3;
+    grid-row: 1 / 2; */
+    /* mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%); */
 }
 
 .new-div {

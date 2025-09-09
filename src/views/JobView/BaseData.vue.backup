@@ -41,8 +41,10 @@ onMounted(() => {
   const update = () => (isMobile.value = mq.matches)
   update()
   mq.addEventListener('change', update)
+  // clean up
   onBeforeUnmount(() => {
     mq.removeEventListener('change', update)
+    // Clean up datepicker observer
     if (datepickerObserver.value) {
       datepickerObserver.value.disconnect();
       datepickerObserver.value = null;
@@ -65,6 +67,7 @@ async function fetchData(endpoint, targetRef) {
 function handleDateChange(field, value) {
     console.log(`Date changed for ${field}:`, value);
     if (value instanceof Date) {
+        // Use local date to avoid timezone issues
         const year = value.getFullYear();
         const month = String(value.getMonth() + 1).padStart(2, '0');
         const day = String(value.getDate()).padStart(2, '0');
@@ -78,6 +81,7 @@ function handleDateChange(field, value) {
         ju.value[field] = value;
         console.log(`Updated ju.${field} to:`, value);
     }
+    // Force header styling after date change
     setTimeout(() => applyHeaderStyling(), 100);
 }
 
@@ -86,6 +90,7 @@ function applyHeaderStyling() {
     headers.forEach(header => {
         header.style.backgroundColor = 'var(--color-button)';
         header.style.color = 'white';
+        // Get computed style to apply actual color value
         const buttonColor = getComputedStyle(document.documentElement).getPropertyValue('--color-button').trim();
         if (buttonColor) {
             header.style.backgroundColor = buttonColor;
@@ -96,27 +101,33 @@ function applyHeaderStyling() {
 function toggleCustomFunction() {
     showCustomFunction.value = !showCustomFunction.value;
     if (showCustomFunction.value) {
+        // Clear dropdown selection when switching to custom input
         ju.value.funktion = null;
         ju.value.customFunktion = '';
     } else {
+        // Clear custom input when switching back to dropdown
         ju.value.customFunktion = '';
     }
 }
 
+// Watch for changes in custom function input
 watch(() => ju.value.customFunktion, (newValue) => {
     if (showCustomFunction.value && newValue) {
         ju.value.funktion = newValue;
     }
 });
 
+// Watch for changes in dropdown selection
 watch(() => ju.value.funktion, (newValue) => {
     if (!showCustomFunction.value && newValue) {
         ju.value.customFunktion = '';
     }
 });
 
+// Convert date string to Date object for display, avoiding timezone issues
 function getDateValue(dateString) {
     if (!dateString) return null;
+    // Parse date string as local date to avoid timezone conversion
     const [year, month, day] = dateString.split('-');
     return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 }
@@ -218,16 +229,19 @@ onMounted(async () => {
         fetchData('positionen', positionen)
     ]);
     
+    // Initialize custom function if there's already a function value that's not in the dropdown
     if (ju.value.funktion && !funktionen.value.includes(ju.value.funktion)) {
         showCustomFunction.value = true;
         ju.value.customFunktion = ju.value.funktion;
     }
     
+    // Set up observer for datepicker styling
     setupDatepickerObserver();
 });
 
 const datepickerObserver = ref(null);
 
+// German locale configuration for datepicker
 const germanLocale = {
   formatLocale: {
     firstDayOfWeek: 1,
@@ -254,6 +268,7 @@ function setupDatepickerObserver() {
             if (mutation.type === 'childList') {
                 mutation.addedNodes.forEach((node) => {
                     if (node.nodeType === Node.ELEMENT_NODE) {
+                        // Check if datepicker popup was added
                         if (node.classList?.contains('mx-datepicker-popup') || 
                             node.querySelector?.('.mx-datepicker-popup')) {
                             setTimeout(() => applyHeaderStyling(), 50);
@@ -318,7 +333,9 @@ watch(() => ju.value.updateType, (newValue) => {
         <Vueform v-model="ju" ref="basedata" :schema="formSchema" :sync="true" />
         
         
+        <!-- Custom Date Picker Fields -->
         <div class="date-picker-section">
+            <!-- Eintritt Date Fields -->
             <div v-if="ju.updateType === 'Eintritt'" class="date-picker-row">
                 <div class="date-picker-field">
                     <DatePicker
@@ -350,6 +367,7 @@ watch(() => ju.value.updateType, (newValue) => {
                 </div>
             </div>
             
+            <!-- Verlängerung Date Field -->
             <div v-if="ju.updateType === 'Verlängerung'" class="date-picker-row">
                 <div class="date-picker-field">
                     <DatePicker
@@ -367,6 +385,7 @@ watch(() => ju.value.updateType, (newValue) => {
                 </div>
             </div>
             
+            <!-- Austritt Date Field -->
             <div v-if="ju.updateType === 'Austritt'" class="date-picker-row">
                 <div class="date-picker-field">
                     <DatePicker
@@ -384,6 +403,7 @@ watch(() => ju.value.updateType, (newValue) => {
                 </div>
             </div>
             
+            <!-- Wechsel Date Field -->
             <div v-if="ju.updateType === 'Wechsel'" class="date-picker-row">
                 <div class="date-picker-field">
                     <DatePicker
@@ -401,6 +421,7 @@ watch(() => ju.value.updateType, (newValue) => {
                 </div>
             </div>
             
+            <!-- Änderung Date Field -->
             <div v-if="ju.updateType === 'Änderung'" class="date-picker-row">
                 <div class="date-picker-field">
                     <DatePicker
@@ -462,6 +483,7 @@ watch(() => ju.value.updateType, (newValue) => {
 }
 
 
+/* Date Picker Styles */
 .date-picker-section {
 	margin: 1.5rem 0;
 }
@@ -491,6 +513,7 @@ watch(() => ju.value.updateType, (newValue) => {
 	font-size: 0.9rem;
 }
 
+/* Override vue-datepicker-next styles to match theme */
 :deep(.mx-datepicker) {
 	width: 100%;
 }
@@ -504,6 +527,7 @@ watch(() => ju.value.updateType, (newValue) => {
 	font-size: 1rem;
 }
 
+/* Datepicker placeholder color - match Vueform fields */
 :deep(.mx-input::placeholder) {
 	color: #9CA3AF !important;
 	opacity: 1 !important;
@@ -529,6 +553,7 @@ watch(() => ju.value.updateType, (newValue) => {
 	opacity: 1 !important;
 }
 
+/* More specific targeting for vue-datepicker-next */
 .date-picker-section :deep(.mx-input::placeholder) {
 	color: #9CA3AF !important;
 	opacity: 1 !important;
@@ -579,6 +604,7 @@ watch(() => ju.value.updateType, (newValue) => {
 	color: white !important;
 }
 
+/* More specific targeting for header background */
 :deep(.mx-datepicker .mx-calendar-header),
 :deep(.mx-calendar .mx-calendar-header),
 :deep(.mx-calendar-header),
@@ -591,6 +617,7 @@ watch(() => ju.value.updateType, (newValue) => {
     color: white !important;
 }
 
+/* Force override with even higher specificity */
 .date-picker-section :deep(.mx-calendar-header) {
     background-color: var(--color-button) !important;
     background: var(--color-button) !important;
@@ -603,6 +630,7 @@ watch(() => ju.value.updateType, (newValue) => {
     color: white !important;
 }
 
+/* Target exact classes from F12 inspection */
 .custom-datepicker :deep(.mx-calendar-header),
 .custom-datepicker :deep(.mx-time-header) {
     box-sizing: border-box;
@@ -615,6 +643,7 @@ watch(() => ju.value.updateType, (newValue) => {
     color: white !important;
 }
 
+/* Alternative approach using CSS variables */
 .custom-datepicker {
     --mx-primary-color: var(--color-button);
     --mx-text-color-primary: white;

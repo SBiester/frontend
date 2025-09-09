@@ -1,8 +1,9 @@
+// composables/useStoreCookieSync.js
 import { watch, onMounted } from 'vue'
 
 export function useStoreCookieSync(storeObject, cookieName, options = {}) {
   const {
-    expires = 3,
+    expires = 3, // Tage
     syncOnMount = true,
     excludeFields = [],
     debounceMs = 100
@@ -38,6 +39,7 @@ export function useStoreCookieSync(storeObject, cookieName, options = {}) {
     document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`
   }
 
+  // Objekt filtern
   const filterObject = (obj) => {
     if (excludeFields.length === 0) return obj
     
@@ -48,6 +50,7 @@ export function useStoreCookieSync(storeObject, cookieName, options = {}) {
     return filtered
   }
 
+  // Store in Cookie speichern
   const saveToCache = () => {
     if (debounceTimer) {
       clearTimeout(debounceTimer)
@@ -60,13 +63,17 @@ export function useStoreCookieSync(storeObject, cookieName, options = {}) {
     }, debounceMs)
   }
 
+  // Cookie-Daten in Store laden
   const loadFromCache = () => {
     const cachedData = getCookie(cookieName)
     if (cachedData && typeof cachedData === 'object') {
+      // Store-Objekt aktualisieren, aber bestehende Struktur beibehalten
       Object.keys(cachedData).forEach(key => {
         if (storeObject.value) {
+          // Für reactive/ref Objekte
           storeObject.value[key] = cachedData[key]
         } else {
+          // Für normale Objekte
           storeObject[key] = cachedData[key]
         }
       })
@@ -76,6 +83,7 @@ export function useStoreCookieSync(storeObject, cookieName, options = {}) {
     return false
   }
 
+  // Watcher für automatisches Speichern
   const stopWatcher = watch(
     () => storeObject.value || storeObject,
     () => {
@@ -84,12 +92,14 @@ export function useStoreCookieSync(storeObject, cookieName, options = {}) {
     { deep: true }
   )
 
+  // Beim Mount laden
   if (syncOnMount) {
     onMounted(() => {
       loadFromCache()
     })
   }
 
+  // Utility-Funktionen
   const clearCache = () => {
     deleteCookie(cookieName)
     console.log(`Cookie '${cookieName}' gelöscht`)

@@ -1,3 +1,4 @@
+// Pinia-Store für Benutzerinformationen
 import { defineStore } from 'pinia';
 
 export const useUserStore = defineStore('user', {

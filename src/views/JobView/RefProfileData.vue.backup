@@ -63,10 +63,12 @@ import { id } from 'date-fns/locale';
 
 const juStore = useJuStore();
 
+// Sichere Referenz-Erstellung ohne storeToRefs
 const ju = computed(() => juStore.ju);
 
 const { clearCache } = useStoreCookieSync(juStore, 'juStore');
 
+// Initialisiere refprofil sofort und nach Cookie-Laden
 if (juStore && juStore.ju && !juStore.ju.hasOwnProperty('refprofil')) {
 	juStore.ju.refprofil = [];
 }
@@ -81,6 +83,7 @@ onMounted(() => {
 
 const emit = defineEmits(['show-hardware', 'go-back']);
 
+// Navigation functions
 const goBack = () => {
 	console.log('Going back to BaseData');
 	emit('go-back');
@@ -107,25 +110,31 @@ const deleteItem = (index: number) => {
 	if (index > -1) {
 		const [movedItem] = targetList.value.splice(index, 1);
 		sourceList.value.push(movedItem);
+		// Direkt im Store setzen
 		juStore.ju.refprofil = [...targetList.value];
 		console.log('Nach deleteItem, refprofil:', juStore.ju.refprofil);
 		updateSourceList();
 		
+		// Separates Cookie für refprofil
 		saveRefprofilToCookie(targetList.value);
 	}
 };
 
 const addProfileItem = (item: any) => {
+	// Überprüfe ob bereits ein Profil ausgewählt ist (nur eines erlaubt)
 	if (targetList.value.length > 0) {
+		// Entferne das aktuelle Profil und füge es zurück zur sourceList
 		const [currentItem] = targetList.value.splice(0, 1);
 		sourceList.value.push(currentItem);
 	}
 	
+	// Finde Item in sourceList und entferne es
 	const sourceIndex = sourceList.value.findIndex(sourceItem => sourceItem.id === item.id);
 	if (sourceIndex > -1) {
 		const [movedItem] = sourceList.value.splice(sourceIndex, 1);
 		targetList.value.push(movedItem);
 		
+		// Update Store und Cookie
 		juStore.ju.refprofil = [...targetList.value];
 		saveRefprofilToCookie(targetList.value);
 		
@@ -140,10 +149,12 @@ const onListChange = (event: any) => {
 	if (event.removed) {
 		console.log(`Item entfernt: ${event.removed.element.name}`);
 	}
+	// Direkt im Store setzen
 	juStore.ju.refprofil = [...targetList.value];
 	console.log('Nach onListChange, refprofil:', juStore.ju.refprofil);
 	updateSourceList();
 	
+	// Separates Cookie für refprofil
 	saveRefprofilToCookie(targetList.value);
 };
 
@@ -152,13 +163,16 @@ const onAdd = (event: any) => {
 		const [removed] = targetList.value.splice(0, 1);
 		sourceList.value.push(removed);
 	}
+	// Direkt im Store setzen
 	juStore.ju.refprofil = [...targetList.value];
 	console.log('Nach onAdd, refprofil:', juStore.ju.refprofil);
 	updateSourceList();
 	
+	// Separates Cookie für refprofil
 	saveRefprofilToCookie(targetList.value);
 };
 
+// Separates Cookie-System für refprofil
 const saveRefprofilToCookie = (profiles) => {
 	const expires = new Date();
 	expires.setTime(expires.getTime() + (3 * 24 * 60 * 60 * 1000));
@@ -185,6 +199,7 @@ const loadRefprofilFromCookie = () => {
 	return [];
 };
 
+// Debug-Funktionen
 const getCookieValue = () => {
 	const cookies = document.cookie.split(';');
 	for (let cookie of cookies) {
@@ -204,6 +219,7 @@ const testCookieWrite = () => {
 	juStore.ju.refprofil = [{ id: 2, name: 'Test-Profil' }];
 	console.log('Test Cookie Write - refprofil gesetzt auf:', juStore.ju.refprofil);
 	
+	// Manuell Cookie aktualisieren
 	const expires = new Date();
 	expires.setTime(expires.getTime() + (3 * 24 * 60 * 60 * 1000));
 	const cookieValue = JSON.stringify(juStore.ju);
@@ -214,10 +230,12 @@ const testCookieWrite = () => {
 const sourceList = ref([]);
 const targetList = ref([]);
 const allReferenzprofile = ref([]);
-const selectedBereich = ref('IT');
+const selectedBereich = ref('IT'); // Standard auf IT setzen
 
+// API-Funktion zum Laden der Referenzprofile
 const fetchReferenzprofile = async () => {
 	try {
+		// Lade alle Referenzprofile
 		const response = await fetch('/api/referenzprofile');
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
@@ -232,9 +250,12 @@ const fetchReferenzprofile = async () => {
 	}
 };
 
+// Lade gespeicherte Profile beim Mount
 onMounted(async () => {
+	// Lade Referenzprofile von API
 	await fetchReferenzprofile();
 	
+	// Dann lade gespeicherte Profile aus Cookie
 	setTimeout(() => {
 		const savedProfiles = loadRefprofilFromCookie();
 		if (savedProfiles && savedProfiles.length > 0) {
@@ -245,18 +266,22 @@ onMounted(async () => {
 	}, 100);
 });
 
+// Funktion zum Aktualisieren der sourceList
 const updateSourceList = () => {
 	let filtered = allReferenzprofile.value;
 	
+	// Filter nach Bereich wenn ausgewählt
 	if (selectedBereich.value) {
 		filtered = filtered.filter(item => item.bereich === selectedBereich.value);
 	}
 	
+	// Entferne bereits ausgewählte Profile
 	sourceList.value = filtered.filter(item => 
 		!targetList.value.some(targetItem => targetItem.id === item.id)
 	);
 };
 
+// Funktion für Bereichsfilterung
 const filterByBereich = () => {
 	updateSourceList();
 	console.log('Bereich geändert zu:', selectedBereich.value);
@@ -266,6 +291,7 @@ const filterByBereich = () => {
 
 
 <style scoped>
+/* Navigation Buttons - BaseData Design */
 .navigation-buttons {
 	display: flex;
 	justify-content: space-between;

@@ -29,6 +29,9 @@
 			<p>Software wird geladen...</p>
 			<hr class="shadow-line" />
 		</div>
+		<!-- <div v-else>
+			<p>Keine Software für dieses Profil gefunden.</p>
+		</div> -->
 		
 		<div class="software-selection">
 			<div class="selection-header">
@@ -157,19 +160,23 @@ import { useStoreCookieSync } from '@/components/useStoreCookieSync'
 import draggable from 'vuedraggable';
 
 const juStore = useJuStore();
+// Sichere Referenz-Erstellung ohne storeToRefs
 const ju = computed(() => juStore.ju);
 
 const emit = defineEmits(['go-back', 'show-options', 'show-sap-profiles']);
 
+// Software State
 const softwareItems = ref([]);
 const loading = ref(false);
 
+// Additional Software Selection State
 const sourceSoftwareList = ref([]);
 const additionalSoftwareList = ref([]);
 const manufacturers = ref([]);
 const selectedManufacturer = ref(null);
 const sapSelected = ref(false);
 
+// API Funktion zum Laden der Software
 const fetchSoftwareForProfile = async (profileName: string) => {
 	loading.value = true;
 	try {
@@ -187,8 +194,10 @@ const fetchSoftwareForProfile = async (profileName: string) => {
 	}
 };
 
+// Watch für Änderungen am Referenzprofil
 watch(() => juStore.ju.refprofil, (newProfiles) => {
 	if (newProfiles && newProfiles.length > 0) {
+		// Verwende das erste ausgewählte Profil
 		const profileName = newProfiles[0].name;
 		fetchSoftwareForProfile(profileName);
 	} else {
@@ -196,6 +205,7 @@ watch(() => juStore.ju.refprofil, (newProfiles) => {
 	}
 }, { immediate: true });
 
+// API Funktion zum Laden der Hersteller
 const fetchManufacturers = async () => {
 	try {
 		const response = await fetch('/api/software/manufacturers');
@@ -210,6 +220,7 @@ const fetchManufacturers = async () => {
 	}
 };
 
+// API Funktion zum Laden der Software für einen Hersteller
 const fetchSoftwareByManufacturer = async (manufacturer: string) => {
 	try {
 		const response = await fetch(`/api/software/manufacturer?manufacturer=${encodeURIComponent(manufacturer)}`);
@@ -224,20 +235,25 @@ const fetchSoftwareByManufacturer = async (manufacturer: string) => {
 	}
 };
 
+// SAP-Auswahl (Toggle-Button)
 const selectSap = () => {
 	sapSelected.value = !sapSelected.value;
+	// Speichere SAP-Auswahl im Store
 	juStore.ju.selectedSap = sapSelected.value;
 	saveSapSelectionToCookie();
 	console.log('SAP toggled:', sapSelected.value);
 };
 
+// Hersteller-Auswahl (unabhängig von SAP)
 const selectManufacturer = async (manufacturer: string) => {
 	selectedManufacturer.value = manufacturer;
 	
 	await fetchSoftwareByManufacturer(manufacturer);
+	// Entferne bereits ausgewählte Software aus der Liste
 	removeSelectedItemsFromSource();
 };
 
+// Hilfsfunktion zum Entfernen bereits ausgewählter Items aus der sourceList
 const removeSelectedItemsFromSource = () => {
 	additionalSoftwareList.value.forEach(softwareItem => {
 		const index = sourceSoftwareList.value.findIndex(item => item.id === softwareItem.id);
@@ -247,6 +263,7 @@ const removeSelectedItemsFromSource = () => {
 	});
 };
 
+// Software Drag & Drop Event Handler
 const onSoftwareListChange = (event: any) => {
 	if (event.added) {
 		console.log(`Software hinzugefügt: ${event.added.element.name}`);
@@ -254,6 +271,7 @@ const onSoftwareListChange = (event: any) => {
 	if (event.removed) {
 		console.log(`Software entfernt: ${event.removed.element.name}`);
 	}
+	// Speichere zusätzliche Software im Store
 	if (!juStore.ju.additionalSoftware) {
 		juStore.ju.additionalSoftware = [];
 	}
@@ -262,6 +280,7 @@ const onSoftwareListChange = (event: any) => {
 };
 
 const onSoftwareAdd = (event: any) => {
+	// Entferne Item aus der sourceList wenn es zur targetList hinzugefügt wird
 	juStore.ju.additionalSoftware = [...additionalSoftwareList.value];
 	saveAdditionalSoftwareToCookie(additionalSoftwareList.value);
 };
@@ -270,17 +289,20 @@ const removeSoftware = (index: number) => {
 	if (index > -1) {
 		const [removedItem] = additionalSoftwareList.value.splice(index, 1);
 		sourceSoftwareList.value.push(removedItem);
+		// Update Store
 		juStore.ju.additionalSoftware = [...additionalSoftwareList.value];
 		saveAdditionalSoftwareToCookie(additionalSoftwareList.value);
 	}
 };
 
 const addSoftwareItem = (item: any) => {
+	// Finde Item in sourceList und entferne es
 	const sourceIndex = sourceSoftwareList.value.findIndex(sourceItem => sourceItem.id === item.id);
 	if (sourceIndex > -1) {
 		const [movedItem] = sourceSoftwareList.value.splice(sourceIndex, 1);
 		additionalSoftwareList.value.push(movedItem);
 		
+		// Update Store und Cookie
 		if (!juStore.ju.additionalSoftware) {
 			juStore.ju.additionalSoftware = [];
 		}
@@ -291,6 +313,7 @@ const addSoftwareItem = (item: any) => {
 	}
 };
 
+// Cookie-System für zusätzliche Software
 const saveAdditionalSoftwareToCookie = (software) => {
 	const expires = new Date();
 	expires.setTime(expires.getTime() + (3 * 24 * 60 * 60 * 1000));
@@ -317,6 +340,7 @@ const loadAdditionalSoftwareFromCookie = () => {
 	return [];
 };
 
+// Cookie-System für SAP-Auswahl
 const saveSapSelectionToCookie = () => {
 	const expires = new Date();
 	expires.setTime(expires.getTime() + (3 * 24 * 60 * 60 * 1000));
@@ -335,6 +359,7 @@ const loadSapSelectionFromCookie = () => {
 	return false;
 };
 
+// Navigation Handler
 const handleNextStep = () => {
 	if (sapSelected.value) {
 		emit('show-sap-profiles');
@@ -343,14 +368,17 @@ const handleNextStep = () => {
 	}
 };
 
+// Initialize saved software from cookie
 const initializeSavedSoftware = () => {
 	const savedAdditionalSoftware = loadAdditionalSoftwareFromCookie();
 	if (savedAdditionalSoftware && savedAdditionalSoftware.length > 0) {
 		console.log('Initializing saved software:', savedAdditionalSoftware);
 		
+		// Clear and set the list
 		additionalSoftwareList.value = [];
 		additionalSoftwareList.value.push(...savedAdditionalSoftware);
 		
+		// Update store
 		if (!juStore.ju.additionalSoftware) {
 			juStore.ju.additionalSoftware = [];
 		}
@@ -362,6 +390,7 @@ const initializeSavedSoftware = () => {
 	return false;
 };
 
+// Watch for store changes and sync with local state
 watch(() => juStore.ju.additionalSoftware, (newSoftware) => {
 	if (newSoftware && newSoftware.length > 0 && additionalSoftwareList.value.length === 0) {
 		additionalSoftwareList.value = [...newSoftware];
@@ -370,8 +399,10 @@ watch(() => juStore.ju.additionalSoftware, (newSoftware) => {
 }, { immediate: true, deep: true });
 
 onMounted(async () => {
+	// Initialize saved software first
 	initializeSavedSoftware();
 	
+	// Initialize SAP selection from cookie
 	const savedSapSelection = loadSapSelectionFromCookie();
 	if (savedSapSelection) {
 		sapSelected.value = true;
@@ -379,14 +410,18 @@ onMounted(async () => {
 		selectedManufacturer.value = 'SAP';
 	}
 	
+	// Lade Software wenn bereits ein Profil ausgewählt ist
 	if (juStore.ju.refprofil && juStore.ju.refprofil.length > 0) {
 		const profileName = juStore.ju.refprofil[0].name;
 		fetchSoftwareForProfile(profileName);
 	}
 	
+	// Lade Hersteller für Auswahl (SAP wird automatisch entfernt falls vorhanden)
 	await fetchManufacturers();
+	// Entferne SAP aus der Herstellerliste da es einen separaten Button hat
 	manufacturers.value = manufacturers.value.filter(manufacturer => manufacturer !== 'SAP');
 	
+	// Try again after a short delay in case store sync is needed
 	setTimeout(() => {
 		if (additionalSoftwareList.value.length === 0) {
 			initializeSavedSoftware();
@@ -432,6 +467,7 @@ onMounted(async () => {
 	}
 }
 
+/* Software Styles */
 .software-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -489,6 +525,7 @@ onMounted(async () => {
 	margin-top: 0.5rem;
 }
 
+/* Software Selection Styles */
 .software-selection {
 	margin-top: 2rem;
 }
@@ -508,6 +545,7 @@ onMounted(async () => {
 	font-size: 0.9rem;
 }
 
+/* Manufacturer Selection Styles */
 .manufacturer-selection {
 	margin-bottom: 2rem;
 }
@@ -690,6 +728,7 @@ onMounted(async () => {
 	border-radius: 0.25rem;
 }
 
+/* Navigation Buttons - BaseData Design */
 .navigation-buttons {
 	display: flex;
 	justify-content: space-between;
@@ -718,6 +757,7 @@ onMounted(async () => {
 	transform: translateX(-2px);
 }
 
+/* SAP Notice Styles */
 .sap-notice h4 {
 	margin: 0 0 1rem 0;
 	color: var(--color-text);
@@ -762,6 +802,7 @@ onMounted(async () => {
 	font-weight: 500;
 }
 
+/* SAP Section Styles */
 .sap-section {
 	margin-bottom: 2rem;
 	padding: 2rem;
@@ -783,6 +824,7 @@ onMounted(async () => {
 	font-size: 0.95rem;
 }
 
+/* Standard Software Section Styles */
 .standard-software-section {
 	margin-bottom: 2rem;
 	padding: 2rem;

@@ -35,7 +35,8 @@
 					</div>
 				</label>
 				
-						<div v-if="option.id === 'telefonnummer' && selectedOptions.telefonnummer" class="telefon-type-selection">
+				<!-- Telefon Type Selection - appears when telefonnummer is selected -->
+				<div v-if="option.id === 'telefonnummer' && selectedOptions.telefonnummer" class="telefon-type-selection">
 					<h5>Telefontyp auswählen:</h5>
 					<div class="telefon-types">
 						<label 
@@ -84,13 +85,16 @@ import { useUserStore } from '@/stores/userStore'
 import { useStoreCookieSync } from '@/components/useStoreCookieSync'
 
 const juStore = useJuStore();
+// Sichere Referenz-Erstellung ohne storeToRefs
 const ju = computed(() => juStore.ju);
 
 const emit = defineEmits(['go-back', 'show-summary']);
 
+// Available options from API
 const availableOptions = ref([]);
 const telefonTypes = ref([]);
 
+// Options State
 const selectedOptions = reactive({
 	telefonnummer: false,
 	tuerschild: false,
@@ -98,11 +102,14 @@ const selectedOptions = reactive({
 	telefontyp: null
 });
 
+// Check if SAP profiles were actually selected
 const sapWasSelected = computed(() => {
+	// First check if SAP profiles exist in store
 	if (juStore.ju.sapProfiles && juStore.ju.sapProfiles.length > 0) {
 		return true;
 	}
 	
+	// Check cookie for SAP profiles
 	const cookies = document.cookie.split(';');
 	for (let cookie of cookies) {
 		const [name, value] = cookie.trim().split('=');
@@ -119,10 +126,12 @@ const sapWasSelected = computed(() => {
 	return false;
 });
 
+// Dynamic back button text
 const backButtonText = computed(() => {
 	return sapWasSelected.value ? 'SAP Profile' : 'Software';
 });
 
+// Fetch available options from API
 const fetchOptions = async () => {
 	try {
 		const response = await fetch('/api/options');
@@ -136,6 +145,7 @@ const fetchOptions = async () => {
 	}
 };
 
+// Fetch telefon types from API
 const fetchTelefonTypes = async () => {
 	try {
 		const response = await fetch('/api/telefon-types');
@@ -149,6 +159,7 @@ const fetchTelefonTypes = async () => {
 	}
 };
 
+// Save options data to store and cookie
 const saveOptionsData = () => {
 	if (!juStore.ju.additionalOptions) {
 		juStore.ju.additionalOptions = {
@@ -163,6 +174,7 @@ const saveOptionsData = () => {
 	console.log('Options gespeichert:', selectedOptions);
 };
 
+// Cookie-System für Options
 const saveOptionsDataToCookie = (options) => {
 	const expires = new Date();
 	expires.setTime(expires.getTime() + (3 * 24 * 60 * 60 * 1000));
@@ -189,6 +201,7 @@ const loadOptionsDataFromCookie = () => {
 	return {};
 };
 
+// Initialize saved options from cookie
 const initializeSavedOptions = () => {
 	const savedOptions = loadOptionsDataFromCookie();
 	if (savedOptions && Object.keys(savedOptions).length > 0) {
@@ -212,10 +225,12 @@ const initializeSavedOptions = () => {
 };
 
 onMounted(async () => {
+	// Fetch available options and telefon types first
 	await Promise.all([
 		fetchOptions(),
 		fetchTelefonTypes()
 	]);
+	// Then initialize saved options
 	initializeSavedOptions();
 });
 </script>
@@ -257,6 +272,7 @@ onMounted(async () => {
 	}
 }
 
+/* Options Styles */
 .options-container {
 	display: flex;
 	flex-direction: column;
@@ -331,6 +347,7 @@ onMounted(async () => {
 	line-height: 1.4;
 }
 
+/* Selected state */
 .option-checkbox:checked + .option-content .option-icon {
 	background: var(--color-button-hover);
 	transform: scale(1.1);
@@ -345,6 +362,7 @@ onMounted(async () => {
 	background: rgba(var(--color-button-hover-rgb), 0.05);
 }
 
+/* Navigation Buttons */
 .navigation-buttons {
 	display: flex;
 	justify-content: space-between;
@@ -364,6 +382,7 @@ onMounted(async () => {
 	gap: 0.5rem;
 }
 
+/* Telefon Type Selection Styles */
 .telefon-type-selection {
 	margin-top: 1rem;
 	padding: 1rem;

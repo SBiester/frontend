@@ -22,6 +22,7 @@ const selectedDate = ref(null);
 
 const sortLists = () => {
     sourceList.value.sort((a, b) => a.id - b.id);
+    /*targetList.value.sort((a, b) => a.id - b.id);*/
 };
 
 onMounted(sortLists);
@@ -57,6 +58,7 @@ const customFormat = (date) => {
             </div>
             <Transition name="slide-fade">
                 <div id="intern" v-if="isEnabled === 'intern'">
+                    <!--<h2>Mitarbeiter*in</h2>-->
                     <div>
                         <form>
                             <fieldset style="display: flex; flex-wrap: wrap; gap: 1rem; border-color: var(--color-border); border-radius: 0.4rem;">
@@ -104,10 +106,12 @@ const customFormat = (date) => {
     </div>
 </template>
 
+<!-- Globale Styles für externe Bibliotheken -->
 <style>
 @import '@vueform/toggle/themes/default.css';
 </style>
 
+<!-- Gekapselte Styles nur für diese Komponente -->
 <style scoped>
 .slide-fade-enter-active,
 .slide-fade-leave-active {
@@ -175,18 +179,22 @@ input {
     margin-left: 10px;
 }
 
+/* Portrait */
 
 @media screen and (orientation: portrait) {
     ::v-deep(.full-width-toggle) {
         --toggle-width: 40vw !important;
+        /* fast ganze Breite im Portrait */
         --toggle-height: 2.5rem !important;
     }
 }
 
+/* Landscape */
 
 @media screen and (orientation: landscape) and (pointer: fine) {
     ::v-deep(.full-width-toggle) {
         --toggle-width: 20vw !important;
+        /* etwas schmaler im Landscape */
         --toggle-height: 2rem !important;
     }
     ::v-deep(.toggle-container) {
@@ -198,6 +206,7 @@ input {
 @media screen and (orientation: landscape) and (pointer: coarse) {
     ::v-deep(.full-width-toggle) {
         --toggle-width: 20vw !important;
+        /* etwas schmaler im Landscape */
         --toggle-height: 2rem !important;
     }
 }
