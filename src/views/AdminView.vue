@@ -10,12 +10,12 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+    import { onMounted, ref } from 'vue';
 
-const showHeadLine = ref(false);
-onMounted(() => {
-    setTimeout(() => {
-        showHeadLine.value = true;
-    }, 100);
-});
+    const showHeadLine = ref(false);
+    onMounted(() => {
+        setTimeout(() => {
+            showHeadLine.value = true;
+        }, 100);
+    });
 </script>
