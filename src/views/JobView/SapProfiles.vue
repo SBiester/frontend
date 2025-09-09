@@ -16,7 +16,7 @@
                         <p class="group-description">{{ group.description }}</p>
                     </div>
                     <div class="expand-icon" :class="{ 'expanded': isGroupExpanded(group.id) }">
-                        <span>▼</span>
+                        <span> ▼ </span>
                     </div>
                 </div>
                 
@@ -47,7 +47,7 @@
                                             {{ permission }}
                                         </span>
                                         <span v-if="profile.permissions.length > 3" class="more-permissions">
-                                            +{{ profile.permissions.length - 3 }} weitere
+                                            + {{ profile.permissions.length - 3 }} weitere
                                         </span>
                                     </div>
                                 </div>
@@ -178,7 +178,7 @@ const loadSapProfilesFromCookie = () => {
                 console.log('SAP Profiles Cookie geladen:', profiles);
                 return profiles;
             } catch (e) {
-                console.error('Fehler beim Laden des SAP Profiles Cookies:', e);
+                console.error('Fehler beim Laden des SAP Profile Cookies:', e);
                 return [];
             }
         }

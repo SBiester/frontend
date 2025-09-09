@@ -1,148 +1,148 @@
 <template>
-<div>
-	<div v-if="juStore.ju.refprofil && juStore.ju.refprofil.length > 0" class="ref">
-		<h3>Ausgewähltes Referenzprofil:</h3>
-		<ul class="list-group">
-			<li v-for="profil in juStore.ju.refprofil" :key="profil.id" class="list-group-item selected">
-				{{ profil.name }}
-			</li>
-		</ul>
-		<hr class="shadow-line" />
-		<h2>Software</h2>
-		<div v-if="softwareItems.length > 0">
-			<p>Durch Profil zugewiesene Software:</p>
-			<div class="software-grid">
-				<div v-for="item in softwareItems" :key="item.id" class="software-card">
-					<div class="software-header">
-						<h4>{{ item.name }}</h4>
-						<span class="category-badge">{{ item.category }}</span>
-					</div>
-					<p class="description">{{ item.description }}</p>
-					<div class="version-info" v-if="item.version">
-						Version: {{ item.version }}
+	<div>
+		<div v-if="juStore.ju.refprofil && juStore.ju.refprofil.length > 0" class="ref">
+			<h3>Ausgewähltes Referenzprofil:</h3>
+			<ul class="list-group">
+				<li v-for="profil in juStore.ju.refprofil" :key="profil.id" class="list-group-item selected">
+					{{ profil.name }}
+				</li>
+			</ul>
+			<hr class="shadow-line" />
+			<h2>Software</h2>
+			<div v-if="softwareItems.length > 0">
+				<p>Durch Profil zugewiesene Software:</p>
+				<div class="software-grid">
+					<div v-for="item in softwareItems" :key="item.id" class="software-card">
+						<div class="software-header">
+							<h4>{{ item.name }}</h4>
+							<span class="category-badge">{{ item.category }}</span>
+						</div>
+						<p class="description">{{ item.description }}</p>
+						<div class="version-info" v-if="item.version">
+							Version: {{ item.version }}
+						</div>
 					</div>
 				</div>
+				<hr class="shadow-line" />
 			</div>
-			<hr class="shadow-line" />
-		</div>
-		<div v-else-if="loading">
-			<p>Software wird geladen...</p>
-			<hr class="shadow-line" />
-		</div>
-		
-		<div class="software-selection">
-			<div class="selection-header">
-				<h3>Zusätzliche Software hinzufügen</h3>
+			<div v-else-if="loading">
+				<p>Software wird geladen...</p>
+				<hr class="shadow-line" />
 			</div>
 			
-			<div class="manufacturer-selection">
-				<div class="sap-section">
-					<h4>SAP Software</h4>
-					<p>Zusätzlich kannst du SAP-Profile und -Berechtigungen auswählen</p>
-					<button 
-						@click="selectSap"
-						:class="{ 'active': sapSelected }"
-						class="sap-button"
-					>
-						<span class="sap-icon">
-							<p class="fa">⚙</p>
-						</span>
-						<span class="sap-text">
-							<strong>{{ sapSelected ? 'SAP Profile ausgewählt' : 'SAP Profile auswählen' }}</strong>
-							<small>{{ sapSelected ? 'Konfiguriere Profile im nächsten Schritt' : 'Rollenbasierte Berechtigungen' }}</small>
-						</span>
-						<span v-if="sapSelected" class="sap-checkmark">✓</span>
-					</button>
+			<div class="software-selection">
+				<div class="selection-header">
+					<h3>Zusätzliche Software hinzufügen</h3>
 				</div>
 				
-				<div class="standard-software-section">
-					<h4>Standard Software</h4>
-					<p>Wähle zusätzliche Software von verschiedenen Herstellern</p>
-					<div class="manufacturer-buttons">
+				<div class="manufacturer-selection">
+					<div class="sap-section">
+						<h4>SAP Software</h4>
+						<p>Zusätzlich kannst du SAP-Profile und -Berechtigungen auswählen</p>
 						<button 
-							v-for="manufacturer in manufacturers" 
-							:key="manufacturer"
-							@click="selectManufacturer(manufacturer)"
-							:class="{ 'active': selectedManufacturer === manufacturer }"
-							class="manufacturer-button"
+							@click="selectSap"
+							:class="{ 'active': sapSelected }"
+							class="sap-button"
 						>
-							{{ manufacturer }}
+							<span class="sap-icon">
+								<p class="fa">⚙</p>
+							</span>
+							<span class="sap-text">
+								<strong>{{ sapSelected ? 'SAP Profile ausgewählt' : 'SAP Profile auswählen' }}</strong>
+								<small>{{ sapSelected ? 'Konfiguriere Profile im nächsten Schritt' : 'Rollenbasierte Berechtigungen' }}</small>
+							</span>
+							<span v-if="sapSelected" class="sap-checkmark">✓</span>
 						</button>
 					</div>
-				</div>
-			</div>
-			
-			<div class="software-lists">
-				<div class="source-list" v-if="selectedManufacturer">
-					<h4>Verfügbare Software - {{ selectedManufacturer }}</h4>
-					<draggable 
-						class="list-group" 
-						:list="sourceSoftwareList" 
-						group="software" 
-						item-key="id"
-					>
-						<template #item="{ element }">
-							<div class="list-group-item">
-								<div class="software-info">
-									<span class="software-name">{{ element.name }}</span>
-									<span class="software-category">{{ element.category }}</span>
-									<span class="software-version" v-if="element.version">v{{ element.version }}</span>
-								</div>
-								<button @click="addSoftwareItem(element)" class="add-button fa">&#10010;</button>
-							</div>
-						</template>
-					</draggable>
-				</div>
-				<div class="source-list" v-else>
-					<div style="padding-left: 0.2rem">
-						<p>Wähle einen Hersteller aus, um verfügbare Software anzuzeigen</p>
+					
+					<div class="standard-software-section">
+						<h4>Standard Software</h4>
+						<p>Wähle zusätzliche Software von verschiedenen Herstellern</p>
+						<div class="manufacturer-buttons">
+							<button 
+								v-for="manufacturer in manufacturers" 
+								:key="manufacturer"
+								@click="selectManufacturer(manufacturer)"
+								:class="{ 'active': selectedManufacturer === manufacturer }"
+								class="manufacturer-button"
+							>
+								{{ manufacturer }}
+							</button>
+						</div>
 					</div>
 				</div>
 				
-				<div class="target-list">
-					<h4>Zusätzlich angeforderte Software</h4>
-					<div class="target-container">
+				<div class="software-lists">
+					<div class="source-list" v-if="selectedManufacturer">
+						<h4>Verfügbare Software - {{ selectedManufacturer }}</h4>
 						<draggable 
-							class="list-group-full target-list" 
-							:list="additionalSoftwareList" 
+							class="list-group" 
+							:list="sourceSoftwareList" 
 							group="software" 
-							@change="onSoftwareListChange" 
-							@add="onSoftwareAdd" 
 							item-key="id"
 						>
-							<template #item="{ element, index }">
+							<template #item="{ element }">
 								<div class="list-group-item">
 									<div class="software-info">
 										<span class="software-name">{{ element.name }}</span>
 										<span class="software-category">{{ element.category }}</span>
 										<span class="software-version" v-if="element.version">v{{ element.version }}</span>
 									</div>
-									<button @click="removeSoftware(index)" class="delete-button fa">&#xf014;</button>
+									<button @click="addSoftwareItem(element)" class="add-button fa">&#10010;</button>
 								</div>
 							</template>
 						</draggable>
-						<div v-show="additionalSoftwareList.length === 0" class="placeholder-container">
-							<span class="placeholder-text">Software hier ablegen</span>
+					</div>
+					<div class="source-list" v-else>
+						<div style="padding-left: 0.2rem">
+							<p>Wähle einen Hersteller aus, um verfügbare Software anzuzeigen</p>
+						</div>
+					</div>
+					
+					<div class="target-list">
+						<h4>Zusätzlich angeforderte Software</h4>
+						<div class="target-container">
+							<draggable 
+								class="list-group-full target-list" 
+								:list="additionalSoftwareList" 
+								group="software" 
+								@change="onSoftwareListChange" 
+								@add="onSoftwareAdd" 
+								item-key="id"
+							>
+								<template #item="{ element, index }">
+									<div class="list-group-item">
+										<div class="software-info">
+											<span class="software-name">{{ element.name }}</span>
+											<span class="software-category">{{ element.category }}</span>
+											<span class="software-version" v-if="element.version">v{{ element.version }}</span>
+										</div>
+										<button @click="removeSoftware(index)" class="delete-button fa">&#xf014;</button>
+									</div>
+								</template>
+							</draggable>
+							<div v-show="additionalSoftwareList.length === 0" class="placeholder-container">
+								<span class="placeholder-text">Software hier ablegen</span>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
+			<hr class="shadow-line" />
+			<div class="navigation-buttons">
+				<button @click="$emit('go-back')" class="back-button">
+					Hardware
+				</button>
+				<button @click="handleNextStep" class="next-button">
+					{{ sapSelected ? 'SAP Profile' : 'Optionale Services' }}
+				</button>
+			</div>
+			<hr class="shadow-line" />
 		</div>
-		<hr class="shadow-line" />
-		<div class="navigation-buttons">
-			<button @click="$emit('go-back')" class="back-button">
-				Hardware
-			</button>
-			<button @click="handleNextStep" class="next-button">
-				{{ sapSelected ? 'SAP Profile' : 'Optionale Services' }}
-			</button>
+		<div v-else>
+			<p>Keine Referenzprofile gespeichert</p>
 		</div>
-		<hr class="shadow-line" />
 	</div>
-	<div v-else>
-		<p>Keine Referenzprofile gespeichert</p>
-	</div>
-</div>
 </template>
 
 <script setup lang="ts">
@@ -284,6 +284,7 @@ const addSoftwareItem = (item: any) => {
 		if (!juStore.ju.additionalSoftware) {
 			juStore.ju.additionalSoftware = [];
 		}
+		
 		juStore.ju.additionalSoftware = [...additionalSoftwareList.value];
 		saveAdditionalSoftwareToCookie(additionalSoftwareList.value);
 		
@@ -376,7 +377,6 @@ onMounted(async () => {
 	if (savedSapSelection) {
 		sapSelected.value = true;
 		juStore.ju.selectedSap = true;
-		selectedManufacturer.value = 'SAP';
 	}
 	
 	if (juStore.ju.refprofil && juStore.ju.refprofil.length > 0) {
@@ -385,7 +385,6 @@ onMounted(async () => {
 	}
 	
 	await fetchManufacturers();
-	manufacturers.value = manufacturers.value.filter(manufacturer => manufacturer !== 'SAP');
 	
 	setTimeout(() => {
 		if (additionalSoftwareList.value.length === 0) {
