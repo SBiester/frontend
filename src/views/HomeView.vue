@@ -145,6 +145,7 @@ button {
 .back-button-header:hover {
 	transform: translateX(-2px);
 }
+
 @media (min-width: 1025px) {
 	.job-view-container {
 		margin-top: 6rem !important;
@@ -155,10 +156,6 @@ button {
 .job-view-container {
 	margin-top: 3.4rem;
 	padding-top: 1rem;
-}
-
-.dashboard-header {
-	/* Extend existing cell-wide styles for dashboard */
 }
 
 .navigation-content {
