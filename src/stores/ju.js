@@ -1,3 +1,4 @@
+import SapProfiles from '@/views/JobView/SapProfiles.vue'
 import { defineStore } from 'pinia'
 import { reactive } from 'vue'
 
@@ -12,9 +13,25 @@ export const useJuStore = defineStore('ju', () => {
     sachbereich: null,
     team: null,
     funktion: null,
+    position: null,
     vorgesetzt: null,
     eintritt: null,
     frist: null,
+    verlaengerungbis: null,
+    austritt_zum: null,
+    wechsel_zum: null,
+    aenderung_zum: null,
+    refprofil: [],
+    additionalHardware: [],
+    additionalSoftware: [],
+    additionalOptions: {
+      telefonnummer: false,
+      tuerschild: false,
+      visitenkarten: false,
+      telefontyp: null
+    },
+    selectedSap: false,
+    sapProfiles: []
   })
 
   function resetJu() {
@@ -28,9 +45,25 @@ export const useJuStore = defineStore('ju', () => {
       sachbereich: null,
       team: null,
       funktion: null,
+      position: null,
       vorgesetzt: null,
       eintritt: null,
       frist: null,
+      verlaengerungbis: null,
+      austritt_zum: null,
+      wechsel_zum: null,
+      aenderung_zum: null,
+      refprofil: [],
+      additionalHardware: [],
+      additionalSoftware: [],
+      additionalOptions: {
+        telefonnummer: false,
+        tuerschild: false,
+        visitenkarten: false,
+        telefontyp: null
+      },
+      selectedSap: false,
+      sapProfiles: []
     })
   }
 

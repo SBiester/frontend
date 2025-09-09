@@ -31,20 +31,10 @@ router.beforeEach((to, from, next) => {
         return next();
       }
       // PM hat Zugriff auf 'pm'- und 'user'-Routen
-      if (userRole === 'pm' && (requiredRole === 'pm' || requiredRole === 'user')) {
-        return next();
-      }
-      // User hat nur Zugriff auf 'user'-Routen
-      if (userRole === 'user' && requiredRole === 'user') {
-        return next();
-      }
 
-      // 3. Wenn keine der obigen Bedingungen zutrifft, ist der Benutzer nicht autorisiert.
-      // Leite ihn zu seiner Standard-Seite weiter.
       if (userRole === 'admin') return next({ path: '/admin' });
       if (userRole === 'pm') return next({ path: '/job' });
-      if (userRole === 'user') return next({ path: '/user' });
-      
+      if (userRole === 'fach') return next({ path: '/job' }); 
       // Fallback für andere Rollen
       return next({ path: '/home' });
 

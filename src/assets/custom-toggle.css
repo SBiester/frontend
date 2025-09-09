@@ -8,9 +8,30 @@
 }
 
 .vf-toggle-label {
-  padding: 0 3rem 0 1rem !important;
+  padding: 0 3.8rem 0 1rem !important;
   line-height: 2rem !important;
   font-size: 1rem;
+}
+
+.vf-toggle-on {
+  background-color: var(--color-heading) !important;
+  color: var(--vt-c-white) !important;
+}
+
+.vf-toggle-off {
+  background-color: var(--color-button) !important;
+  color: var(--vt-c-white) !important;
+}
+
+.vf-radio-tabs {
+  background: transparent !important;
+  color: var(--color-text) !important;
+}
+
+.vf-radio-tabs-selected {
+  background: var(--color-button) !important;
+  color: var(--vt-c-white) !important;
+  border-color: var(--vf-border-color-checkbox) !important;
 }
 
 :root, :before, :after, * {
@@ -396,3 +417,33 @@
   --vf-slider-tooltip-arrow-size-sm: var(--vf-slider-tooltip-arrow-size);
   --vf-slider-tooltip-arrow-size-lg: var(--vf-slider-tooltip-arrow-size);
 }
+
+/* Custom Plus Button Styling */
+[data-name="funktionAddButton"] {
+  text-align: right !important;
+}
+
+[data-name="funktionAddButton"] .vf-element {
+  text-align: right !important;
+}
+
+[data-name="funktionAddButton"] .vf-element-layout {
+  text-align: right !important;
+}
+
+[data-name="funktionAddButton"] button,
+[data-name="funktionAddButton"] .vf-btn {
+  margin-left: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 900 !important;
+  font-size: 1.4em !important;
+  line-height: 1 !important;
+  width: 2.2em !important;
+  height: 2.2em !important;
+  border-radius: 4px !important;
+  transition: transform 0.3s ease !important;
+  padding: 0 !important;
+}
+

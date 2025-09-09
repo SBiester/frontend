@@ -18,7 +18,7 @@
 #app {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0rem;
   font-weight: normal;
 }
 
@@ -41,7 +41,9 @@ body {
     right: 1rem;
     display: flex;
     gap: 0.5rem;
+    z-index: 1000;
 }
+
 button {
     padding: 0.5rem 1rem;
     font-family: 'GT Pressura';
@@ -60,8 +62,9 @@ button:hover {
 }
 
 h1 {
-  font-size: 4rem;
+  font-size: 2.5rem;
   font-weight: bold;
+  word-wrap: none;
   font-family: "Univia Pro", sans-serif;
   color: var(--color-heading);
   opacity: 0;
@@ -79,7 +82,7 @@ h1 {
 
 main {
     display: grid;
-    grid-template-columns: repeat(3,1fr);
+    grid-template-columns: repeat(1,1fr);
     grid-template-rows: auto auto auto;
     gap: 2 2rem;
 }
@@ -95,12 +98,12 @@ p {
   }
 }
 
-@media (min-width: 1024px) and (pointer: fine) {
+/* @media (min-width: 1025px) and (pointer: fine) {
   body {
     display: flex;
     place-items: center;
   }
-}
+} */
 
 input {
   outline: none;
@@ -125,24 +128,50 @@ input:focus {
   width: 100%;
 }
 
-[class*="vf-col-"] {
-  /* padding-left: 0.25rem; */
-  /* padding-right: 0.25rem; */
-}
-
 .vf-col-12 {
   flex: 0 0 100%;
   max-width: 100%;
 }
 
-/* Tablet Breakpoint (und größer) */
-@media (min-width: 768px) {
+@media (min-width: 1025px) {
   .vf-col-tablet-4 {
-    flex: 0 0 28%;
-    max-width: 28%;
+    flex: 0 0 32%;
+    max-width: 32%;
   }
   .vf-col-tablet-6 {
     flex: 0 0 49%;
     max-width: 49%;
   }
+  .vf-col-tablet-8 {
+    flex: 0 0 66%;
+    max-width: 66%;
+  }
+}
+
+.vf-col-tablet-2 {
+  flex: 0 0 15%;
+  max-width: 15%;
+}
+
+.vf-col-tablet-1 {
+  flex: 0 0 5%;
+  max-width: 5%;
+}
+
+.vf-col-tablet-10 { 
+  flex: 0 0 84%;
+  max-width: 84%;
+}
+
+.vf-col-tablet-11 {
+  flex: 0 0 93%;
+  max-width: 93%;
+}
+
+.warning {
+  color: var(--vf-danger) !important;
+  background-color: var(--vf-danger-lighter) !important;
+  border: 1px solid var(--vf-danger) !important;
+  padding: 0.7rem 1rem;
+  border-radius: 0.5rem;
 }

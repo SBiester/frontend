@@ -39,7 +39,7 @@ export function useStoreCookieSync(storeObject, cookieName, options = {}) {
     document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`
   }
 
-  // Objekt filtern (ausgeschlossene Felder entfernen)
+  // Objekt filtern
   const filterObject = (obj) => {
     if (excludeFields.length === 0) return obj
     
@@ -50,7 +50,7 @@ export function useStoreCookieSync(storeObject, cookieName, options = {}) {
     return filtered
   }
 
-  // Store in Cookie speichern (mit Debouncing)
+  // Store in Cookie speichern
   const saveToCache = () => {
     if (debounceTimer) {
       clearTimeout(debounceTimer)
@@ -92,7 +92,7 @@ export function useStoreCookieSync(storeObject, cookieName, options = {}) {
     { deep: true }
   )
 
-  // Beim Mount laden (falls gewünscht)
+  // Beim Mount laden
   if (syncOnMount) {
     onMounted(() => {
       loadFromCache()
