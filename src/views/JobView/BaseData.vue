@@ -208,6 +208,14 @@ const formSchema = computed(() => ({
     },
 }));
 
+const commentSchema = computed(() => ({
+    kommentar: {
+        type: 'textarea',
+        placeholder: 'Zusätzliche Kommentare oder Anmerkungen...',
+        rows: 4
+    }
+}));
+
 onMounted(async () => {
     await Promise.all([
         fetchData('bereiche', bereiche),
@@ -417,6 +425,11 @@ watch(() => ju.value.updateType, (newValue) => {
                     />
                 </div>
             </div>
+        </div>
+        
+        <!-- Kommentar field moved below date pickers -->
+        <div class="comment-section">
+            <Vueform v-model="ju" :schema="commentSchema" :sync="true" />
         </div>
     
         <hr class="shadow-line" />

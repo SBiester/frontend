@@ -35,7 +35,7 @@
 					</div>
 				</label>
 				
-						<div v-if="option.id === 'telefonnummer' && selectedOptions.telefonnummer" class="telefon-type-selection">
+				<div v-if="option.id === 'telefonnummer' && selectedOptions.telefonnummer" class="telefon-type-selection">
 					<h5>Telefontyp auswählen:</h5>
 					<div class="telefon-types">
 						<label 

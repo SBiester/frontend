@@ -55,7 +55,35 @@
 						</button>
 					</div>
 					
-					<div class="standard-software-section">
+					<div class="search-section">
+						<div class="search-input-container">
+							<input 
+								v-model="searchQuery"
+								@input="onSearchInput"
+								type="text" 
+								class="search-input"
+								placeholder="Standard-Software durchsuchen (Name, Kategorie, Beschreibung)..."
+							/>
+							<div class="search-icon">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<circle cx="11" cy="11" r="8"></circle>
+									<path d="m21 21-4.35-4.35"></path>
+								</svg>
+							</div>
+						</div>
+						
+						<div v-if="searchQuery && searchResults !== null" class="search-results-info">
+							<span v-if="searchResults.total_results > 0">
+								{{ searchResults.total_results }} Software-Items gefunden für "{{ searchQuery }}"
+							</span>
+							<span v-else>
+								Keine Software gefunden für "{{ searchQuery }}"
+							</span>
+							<button @click="clearSearch" class="clear-search-btn">Suche löschen</button>
+						</div>
+					</div>
+					
+					<div class="standard-software-section" v-if="!searchQuery">
 						<h4>Standard Software</h4>
 						<p>Wähle zusätzliche Software von verschiedenen Herstellern</p>
 						<div class="manufacturer-buttons">
@@ -73,7 +101,29 @@
 				</div>
 				
 				<div class="software-lists">
-					<div class="source-list" v-if="selectedManufacturer">
+					<!-- Search Results -->
+					<div v-if="searchQuery && searchResults" class="search-results">
+						<div v-if="searchResults.categories && searchResults.categories.length > 0">
+							<div v-for="category in searchResults.categories" :key="category.category" class="search-category">
+								<h4>{{ category.category }}</h4>
+								<div class="list-group">
+									<div v-for="element in category.items" :key="element.id" class="list-group-item">
+										<div class="software-info">
+											<span class="software-name">{{ element.name }}</span>
+											<span class="software-category">{{ element.category }}</span>
+											<span class="software-version" v-if="element.version">v{{ element.version }}</span>
+										</div>
+										<button @click="addSoftwareItem(element)" class="add-button fa">&#10010;</button>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div v-else class="no-results">
+							<p>Keine Software gefunden für "{{ searchQuery }}"</p>
+						</div>
+					</div>
+					
+					<div v-else-if="selectedManufacturer" class="source-list">
 						<h4>Verfügbare Software - {{ selectedManufacturer }}</h4>
 						<draggable 
 							class="list-group" 
@@ -93,9 +143,9 @@
 							</template>
 						</draggable>
 					</div>
-					<div class="source-list" v-else>
+					<div v-else-if="!searchQuery" class="source-list">
 						<div style="padding-left: 0.2rem">
-							<p>Wähle einen Hersteller aus, um verfügbare Software anzuzeigen</p>
+							<p>Wähle einen Hersteller aus oder nutze die Suchfunktion</p>
 						</div>
 					</div>
 					
@@ -169,6 +219,9 @@ const additionalSoftwareList = ref([]);
 const manufacturers = ref([]);
 const selectedManufacturer = ref(null);
 const sapSelected = ref(false);
+const searchQuery = ref('');
+const searchResults = ref(null);
+const searchTimeout = ref(null);
 
 const fetchSoftwareForProfile = async (profileName: string) => {
 	loading.value = true;
@@ -363,6 +416,43 @@ const initializeSavedSoftware = () => {
 	return false;
 };
 
+const searchSoftware = async (query) => {
+	if (!query.trim()) {
+		searchResults.value = null;
+		return;
+	}
+	
+	try {
+		const response = await fetch(`/api/software/search?query=${encodeURIComponent(query)}`);
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		const data = await response.json();
+		searchResults.value = data;
+	} catch (error) {
+		console.error('Fehler bei der Software Suche:', error);
+		searchResults.value = { categories: [], total_results: 0 };
+	}
+};
+
+const onSearchInput = () => {
+	if (searchTimeout.value) {
+		clearTimeout(searchTimeout.value);
+	}
+	
+	searchTimeout.value = setTimeout(() => {
+		searchSoftware(searchQuery.value);
+	}, 300);
+};
+
+const clearSearch = () => {
+	searchQuery.value = '';
+	searchResults.value = null;
+	if (searchTimeout.value) {
+		clearTimeout(searchTimeout.value);
+	}
+};
+
 watch(() => juStore.ju.additionalSoftware, (newSoftware) => {
 	if (newSoftware && newSoftware.length > 0 && additionalSoftwareList.value.length === 0) {
 		additionalSoftwareList.value = [...newSoftware];
@@ -553,6 +643,95 @@ onMounted(async () => {
 	background: var(--color-button) !important;
 	color: var(--color-text) !important;
 	font-weight: 500;
+}
+
+.search-section {
+	margin-bottom: 2rem;
+}
+
+.search-input-container {
+	position: relative;
+	margin-bottom: 1rem;
+}
+
+.search-input {
+	width: 100%;
+	padding: 0.75rem 2.5rem 0.75rem 1rem;
+	border: 2px solid var(--color-border);
+	border-radius: 0.5rem;
+	background: var(--color-background);
+	color: var(--color-text);
+	font-size: 1rem;
+	transition: all 0.2s ease;
+}
+
+.search-input:focus {
+	outline: none;
+	border-color: var(--color-button);
+	box-shadow: 0 0 0 3px rgba(var(--color-button-rgb, 59, 130, 246), 0.1);
+}
+
+.search-input::placeholder {
+	color: var(--color-text-muted);
+}
+
+.search-icon {
+	position: absolute;
+	right: 0.75rem;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--color-text-muted);
+	pointer-events: none;
+}
+
+.search-results-info {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.5rem;
+	background: var(--color-background-soft);
+	border-radius: 0.25rem;
+	font-size: 0.9rem;
+	color: var(--color-text-muted);
+}
+
+.clear-search-btn {
+	background: none !important;
+	border: 1px solid var(--color-border) !important;
+	color: var(--color-text-muted) !important;
+	padding: 0.25rem 0.5rem !important;
+	border-radius: 0.25rem;
+	font-size: 0.8rem;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.clear-search-btn:hover {
+	background: var(--color-background-mute) !important;
+	border-color: var(--color-button) !important;
+	color: var(--color-text) !important;
+}
+
+.search-results {
+	margin-bottom: 2rem;
+}
+
+.search-category {
+	margin-bottom: 1.5rem;
+}
+
+.search-category h4 {
+	margin: 0 0 0.5rem 0;
+	color: var(--color-text);
+	font-size: 1rem;
+	font-weight: 600;
+}
+
+.no-results {
+	text-align: center;
+	padding: 2rem;
+	color: var(--color-text-muted);
+	font-style: italic;
 }
 
 .software-lists {

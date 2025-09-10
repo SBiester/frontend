@@ -4,12 +4,40 @@
         <h2>SAP Profile auswählen</h2>
         <p>Wähle die benötigten SAP Profile aus den verschiedenen Kategorien:</p>
         
+        <div class="search-section">
+            <div class="search-input-container">
+                <input 
+                    v-model="searchQuery"
+                    @input="onSearchInput"
+                    type="text" 
+                    class="search-input"
+                    placeholder="Profile durchsuchen (Name oder Schlüssel)..."
+                />
+                <div class="search-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </div>
+            </div>
+            
+            <div v-if="searchQuery && searchResults !== null" class="search-results-info">
+                <span v-if="searchResults.total_results > 0">
+                    {{ searchResults.total_results }} Profile gefunden für "{{ searchQuery }}"
+                </span>
+                <span v-else>
+                    Keine Profile gefunden für "{{ searchQuery }}"
+                </span>
+                <button @click="clearSearch" class="clear-search-btn">Suche löschen</button>
+            </div>
+        </div>
+        
         <div v-if="loading" class="loading">
             <p>SAP Profile werden geladen...</p>
         </div>
         
-        <div v-else-if="profileGroups.length > 0" class="profile-groups">
-            <div v-for="group in profileGroups" :key="group.id" class="profile-group">
+        <div v-else-if="currentProfileGroups.length > 0" class="profile-groups">
+            <div v-for="group in currentProfileGroups" :key="group.id" class="profile-group">
                 <div class="group-header" @click="toggleGroup(group.id)">
                     <div class="group-header-content">
                         <h3>{{ group.name }}</h3>
@@ -33,9 +61,9 @@
                             >
                                 <div class="profile-header">
                                     <h5>{{ profile.name }}</h5>
-                                    <span class="profile-code">{{ profile.code }}</span>
                                 </div>
-                                <p class="profile-description">{{ profile.description }}</p>
+                                <span class="profile-code">{{ profile.code }}</span>
+                                <!-- <p class="profile-description">{{ profile.description }}</p>
                                 <div class="profile-permissions" v-if="profile.permissions && profile.permissions.length > 0">
                                     <span class="permissions-label">Berechtigungen:</span>
                                     <div class="permissions-list">
@@ -50,7 +78,7 @@
                                             + {{ profile.permissions.length - 3 }} weitere
                                         </span>
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                     </div>
@@ -105,6 +133,13 @@ const profileGroups = ref([]);
 const selectedProfiles = ref([]);
 const loading = ref(false);
 const expandedGroups = ref(new Set());
+const searchQuery = ref('');
+const searchResults = ref(null);
+const searchTimeout = ref(null);
+
+const currentProfileGroups = computed(() => {
+    return searchQuery.value && searchResults.value ? searchResults.value.groups : profileGroups.value;
+});
 
 const fetchSapProfiles = async () => {
     loading.value = true;
@@ -192,6 +227,52 @@ const goBack = () => {
 
 const continueToOptions = () => {
     emit('show-options');
+};
+
+const searchSapProfiles = async (query) => {
+    if (!query.trim()) {
+        searchResults.value = null;
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/sap/search?query=${encodeURIComponent(query)}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        searchResults.value = data;
+        
+        // Auto-expand all categories when search results are found
+        if (data.groups && data.groups.length > 0) {
+            expandedGroups.value = new Set(data.groups.map(group => group.id));
+        }
+    } catch (error) {
+        console.error('Fehler bei der SAP Profile Suche:', error);
+        searchResults.value = { groups: [], total_results: 0 };
+    }
+};
+
+const onSearchInput = () => {
+    // Clear existing timeout
+    if (searchTimeout.value) {
+        clearTimeout(searchTimeout.value);
+    }
+    
+    // Set new timeout for debounced search
+    searchTimeout.value = setTimeout(() => {
+        searchSapProfiles(searchQuery.value);
+    }, 300); // 300ms delay for live search
+};
+
+const clearSearch = () => {
+    searchQuery.value = '';
+    searchResults.value = null;
+    // Reset expanded groups to initial state when clearing search
+    expandedGroups.value = new Set();
+    if (searchTimeout.value) {
+        clearTimeout(searchTimeout.value);
+    }
 };
 
 onMounted(async () => {
@@ -488,5 +569,72 @@ onMounted(async () => {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+.search-section {
+    margin-bottom: 2rem;
+}
+
+.search-input-container {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    border: 2px solid var(--color-border);
+    border-radius: 0.5rem;
+    background: var(--color-background);
+    color: var(--color-text);
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--color-button);
+    box-shadow: 0 0 0 3px rgba(var(--color-button-rgb, 59, 130, 246), 0.1);
+}
+
+.search-input::placeholder {
+    color: var(--color-text-muted);
+}
+
+.search-icon {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    pointer-events: none;
+}
+
+.search-results-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: var(--color-background-soft);
+    border-radius: 0.25rem;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.clear-search-btn {
+    background: none !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-text-muted) !important;
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 0.25rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clear-search-btn:hover {
+    background: var(--color-background-mute) !important;
+    border-color: var(--color-button) !important;
+    color: var(--color-text) !important;
 }
 </style>

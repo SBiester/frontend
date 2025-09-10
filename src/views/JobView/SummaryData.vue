@@ -53,6 +53,10 @@
 				<div class="summary-item" v-if="ju.aenderung_zum">
 					<strong>Änderung zum:</strong> {{ formatDate(ju.aenderung_zum) }}
 				</div>
+				<div class="summary-item" v-if="ju.kommentar">
+					<strong>Kommentare:</strong> 
+					<div class="comment-text">{{ ju.kommentar }}</div>
+				</div>
 			</div>
 		</div>
 
@@ -115,7 +119,7 @@
 						<span class="sap-profile-name">{{ profile.name }}</span>
 						<span class="sap-profile-code">{{ profile.code }}</span>
 					</div>
-					<div v-if="profile.description" class="sap-profile-description">
+					<!-- <div v-if="profile.description" class="sap-profile-description">
 						{{ profile.description }}
 					</div>
 					<div v-if="profile.permissions && profile.permissions.length > 0" class="sap-profile-permissions">
@@ -132,7 +136,7 @@
 								+{{ profile.permissions.length - 5 }} weitere
 							</span>
 						</div>
-					</div>
+					</div> -->
 				</div>
 			</div>
 		</div>
@@ -290,6 +294,7 @@ const clearJobUpdateStore = () => {
 		additionalSoftware: [],
 		sapProfiles: [],
 		selectedSap: false,
+		kommentar: '',
 		additionalOptions: {
 			telefonnummer: false,
 			tuerschild: false,
@@ -377,6 +382,17 @@ onMounted(() => {
 	background: var(--color-background-mute);
 	border-radius: 0.3rem;
 	border-left: 3px solid var(--color-button);
+}
+
+.comment-text {
+	margin-top: 0.5rem;
+	padding: 0.5rem;
+	background: var(--color-background-soft);
+	border-radius: 0.25rem;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+	font-style: italic;
+	color: var(--color-text-muted);
 }
 
 .profile-item {
