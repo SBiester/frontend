@@ -10,18 +10,18 @@
 			<!-- Tab Navigation -->
 			<div class="tab-navigation">
 				<button 
-					@click="activeTab = 'groups'" 
-					:class="{ 'active': activeTab === 'groups' }"
-					class="tab-button"
-				>
-					Rollengruppen
-				</button>
-				<button 
 					@click="activeTab = 'profiles'" 
 					:class="{ 'active': activeTab === 'profiles' }"
 					class="tab-button"
 				>
 					SAP Profile
+				</button>
+				<button 
+					@click="activeTab = 'groups'" 
+					:class="{ 'active': activeTab === 'groups' }"
+					class="tab-button"
+				>
+					Rollengruppen
 				</button>
 			</div>
 
@@ -117,16 +117,14 @@
 					<table class="profiles-table">
 						<thead>
 							<tr>
-								<th>ID</th>
 								<th>Bezeichnung</th>
 								<th>Schlüssel</th>
 								<th>Rollengruppe</th>
-								<th>Aktionen</th>
+								<th class="text-right">Aktionen</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr v-for="profile in filteredProfiles" :key="profile.SammelrollenID" class="profile-row">
-								<td>{{ profile.SammelrollenID }}</td>
 								<td class="profile-name">{{ profile.Bezeichnung }}</td>
 								<td>
 									<code class="profile-key">{{ profile.Schluessel }}</code>
@@ -134,7 +132,7 @@
 								<td>
 									<span class="group-badge">{{ getGroupName(profile.RollengruppeID) }}</span>
 								</td>
-								<td>
+								<td class="text-right">
 									<div class="action-buttons">
 										<button @click="editProfile(profile)" class="action-btn edit">
 											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -161,7 +159,7 @@
 		<div v-if="showAddGroupForm" class="modal-overlay" @click="closeModals">
 			<div class="modal-content" @click.stop>
 				<div class="modal-header">
-					<h3>Neue Rollengruppe hinzufügen</h3>
+					<h3>{{ editingGroup ? 'Rollengruppe bearbeiten' : 'Neue Rollengruppe hinzufügen' }}</h3>
 					<button @click="closeModals" class="close-btn">×</button>
 				</div>
 				<div class="modal-body">
@@ -172,7 +170,7 @@
 						</div>
 						<div class="modal-actions">
 							<button type="button" @click="closeModals" class="btn-secondary">Abbrechen</button>
-							<button type="submit" class="btn-primary">Rollengruppe hinzufügen</button>
+							<button type="submit" class="btn-primary">{{ editingGroup ? 'Aktualisieren' : 'Rollengruppe hinzufügen' }}</button>
 						</div>
 					</form>
 				</div>
@@ -183,7 +181,7 @@
 		<div v-if="showAddProfileForm" class="modal-overlay" @click="closeModals">
 			<div class="modal-content" @click.stop>
 				<div class="modal-header">
-					<h3>Neues SAP Profil hinzufügen</h3>
+					<h3>{{ editingProfile ? 'SAP Profil bearbeiten' : 'Neues SAP Profil hinzufügen' }}</h3>
 					<button @click="closeModals" class="close-btn">×</button>
 				</div>
 				<div class="modal-body">
@@ -207,7 +205,7 @@
 						</div>
 						<div class="modal-actions">
 							<button type="button" @click="closeModals" class="btn-secondary">Abbrechen</button>
-							<button type="submit" class="btn-primary">Profil hinzufügen</button>
+							<button type="submit" class="btn-primary">{{ editingProfile ? 'Aktualisieren' : 'Profil hinzufügen' }}</button>
 						</div>
 					</form>
 				</div>
@@ -224,7 +222,7 @@ import adminService from '@/services/adminService';
 
 const emit = defineEmits(['go-back']);
 
-const activeTab = ref('groups');
+const activeTab = ref('profiles');
 const profileSearchQuery = ref('');
 const selectedGroupFilter = ref('');
 
@@ -233,6 +231,9 @@ const sammelrollen = ref([]);
 
 const showAddGroupForm = ref(false);
 const showAddProfileForm = ref(false);
+
+const editingGroup = ref(null);
+const editingProfile = ref(null);
 
 const newGroup = ref({ Bezeichnung: '' });
 const newProfile = ref({ Bezeichnung: '', Schluessel: '', RollengruppeID: '' });
@@ -323,44 +324,98 @@ const getGroupName = (groupId) => {
 };
 
 const addGroup = async () => {
-	// TODO: Implement API call to add group
-	console.log('Add group:', newGroup.value);
-	closeModals();
+	try {
+		if (editingGroup.value) {
+			// Update existing group
+			const response = await adminService.updateSapRoleGroup(editingGroup.value, newGroup.value);
+			if (response && response.group) {
+				const index = rollengruppen.value.findIndex(g => g.RollengruppeID === editingGroup.value);
+				if (index !== -1) {
+					rollengruppen.value[index] = response.group;
+				}
+			}
+		} else {
+			// Create new group
+			const response = await adminService.createSapRoleGroup(newGroup.value);
+			if (response && response.group) {
+				rollengruppen.value.push(response.group);
+			}
+		}
+		closeModals();
+		await loadRollengruppen(); // Reload to get fresh data
+	} catch (error) {
+		console.error('Fehler beim Speichern der Rollengruppe:', error);
+		alert('Fehler beim Speichern der Rollengruppe: ' + (error.response?.data?.message || error.message));
+	}
 };
 
 const addProfile = async () => {
-	// TODO: Implement API call to add profile
-	console.log('Add profile:', newProfile.value);
-	closeModals();
+	try {
+		if (editingProfile.value) {
+			// Update existing profile
+			const response = await adminService.updateSapRole(editingProfile.value, newProfile.value);
+			if (response && response.role) {
+				const index = sammelrollen.value.findIndex(p => p.SammelrollenID === editingProfile.value);
+				if (index !== -1) {
+					sammelrollen.value[index] = response.role;
+				}
+			}
+		} else {
+			// Create new profile
+			const response = await adminService.createSapRole(newProfile.value);
+			if (response && response.role) {
+				sammelrollen.value.push(response.role);
+			}
+		}
+		closeModals();
+		await loadSammelrollen(); // Reload to get fresh data
+	} catch (error) {
+		console.error('Fehler beim Speichern des SAP Profils:', error);
+		alert('Fehler beim Speichern des SAP Profils: ' + (error.response?.data?.message || error.message));
+	}
 };
 
 const editGroup = (group) => {
-	console.log('Edit group:', group);
-	// TODO: Implement edit functionality
+	newGroup.value = { ...group };
+	editingGroup.value = group.RollengruppeID;
+	showAddGroupForm.value = true;
 };
 
-const deleteGroup = (group) => {
+const deleteGroup = async (group) => {
 	if (confirm(`Rollengruppe "${group.Bezeichnung}" wirklich löschen?`)) {
-		// TODO: Implement API call to delete group
-		console.log('Delete group:', group);
+		try {
+			await adminService.deleteSapRoleGroup(group.RollengruppeID);
+			rollengruppen.value = rollengruppen.value.filter(g => g.RollengruppeID !== group.RollengruppeID);
+		} catch (error) {
+			console.error('Fehler beim Löschen der Rollengruppe:', error);
+			alert('Fehler beim Löschen der Rollengruppe: ' + (error.response?.data?.message || error.message));
+		}
 	}
 };
 
 const editProfile = (profile) => {
-	console.log('Edit profile:', profile);
-	// TODO: Implement edit functionality
+	newProfile.value = { ...profile };
+	editingProfile.value = profile.SammelrollenID;
+	showAddProfileForm.value = true;
 };
 
-const deleteProfile = (profile) => {
+const deleteProfile = async (profile) => {
 	if (confirm(`SAP Profil "${profile.Bezeichnung}" wirklich löschen?`)) {
-		// TODO: Implement API call to delete profile
-		console.log('Delete profile:', profile);
+		try {
+			await adminService.deleteSapRole(profile.SammelrollenID);
+			sammelrollen.value = sammelrollen.value.filter(p => p.SammelrollenID !== profile.SammelrollenID);
+		} catch (error) {
+			console.error('Fehler beim Löschen des SAP Profils:', error);
+			alert('Fehler beim Löschen des SAP Profils: ' + (error.response?.data?.message || error.message));
+		}
 	}
 };
 
 const closeModals = () => {
 	showAddGroupForm.value = false;
 	showAddProfileForm.value = false;
+	editingGroup.value = null;
+	editingProfile.value = null;
 	newGroup.value = { Bezeichnung: '' };
 	newProfile.value = { Bezeichnung: '', Schluessel: '', RollengruppeID: '' };
 };
@@ -609,6 +664,7 @@ onMounted(async () => {
 .action-buttons {
 	display: flex;
 	gap: 0.5rem;
+	justify-content: flex-end;
 }
 
 .action-btn {
@@ -786,5 +842,9 @@ onMounted(async () => {
 	.profiles-table td {
 		padding: 0.5rem;
 	}
+}
+
+.text-right {
+	text-align: right !important;
 }
 </style>

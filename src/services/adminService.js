@@ -96,6 +96,47 @@ class AdminService {
     }
   }
 
+  // Hardware Categories Management
+  async getHardwareCategories() {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/admin/hardware/categories`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching hardware categories:', error)
+      throw error
+    }
+  }
+
+  async createHardwareCategory(categoryData) {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/admin/hardware/categories`, categoryData)
+      return response.data
+    } catch (error) {
+      console.error('Error creating hardware category:', error)
+      throw error
+    }
+  }
+
+  async updateHardwareCategory(id, categoryData) {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/admin/hardware/categories/${id}`, categoryData)
+      return response.data
+    } catch (error) {
+      console.error('Error updating hardware category:', error)
+      throw error
+    }
+  }
+
+  async deleteHardwareCategory(id) {
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/admin/hardware/categories/${id}`)
+      return response.data
+    } catch (error) {
+      console.error('Error deleting hardware category:', error)
+      throw error
+    }
+  }
+
   // Software Management
   async getSoftwareItems(params = {}) {
     try {
@@ -133,6 +174,47 @@ class AdminService {
       return response.data
     } catch (error) {
       console.error('Error deleting software item:', error)
+      throw error
+    }
+  }
+
+  // Software Manufacturers Management
+  async getSoftwareManufacturers() {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/admin/software/manufacturers`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching software manufacturers:', error)
+      throw error
+    }
+  }
+
+  async createSoftwareManufacturer(manufacturerData) {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/admin/software/manufacturers`, manufacturerData)
+      return response.data
+    } catch (error) {
+      console.error('Error creating software manufacturer:', error)
+      throw error
+    }
+  }
+
+  async updateSoftwareManufacturer(id, manufacturerData) {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/admin/software/manufacturers/${id}`, manufacturerData)
+      return response.data
+    } catch (error) {
+      console.error('Error updating software manufacturer:', error)
+      throw error
+    }
+  }
+
+  async deleteSoftwareManufacturer(id) {
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/admin/software/manufacturers/${id}`)
+      return response.data
+    } catch (error) {
+      console.error('Error deleting software manufacturer:', error)
       throw error
     }
   }

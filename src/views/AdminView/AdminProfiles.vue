@@ -15,7 +15,7 @@
             @input="handleSearch"
             type="text" 
             class="search-input"
-            placeholder="Profile durchsuchen (Name, Kategorie, Beschreibung)..."
+            placeholder="Profile durchsuchen (Name, Bereich, Sachbereich & Team)..."
           />
           <div class="search-icon">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -57,8 +57,8 @@
           <thead>
             <tr>
               <th>Profil Name</th>
-              <th>Kategorie</th>
-              <th>Beschreibung</th>
+              <th>Bereich</th>
+              <th>Sachbereich & Team</th>
               <th>Hardware</th>
               <th>Software</th>
               <th>SAP Profile</th>
@@ -78,7 +78,7 @@
                 </div>
               </td>
               <td>
-                <span class="category-badge">{{ profile.category }}</span>
+                <span class="category-badge">{{ profile.bereich }}</span>
               </td>
               <td class="description">{{ profile.description }}</td>
               <td class="count">{{ profile.hardwareCount }}</td>
@@ -324,6 +324,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+import adminService from '@/services/adminService'
 
 const emit = defineEmits(['go-back'])
     // Reactive state

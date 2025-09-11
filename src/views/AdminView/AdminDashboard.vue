@@ -2,8 +2,28 @@
 <div>
 	<hr class="shadow-line" />
 	<div class="ref">
-		<h2>Administrationsbereich</h2>
-		<p>Verwalte Benutzer, Rollen, Hardware, Software und Referenzprofile</p>
+		<div class="dashboard-header">
+			<div>
+				<h2>Administrationsbereich</h2>
+				<p>Verwalte Benutzer, Rollen, Hardware, Software und Referenzprofile</p>
+			</div>
+			<div class="refresh-info">
+				<div class="last-update" v-if="lastUpdate">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<polyline points="23 4 23 10 17 10"></polyline>
+						<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+					</svg>
+					Aktualisiert: {{ lastUpdate }}
+				</div>
+				<button @click="loadStatistics" class="manual-refresh-btn" :disabled="isLoading">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" :class="{ 'rotating': isLoading }">
+						<polyline points="23 4 23 10 17 10"></polyline>
+						<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+					</svg>
+					{{ isLoading ? 'Lädt...' : 'Aktualisieren' }}
+				</button>
+			</div>
+		</div>
 		<hr class="shadow-line" />
 		
 		<div class="admin-modules">
@@ -37,7 +57,7 @@
 						</div>
 						<h3>Rollen & SAP Profile</h3>
 					</div>
-					<p>Rollengruppen und SAP-Profile verwalten, Berechtigungen definieren</p>
+					<p>Rollengruppen und SAP-Profile verwalten</p>
 					<div class="module-stats">
 						<span class="stat-item">{{ roleStats.groups }} Rollengruppen</span>
 						<span class="stat-item">{{ roleStats.profiles }} SAP Profile</span>
@@ -130,7 +150,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 
 const emit = defineEmits(['show-users', 'show-roles', 'show-hardware', 'show-software', 'show-profiles', 'back-to-navigation']);
 
@@ -164,11 +184,15 @@ const systemStats = ref({
 	pendingRequests: 0
 });
 
+const isLoading = ref(false);
+const lastUpdate = ref(null);
+
 import adminService from '@/services/adminService';
 
 // Load statistics
 const loadStatistics = async () => {
 	try {
+		isLoading.value = true;
 		const stats = await adminService.getDashboardStats();
 		
 		// Update stats with API data
@@ -191,13 +215,20 @@ const loadStatistics = async () => {
 			softwareStats.value.manufacturers = stats.software.manufacturers;
 		}
 		
-		// Referenzprofil-Statistiken (Mock)
-		profileStats.value.total = 42;
-		profileStats.value.departments = 8;
+		// Profile-Statistiken
+		if (stats.profiles) {
+			profileStats.value.total = stats.profiles.total;
+			profileStats.value.departments = stats.profiles.departments;
+		}
 		
-		// System-Statistiken (Mock)
-		systemStats.value.activeUsers = 23;
-		systemStats.value.pendingRequests = 5;
+		// Order/System-Statistiken
+		if (stats.orders) {
+			systemStats.value.activeUsers = stats.orders.active;
+			systemStats.value.pendingRequests = stats.orders.pending;
+		}
+		
+		// Update last update time
+		lastUpdate.value = new Date().toLocaleTimeString('de-DE');
 		
 	} catch (error) {
 		console.error('Fehler beim Laden der Statistiken:', error);
@@ -209,11 +240,33 @@ const loadStatistics = async () => {
 		hardwareStats.value.categories = 12;
 		softwareStats.value.total = 87;
 		softwareStats.value.manufacturers = 23;
+	} finally {
+		isLoading.value = false;
 	}
 };
 
-onMounted(() => {
+// Auto-refresh setup
+const refreshInterval = ref(null);
+
+// Load statistics with auto-refresh
+const startAutoRefresh = () => {
+	// Load initially
 	loadStatistics();
+	
+	// Set up auto-refresh every 30 seconds
+	refreshInterval.value = setInterval(() => {
+		loadStatistics();
+	}, 30000);
+};
+
+onMounted(() => {
+	startAutoRefresh();
+});
+
+onUnmounted(() => {
+	if (refreshInterval.value) {
+		clearInterval(refreshInterval.value);
+	}
 });
 </script>
 
@@ -221,6 +274,61 @@ onMounted(() => {
 .ref {
 	max-width: 1200px;
 	margin: 0 auto;
+}
+
+.dashboard-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 2rem;
+	margin-bottom: 1rem;
+}
+
+.refresh-info {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	align-items: flex-end;
+}
+
+.last-update {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	color: var(--color-text-muted);
+	font-size: 0.85rem;
+}
+
+.manual-refresh-btn {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0.75rem !important;
+	background: var(--color-button) !important;
+	color: var(--color-text) !important;
+	border: none !important;
+	border-radius: 0.25rem;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	font-size: 0.85rem;
+}
+
+.manual-refresh-btn:hover:not(:disabled) {
+	background: var(--color-button-hover) !important;
+}
+
+.manual-refresh-btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.rotating {
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
 }
 
 .admin-modules {
@@ -350,6 +458,18 @@ onMounted(() => {
 @media (max-width: 640px) {
 	.ref {
 		width: 95%;
+	}
+	
+	.dashboard-header {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 1rem;
+	}
+	
+	.refresh-info {
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
 	}
 	
 	.module-card {

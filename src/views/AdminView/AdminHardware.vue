@@ -7,56 +7,113 @@
 		<hr class="shadow-line" />
 		
 		<div class="hardware-management">
-			<!-- Controls -->
-			<div class="controls-section">
-				<div class="search-input-container">
-					<input 
-						v-model="searchQuery"
-						@input="onSearchInput"
-						type="text" 
-						class="search-input"
-						placeholder="Hardware durchsuchen (Name, Kategorie, Spezifikationen)..."
-					/>
-					<div class="search-icon">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<circle cx="11" cy="11" r="8"></circle>
-							<path d="m21 21-4.35-4.35"></path>
-						</svg>
-					</div>
-				</div>
-				
-				<div class="filter-controls">
-					<select v-model="selectedCategory" class="filter-select">
-						<option value="">Alle Kategorien</option>
-						<option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
-					</select>
-					
-					<select v-model="selectedStatus" class="filter-select">
-						<option value="">Alle Status</option>
-						<option value="available">Verfügbar</option>
-						<option value="assigned">Zugewiesen</option>
-						<option value="maintenance">Wartung</option>
-					</select>
-					
-					<button @click="showAddHardwareForm = true" class="add-button">
+			<!-- Tab Navigation -->
+			<div class="tab-navigation">
+				<button 
+					@click="activeTab = 'hardware'" 
+					:class="{ 'active': activeTab === 'hardware' }"
+					class="tab-button"
+				>
+					Hardware
+				</button>
+				<button 
+					@click="activeTab = 'categories'" 
+					:class="{ 'active': activeTab === 'categories' }"
+					class="tab-button"
+				>
+					Kategorien
+				</button>
+			</div>
+
+			<!-- Kategorien Tab -->
+			<div v-if="activeTab === 'categories'" class="tab-content">
+				<div class="section-header">
+					<h3>Hardware-Kategorien</h3>
+					<button @click="showAddCategoryForm = true" class="add-button">
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 							<path d="M12 5v14m7-7H5"></path>
 						</svg>
-						Hardware hinzufügen
+						Neue Kategorie
 					</button>
+				</div>
+				
+				<div class="categories-grid">
+					<div v-for="category in categories" :key="category.id" class="category-card">
+						<div class="category-header">
+							<h4>{{ category.name }}</h4>
+							<div class="category-actions">
+								<button @click="editCategory(category)" class="action-btn edit">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+										<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+										<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+									</svg>
+								</button>
+								<button @click="deleteCategory(category)" class="action-btn delete">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+										<polyline points="3,6 5,6 21,6"></polyline>
+										<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+									</svg>
+								</button>
+							</div>
+						</div>
+						<div class="category-stats">
+							<span class="stat-badge">{{ category.hardware_count }} Hardware-Elemente</span>
+						</div>
+					</div>
 				</div>
 			</div>
 
-			<!-- Hardware Grid -->
-			<div v-if="searchQuery && searchResults" class="search-results">
-				<div v-if="searchResults.categories && searchResults.categories.length > 0">
-					<div v-for="category in searchResults.categories" :key="category.category" class="search-category">
-						<h3>{{ category.category }} ({{ category.items.length }})</h3>
-						<div class="hardware-grid">
-							<div v-for="item in category.items" :key="item.id" class="hardware-card">
-								<div class="card-header">
-									<h4>{{ item.name }}</h4>
-									<div class="card-actions">
+			<!-- Hardware Tab -->
+			<div v-if="activeTab === 'hardware'" class="tab-content">
+				<div class="section-header">
+					<h3>Hardware-Elemente</h3>
+					<div class="hardware-controls">
+						<div class="search-input-container">
+							<input 
+								v-model="hardwareSearchQuery"
+								type="text" 
+								class="search-input"
+								placeholder="Hardware durchsuchen..."
+							/>
+							<div class="search-icon">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<circle cx="11" cy="11" r="8"></circle>
+									<path d="m21 21-4.35-4.35"></path>
+								</svg>
+							</div>
+						</div>
+						<select v-model="selectedCategoryFilter" class="filter-select">
+							<option value="">Alle Kategorien</option>
+							<option v-for="category in categories" :key="category.id" :value="category.id">
+								{{ category.name }}
+							</option>
+						</select>
+						<button @click="showAddHardwareForm = true" class="add-button">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M12 5v14m7-7H5"></path>
+							</svg>
+							Neue Hardware
+						</button>
+					</div>
+				</div>
+
+				<div class="hardware-table-container">
+					<table class="hardware-table">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Kategorie</th>
+								<th class="text-right">Aktionen</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="item in filteredHardware" :key="item.id" class="hardware-row">
+								<td class="hardware-name">{{ item.name }}</td>
+								<td>
+									<span class="category-badge">{{ getCategoryName(item.category_id) }}</span>
+								</td>
+								<td class="text-right">
+									<div class="action-buttons">
 										<button @click="editHardware(item)" class="action-btn edit">
 											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 												<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -70,83 +127,42 @@
 											</svg>
 										</button>
 									</div>
-								</div>
-								<div class="card-content">
-									<div class="item-info">
-										<span class="category-badge">{{ item.category }}</span>
-										<span :class="`status-badge ${item.assigned ? 'assigned' : 'available'}`">
-											{{ item.assigned ? 'Zugewiesen' : 'Verfügbar' }}
-										</span>
-									</div>
-									<p class="specifications">{{ item.specifications }}</p>
-									<div class="item-meta">
-										<span class="item-id">ID: {{ item.id }}</span>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div v-else class="no-results">
-					<p>Keine Hardware gefunden für "{{ searchQuery }}"</p>
+								</td>
+							</tr>
+						</tbody>
+					</table>
 				</div>
 			</div>
+		</div>
 
-			<!-- Category-based display (when not searching) -->
-			<div v-else class="categories-display">
-				<div v-for="category in filteredCategories" :key="category.name" class="category-section">
-					<div class="category-header">
-						<h3>{{ category.name }} ({{ category.items.length }})</h3>
-						<button @click="toggleCategory(category.name)" class="toggle-btn">
-							<span :class="{ 'expanded': expandedCategories.has(category.name) }">
-								{{ expandedCategories.has(category.name) ? '−' : '+' }}
-							</span>
-						</button>
-					</div>
-					
-					<div v-if="expandedCategories.has(category.name)" class="hardware-grid">
-						<div v-for="item in category.items" :key="item.id" class="hardware-card">
-							<div class="card-header">
-								<h4>{{ item.name }}</h4>
-								<div class="card-actions">
-									<button @click="editHardware(item)" class="action-btn edit">
-										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-											<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-										</svg>
-									</button>
-									<button @click="deleteHardware(item)" class="action-btn delete">
-										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<polyline points="3,6 5,6 21,6"></polyline>
-											<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-										</svg>
-									</button>
-								</div>
-							</div>
-							<div class="card-content">
-								<div class="item-info">
-									<span class="category-badge">{{ item.category }}</span>
-									<span :class="`status-badge ${item.assigned ? 'assigned' : 'available'}`">
-										{{ item.assigned ? 'Zugewiesen' : 'Verfügbar' }}
-									</span>
-								</div>
-								<p class="specifications">{{ item.specifications }}</p>
-								<div class="item-meta">
-									<span class="item-id">ID: {{ item.id }}</span>
-								</div>
-							</div>
+		<!-- Add Category Modal -->
+		<div v-if="showAddCategoryForm" class="modal-overlay" @click="closeModals">
+			<div class="modal-content" @click.stop>
+				<div class="modal-header">
+					<h3>{{ editingCategory ? 'Kategorie bearbeiten' : 'Neue Kategorie hinzufügen' }}</h3>
+					<button @click="closeModals" class="close-btn">×</button>
+				</div>
+				<div class="modal-body">
+					<form @submit.prevent="addCategory">
+						<div class="form-group">
+							<label>Name</label>
+							<input v-model="newCategory.name" type="text" required class="form-input">
 						</div>
-					</div>
+						<div class="modal-actions">
+							<button type="button" @click="closeModals" class="btn-secondary">Abbrechen</button>
+							<button type="submit" class="btn-primary">{{ editingCategory ? 'Aktualisieren' : 'Kategorie hinzufügen' }}</button>
+						</div>
+					</form>
 				</div>
 			</div>
 		</div>
 
 		<!-- Add Hardware Modal -->
-		<div v-if="showAddHardwareForm" class="modal-overlay" @click="closeModal">
+		<div v-if="showAddHardwareForm" class="modal-overlay" @click="closeModals">
 			<div class="modal-content" @click.stop>
 				<div class="modal-header">
-					<h3>Neue Hardware hinzufügen</h3>
-					<button @click="closeModal" class="close-btn">×</button>
+					<h3>{{ editingHardware ? 'Hardware bearbeiten' : 'Neue Hardware hinzufügen' }}</h3>
+					<button @click="closeModals" class="close-btn">×</button>
 				</div>
 				<div class="modal-body">
 					<form @submit.prevent="addHardware">
@@ -156,24 +172,16 @@
 						</div>
 						<div class="form-group">
 							<label>Kategorie</label>
-							<select v-model="newHardware.category" required class="form-input">
+							<select v-model="newHardware.category_id" required class="form-input">
 								<option value="">Kategorie wählen</option>
-								<option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
+								<option v-for="category in categories" :key="category.id" :value="category.id">
+									{{ category.name }}
+								</option>
 							</select>
 						</div>
-						<div class="form-group">
-							<label>Spezifikationen</label>
-							<textarea v-model="newHardware.specifications" required class="form-input" rows="3"></textarea>
-						</div>
-						<div class="form-group">
-							<label>
-								<input v-model="newHardware.assigned" type="checkbox">
-								Bereits zugewiesen
-							</label>
-						</div>
 						<div class="modal-actions">
-							<button type="button" @click="closeModal" class="btn-secondary">Abbrechen</button>
-							<button type="submit" class="btn-primary">Hardware hinzufügen</button>
+							<button type="button" @click="closeModals" class="btn-secondary">Abbrechen</button>
+							<button type="submit" class="btn-primary">{{ editingHardware ? 'Aktualisieren' : 'Hardware hinzufügen' }}</button>
 						</div>
 					</form>
 				</div>
@@ -186,154 +194,172 @@
 
 <script setup>
 import { onMounted, ref, computed } from 'vue';
+import adminService from '@/services/adminService';
 
 const emit = defineEmits(['go-back']);
 
-const searchQuery = ref('');
-const selectedCategory = ref('');
-const selectedStatus = ref('');
-const searchResults = ref(null);
-const searchTimeout = ref(null);
+const activeTab = ref('hardware');
+const hardwareSearchQuery = ref('');
+const selectedCategoryFilter = ref('');
 
-const hardwareItems = ref([]);
 const categories = ref([]);
-const expandedCategories = ref(new Set(['Laptop', 'Monitor'])); // Default expanded
+const hardwareItems = ref([]);
 
+const showAddCategoryForm = ref(false);
 const showAddHardwareForm = ref(false);
-const newHardware = ref({
-	name: '',
-	category: '',
-	specifications: '',
-	assigned: false
-});
 
-const loadHardware = async () => {
-	try {
-		const response = await fetch('/api/hardware');
-		if (response.ok) {
-			const data = await response.json();
-			hardwareItems.value = data.hardware || [];
-		}
-	} catch (error) {
-		console.error('Fehler beim Laden der Hardware:', error);
-	}
-};
+const editingCategory = ref(null);
+const editingHardware = ref(null);
+
+const newCategory = ref({ name: '' });
+const newHardware = ref({ name: '', category_id: '' });
 
 const loadCategories = async () => {
 	try {
-		const response = await fetch('/api/hardware/categories');
-		if (response.ok) {
-			const data = await response.json();
-			categories.value = data.categories || [];
-		}
+		const data = await adminService.getHardwareCategories();
+		categories.value = data || [];
 	} catch (error) {
 		console.error('Fehler beim Laden der Kategorien:', error);
+		categories.value = [];
 	}
 };
 
-const filteredCategories = computed(() => {
-	let items = [...hardwareItems.value];
-	
-	if (selectedCategory.value) {
-		items = items.filter(item => item.category === selectedCategory.value);
-	}
-	
-	if (selectedStatus.value) {
-		if (selectedStatus.value === 'assigned') {
-			items = items.filter(item => item.assigned);
-		} else if (selectedStatus.value === 'available') {
-			items = items.filter(item => !item.assigned);
-		}
-	}
-	
-	// Group by category
-	const grouped = {};
-	items.forEach(item => {
-		if (!grouped[item.category]) {
-			grouped[item.category] = [];
-		}
-		grouped[item.category].push(item);
-	});
-	
-	return Object.keys(grouped).map(category => ({
-		name: category,
-		items: grouped[category]
-	}));
-});
-
-const searchHardware = async (query) => {
-	if (!query.trim()) {
-		searchResults.value = null;
-		return;
-	}
-	
+const loadHardware = async () => {
 	try {
-		const response = await fetch(`/api/hardware/search?query=${encodeURIComponent(query)}`);
-		if (response.ok) {
-			const data = await response.json();
-			searchResults.value = data;
+		const data = await adminService.getHardwareItems();
+		if (data && data.data) {
+			hardwareItems.value = data.data;
+		} else {
+			hardwareItems.value = data || [];
 		}
 	} catch (error) {
-		console.error('Fehler bei der Hardware Suche:', error);
-		searchResults.value = { categories: [], total_results: 0 };
+		console.error('Fehler beim Laden der Hardware:', error);
+		hardwareItems.value = [];
 	}
 };
 
-const onSearchInput = () => {
-	if (searchTimeout.value) {
-		clearTimeout(searchTimeout.value);
+const filteredHardware = computed(() => {
+	let filtered = hardwareItems.value;
+	
+	if (hardwareSearchQuery.value) {
+		const query = hardwareSearchQuery.value.toLowerCase();
+		filtered = filtered.filter(item => 
+			item.name.toLowerCase().includes(query)
+		);
 	}
 	
-	searchTimeout.value = setTimeout(() => {
-		searchHardware(searchQuery.value);
-	}, 300);
+	if (selectedCategoryFilter.value) {
+		filtered = filtered.filter(item => item.category_id == selectedCategoryFilter.value);
+	}
+	
+	return filtered;
+});
+
+const getCategoryName = (categoryId) => {
+	const category = categories.value.find(c => c.id === categoryId);
+	return category ? category.name : 'Unbekannt';
 };
 
-const toggleCategory = (categoryName) => {
-	if (expandedCategories.value.has(categoryName)) {
-		expandedCategories.value.delete(categoryName);
-	} else {
-		expandedCategories.value.add(categoryName);
+const addCategory = async () => {
+	try {
+		if (editingCategory.value) {
+			// Update existing category
+			const response = await adminService.updateHardwareCategory(editingCategory.value, newCategory.value);
+			if (response && response.category) {
+				const index = categories.value.findIndex(c => c.id === editingCategory.value);
+				if (index !== -1) {
+					categories.value[index] = response.category;
+				}
+			}
+		} else {
+			// Create new category
+			const response = await adminService.createHardwareCategory(newCategory.value);
+			if (response && response.category) {
+				categories.value.push(response.category);
+			}
+		}
+		closeModals();
+		await loadCategories(); // Reload to get fresh data
+	} catch (error) {
+		console.error('Fehler beim Speichern der Kategorie:', error);
+		alert('Fehler beim Speichern der Kategorie: ' + (error.response?.data?.message || error.message));
+	}
+};
+
+const addHardware = async () => {
+	try {
+		if (editingHardware.value) {
+			// Update existing hardware
+			const response = await adminService.updateHardwareItem(editingHardware.value, newHardware.value);
+			if (response && response.hardware) {
+				const index = hardwareItems.value.findIndex(h => h.id === editingHardware.value);
+				if (index !== -1) {
+					hardwareItems.value[index] = response.hardware;
+				}
+			}
+		} else {
+			// Create new hardware
+			const response = await adminService.createHardwareItem(newHardware.value);
+			if (response && response.hardware) {
+				hardwareItems.value.push(response.hardware);
+			}
+		}
+		closeModals();
+		await loadHardware(); // Reload to get fresh data
+	} catch (error) {
+		console.error('Fehler beim Speichern der Hardware:', error);
+		alert('Fehler beim Speichern der Hardware: ' + (error.response?.data?.message || error.message));
+	}
+};
+
+const editCategory = (category) => {
+	newCategory.value = { ...category };
+	editingCategory.value = category.id;
+	showAddCategoryForm.value = true;
+};
+
+const deleteCategory = async (category) => {
+	if (confirm(`Kategorie "${category.name}" wirklich löschen?`)) {
+		try {
+			await adminService.deleteHardwareCategory(category.id);
+			categories.value = categories.value.filter(c => c.id !== category.id);
+		} catch (error) {
+			console.error('Fehler beim Löschen der Kategorie:', error);
+			alert('Fehler beim Löschen der Kategorie: ' + (error.response?.data?.message || error.message));
+		}
 	}
 };
 
 const editHardware = (item) => {
-	console.log('Edit hardware:', item);
-	// TODO: Implement edit functionality
+	newHardware.value = { ...item };
+	editingHardware.value = item.id;
+	showAddHardwareForm.value = true;
 };
 
-const deleteHardware = (item) => {
+const deleteHardware = async (item) => {
 	if (confirm(`Hardware "${item.name}" wirklich löschen?`)) {
-		const index = hardwareItems.value.findIndex(h => h.id === item.id);
-		if (index > -1) {
-			hardwareItems.value.splice(index, 1);
+		try {
+			await adminService.deleteHardwareItem(item.id);
+			hardwareItems.value = hardwareItems.value.filter(h => h.id !== item.id);
+		} catch (error) {
+			console.error('Fehler beim Löschen der Hardware:', error);
+			alert('Fehler beim Löschen der Hardware: ' + (error.response?.data?.message || error.message));
 		}
 	}
 };
 
-const addHardware = () => {
-	const hardware = {
-		id: Date.now(),
-		...newHardware.value
-	};
-	
-	hardwareItems.value.push(hardware);
-	closeModal();
-};
-
-const closeModal = () => {
+const closeModals = () => {
+	showAddCategoryForm.value = false;
 	showAddHardwareForm.value = false;
-	newHardware.value = {
-		name: '',
-		category: '',
-		specifications: '',
-		assigned: false
-	};
+	editingCategory.value = null;
+	editingHardware.value = null;
+	newCategory.value = { name: '' };
+	newHardware.value = { name: '', category_id: '' };
 };
 
 onMounted(async () => {
-	await loadHardware();
 	await loadCategories();
+	await loadHardware();
 });
 </script>
 
@@ -343,44 +369,76 @@ onMounted(async () => {
 	margin: 0 auto;
 }
 
-.controls-section {
+.tab-navigation {
+	display: flex;
+	gap: 1rem;
 	margin-bottom: 2rem;
+	border-bottom: 1px solid var(--color-border);
 }
 
-.search-input-container {
-	position: relative;
-	margin-bottom: 1rem;
-}
-
-.search-input {
-	width: 100%;
-	padding: 0.75rem 2.5rem 0.75rem 1rem;
-	border: 2px solid var(--color-border);
-	border-radius: 0.5rem;
-	background: var(--color-background);
-	color: var(--color-text);
-	font-size: 1rem;
+.tab-button {
+	padding: 0.75rem 1.5rem !important;
+	background: none !important;
+	border: none !important;
+	color: var(--color-text-muted) !important;
+	cursor: pointer;
 	transition: all 0.2s ease;
+	border-bottom: 2px solid transparent !important;
 }
 
-.search-input:focus {
-	outline: none;
-	border-color: var(--color-button);
+.tab-button:hover {
+	color: var(--color-text) !important;
 }
 
-.search-icon {
-	position: absolute;
-	right: 0.75rem;
-	top: 50%;
-	transform: translateY(-50%);
-	color: var(--color-text-muted);
+.tab-button.active {
+	color: var(--color-button) !important;
+	border-bottom-color: var(--color-button) !important;
 }
 
-.filter-controls {
+.tab-content {
+	margin-top: 1rem;
+}
+
+.section-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 2rem;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.section-header h3 {
+	margin: 0;
+	color: var(--color-text);
+}
+
+.hardware-controls {
 	display: flex;
 	gap: 1rem;
 	align-items: center;
 	flex-wrap: wrap;
+}
+
+.search-input-container {
+	position: relative;
+}
+
+.search-input {
+	padding: 0.5rem 2rem 0.5rem 0.75rem;
+	border: 1px solid var(--color-border);
+	border-radius: 0.25rem;
+	background: var(--color-background);
+	color: var(--color-text);
+	width: 250px;
+}
+
+.search-icon {
+	position: absolute;
+	right: 0.5rem;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--color-text-muted);
 }
 
 .filter-select {
@@ -408,70 +466,13 @@ onMounted(async () => {
 	background: var(--color-button-hover) !important;
 }
 
-.search-results,
-.categories-display {
-	margin-top: 2rem;
-}
-
-.search-category,
-.category-section {
-	margin-bottom: 2rem;
-}
-
-.search-category h3 {
-	color: var(--color-text);
-	margin-bottom: 1rem;
-	padding-bottom: 0.5rem;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.category-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 1rem;
-	padding: 1rem;
-	background: var(--color-background-mute);
-	border-radius: 0.5rem;
-	cursor: pointer;
-}
-
-.category-header h3 {
-	margin: 0;
-	color: var(--color-text);
-}
-
-.toggle-btn {
-	background: none !important;
-	border: 1px solid var(--color-border) !important;
-	color: var(--color-text) !important;
-	width: 2rem;
-	height: 2rem;
-	border-radius: 50%;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-weight: bold;
-	transition: all 0.2s ease;
-}
-
-.toggle-btn:hover {
-	background: var(--color-button) !important;
-	color: var(--color-text) !important;
-}
-
-.toggle-btn span.expanded {
-	transform: rotate(180deg);
-}
-
-.hardware-grid {
+.categories-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
 	gap: 1.5rem;
 }
 
-.hardware-card {
+.category-card {
 	background: var(--color-background);
 	border: 1px solid var(--color-border);
 	border-radius: 0.5rem;
@@ -479,86 +480,93 @@ onMounted(async () => {
 	transition: all 0.2s ease;
 }
 
-.hardware-card:hover {
+.category-card:hover {
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	transform: translateY(-1px);
 }
 
-.card-header {
+.category-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: flex-start;
 	margin-bottom: 1rem;
 }
 
-.card-header h4 {
+.category-header h4 {
 	margin: 0;
 	color: var(--color-text);
 	font-size: 1.1rem;
-	font-weight: 600;
 }
 
-.card-actions {
+.category-actions {
 	display: flex;
 	gap: 0.5rem;
 }
 
-.card-content {
-	margin-top: 1rem;
-}
-
-.item-info {
+.category-stats {
 	display: flex;
 	gap: 0.5rem;
 	margin-bottom: 1rem;
-	flex-wrap: wrap;
 }
 
-.category-badge {
-	background: var(--color-button);
+.stat-badge {
+	background: var(--color-background-soft);
 	color: var(--color-text);
 	padding: 0.25rem 0.5rem;
 	border-radius: 0.25rem;
 	font-size: 0.8rem;
-	font-weight: 500;
 }
 
-.status-badge {
+.hardware-table-container {
+	overflow-x: auto;
+	border: 1px solid var(--color-border);
+	border-radius: 0.5rem;
+}
+
+.hardware-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.hardware-table th {
+	background: var(--color-background-mute);
+	color: var(--color-text);
+	padding: 1rem;
+	text-align: left;
+	font-weight: 600;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.hardware-row {
+	border-bottom: 1px solid var(--color-border);
+	transition: background-color 0.2s ease;
+}
+
+.hardware-row:hover {
+	background: var(--color-background-soft);
+}
+
+.hardware-table td {
+	padding: 1rem;
+	vertical-align: middle;
+}
+
+.hardware-name {
+	font-weight: 500;
+	color: var(--color-text);
+}
+
+.category-badge {
+	background: var(--color-background-soft);
+	color: var(--color-text);
 	padding: 0.25rem 0.5rem;
 	border-radius: 0.25rem;
 	font-size: 0.8rem;
-	font-weight: 500;
 }
 
-.status-badge.available {
-	background: rgba(34, 197, 94, 0.1);
-	color: rgb(34, 197, 94);
-}
-
-.status-badge.assigned {
-	background: rgba(249, 115, 22, 0.1);
-	color: rgb(249, 115, 22);
-}
-
-.specifications {
-	color: var(--color-text-muted);
-	margin: 0 0 1rem 0;
-	font-size: 0.9rem;
-	line-height: 1.4;
-}
-
-.item-meta {
+.action-buttons {
 	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-top: 1rem;
-	padding-top: 1rem;
-	border-top: 1px solid var(--color-border);
-}
-
-.item-id {
-	font-size: 0.8rem;
-	color: var(--color-text-muted);
+	gap: 0.5rem;
+	justify-content: flex-end;
 }
 
 .action-btn {
@@ -589,13 +597,6 @@ onMounted(async () => {
 .action-btn.delete:hover {
 	background: rgb(239, 68, 68) !important;
 	color: white !important;
-}
-
-.no-results {
-	text-align: center;
-	padding: 3rem;
-	color: var(--color-text-muted);
-	font-style: italic;
 }
 
 /* Modal Styles */
@@ -696,20 +697,6 @@ onMounted(async () => {
 	cursor: pointer;
 }
 
-.navigation-buttons {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 1rem;
-	margin-top: 2rem;
-}
-
-.back-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-
 .shadow-line {
 	border: 0;
 	height: 1px;
@@ -717,22 +704,35 @@ onMounted(async () => {
 	margin: 2rem 0;
 }
 
+.text-right {
+	text-align: right !important;
+}
+
 @media (max-width: 768px) {
-	.hardware-grid {
-		grid-template-columns: 1fr;
-	}
-	
-	.filter-controls {
+	.section-header {
 		flex-direction: column;
 		align-items: stretch;
 	}
 	
-	.category-header {
-		padding: 0.75rem;
+	.hardware-controls {
+		flex-direction: column;
 	}
 	
-	.hardware-card {
-		padding: 1rem;
+	.search-input {
+		width: 100%;
+	}
+	
+	.categories-grid {
+		grid-template-columns: 1fr;
+	}
+	
+	.hardware-table {
+		font-size: 0.9rem;
+	}
+	
+	.hardware-table th,
+	.hardware-table td {
+		padding: 0.5rem;
 	}
 }
 </style>

@@ -7,54 +7,114 @@
 		<hr class="shadow-line" />
 		
 		<div class="software-management">
-			<!-- Controls -->
-			<div class="controls-section">
-				<div class="search-input-container">
-					<input 
-						v-model="searchQuery"
-						@input="onSearchInput"
-						type="text" 
-						class="search-input"
-						placeholder="Software durchsuchen (Name, Kategorie, Beschreibung)..."
-					/>
-					<div class="search-icon">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-							<circle cx="11" cy="11" r="8"></circle>
-							<path d="m21 21-4.35-4.35"></path>
-						</svg>
-					</div>
-				</div>
-				
-				<div class="filter-controls">
-					<select v-model="selectedCategory" class="filter-select">
-						<option value="">Alle Kategorien</option>
-						<option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
-					</select>
-					
-					<select v-model="selectedManufacturer" class="filter-select">
-						<option value="">Alle Hersteller</option>
-						<option v-for="manufacturer in manufacturers" :key="manufacturer" :value="manufacturer">{{ manufacturer }}</option>
-					</select>
-					
-					<button @click="showAddSoftwareForm = true" class="add-button">
+			<!-- Tab Navigation -->
+			<div class="tab-navigation">
+				<button 
+					@click="activeTab = 'software'" 
+					:class="{ 'active': activeTab === 'software' }"
+					class="tab-button"
+				>
+					Software
+				</button>
+				<button 
+					@click="activeTab = 'manufacturers'" 
+					:class="{ 'active': activeTab === 'manufacturers' }"
+					class="tab-button"
+				>
+					Hersteller
+				</button>
+			</div>
+
+			<!-- Hersteller Tab -->
+			<div v-if="activeTab === 'manufacturers'" class="tab-content">
+				<div class="section-header">
+					<h3>Software-Hersteller</h3>
+					<button @click="showAddManufacturerForm = true" class="add-button">
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 							<path d="M12 5v14m7-7H5"></path>
 						</svg>
-						Software hinzufügen
+						Neuer Hersteller
 					</button>
+				</div>
+				
+				<div class="manufacturers-grid">
+					<div v-for="manufacturer in manufacturers" :key="manufacturer.id" class="manufacturer-card">
+						<div class="manufacturer-header">
+							<h4>{{ manufacturer.name }}</h4>
+							<div class="manufacturer-actions">
+								<button @click="editManufacturer(manufacturer)" class="action-btn edit">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+										<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+										<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+									</svg>
+								</button>
+								<button @click="deleteManufacturer(manufacturer)" class="action-btn delete">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+										<polyline points="3,6 5,6 21,6"></polyline>
+										<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+									</svg>
+								</button>
+							</div>
+						</div>
+						<div class="manufacturer-stats">
+							<span class="stat-badge">ID: {{ manufacturer.id }}</span>
+							<span class="stat-badge">{{ manufacturer.software_count }} Software-Anwendungen</span>
+						</div>
+					</div>
 				</div>
 			</div>
 
-			<!-- Software Grid -->
-			<div v-if="searchQuery && searchResults" class="search-results">
-				<div v-if="searchResults.categories && searchResults.categories.length > 0">
-					<div v-for="category in searchResults.categories" :key="category.category" class="search-category">
-						<h3>{{ category.category }} ({{ category.items.length }})</h3>
-						<div class="software-grid">
-							<div v-for="item in category.items" :key="item.id" class="software-card">
-								<div class="card-header">
-									<h4>{{ item.name }}</h4>
-									<div class="card-actions">
+			<!-- Software Tab -->
+			<div v-if="activeTab === 'software'" class="tab-content">
+				<div class="section-header">
+					<h3>Software-Anwendungen</h3>
+					<div class="software-controls">
+						<div class="search-input-container">
+							<input 
+								v-model="softwareSearchQuery"
+								type="text" 
+								class="search-input"
+								placeholder="Software durchsuchen..."
+							/>
+							<div class="search-icon">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<circle cx="11" cy="11" r="8"></circle>
+									<path d="m21 21-4.35-4.35"></path>
+								</svg>
+							</div>
+						</div>
+						<select v-model="selectedManufacturerFilter" class="filter-select">
+							<option value="">Alle Hersteller</option>
+							<option v-for="manufacturer in manufacturers" :key="manufacturer.id" :value="manufacturer.id">
+								{{ manufacturer.name }}
+							</option>
+						</select>
+						<button @click="showAddSoftwareForm = true" class="add-button">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M12 5v14m7-7H5"></path>
+							</svg>
+							Neue Software
+						</button>
+					</div>
+				</div>
+
+				<div class="software-table-container">
+					<table class="software-table">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Hersteller</th>
+								<th class="text-right">Aktionen</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="item in filteredSoftware" :key="item.id" class="software-row">
+								<td class="software-name">{{ item.name }}</td>
+								<td>
+									<span class="manufacturer-badge">{{ getManufacturerName(item.manufacturer_id) }}</span>
+								</td>
+								<td class="text-right">
+									<div class="action-buttons">
 										<button @click="editSoftware(item)" class="action-btn edit">
 											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 												<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -68,79 +128,42 @@
 											</svg>
 										</button>
 									</div>
-								</div>
-								<div class="card-content">
-									<div class="item-info">
-										<span class="category-badge">{{ item.category }}</span>
-										<span v-if="item.version" class="version-badge">v{{ item.version }}</span>
-									</div>
-									<p class="description">{{ item.description }}</p>
-									<div class="item-meta">
-										<span class="item-id">ID: {{ item.id }}</span>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div v-else class="no-results">
-					<p>Keine Software gefunden für "{{ searchQuery }}"</p>
+								</td>
+							</tr>
+						</tbody>
+					</table>
 				</div>
 			</div>
+		</div>
 
-			<!-- Manufacturer-based display (when not searching) -->
-			<div v-else class="manufacturers-display">
-				<div v-for="manufacturer in filteredManufacturers" :key="manufacturer.name" class="manufacturer-section">
-					<div class="manufacturer-header">
-						<h3>{{ manufacturer.name }} ({{ manufacturer.items.length }})</h3>
-						<button @click="toggleManufacturer(manufacturer.name)" class="toggle-btn">
-							<span :class="{ 'expanded': expandedManufacturers.has(manufacturer.name) }">
-								{{ expandedManufacturers.has(manufacturer.name) ? '−' : '+' }}
-							</span>
-						</button>
-					</div>
-					
-					<div v-if="expandedManufacturers.has(manufacturer.name)" class="software-grid">
-						<div v-for="item in manufacturer.items" :key="item.id" class="software-card">
-							<div class="card-header">
-								<h4>{{ item.name }}</h4>
-								<div class="card-actions">
-									<button @click="editSoftware(item)" class="action-btn edit">
-										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-											<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-										</svg>
-									</button>
-									<button @click="deleteSoftware(item)" class="action-btn delete">
-										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-											<polyline points="3,6 5,6 21,6"></polyline>
-											<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-										</svg>
-									</button>
-								</div>
-							</div>
-							<div class="card-content">
-								<div class="item-info">
-									<span class="category-badge">{{ item.category }}</span>
-									<span v-if="item.version" class="version-badge">v{{ item.version }}</span>
-								</div>
-								<p class="description">{{ item.description }}</p>
-								<div class="item-meta">
-									<span class="item-id">ID: {{ item.id }}</span>
-								</div>
-							</div>
+		<!-- Add Manufacturer Modal -->
+		<div v-if="showAddManufacturerForm" class="modal-overlay" @click="closeModals">
+			<div class="modal-content" @click.stop>
+				<div class="modal-header">
+					<h3>{{ editingManufacturer ? 'Hersteller bearbeiten' : 'Neuen Hersteller hinzufügen' }}</h3>
+					<button @click="closeModals" class="close-btn">×</button>
+				</div>
+				<div class="modal-body">
+					<form @submit.prevent="addManufacturer">
+						<div class="form-group">
+							<label>Name</label>
+							<input v-model="newManufacturer.name" type="text" required class="form-input">
 						</div>
-					</div>
+						<div class="modal-actions">
+							<button type="button" @click="closeModals" class="btn-secondary">Abbrechen</button>
+							<button type="submit" class="btn-primary">{{ editingManufacturer ? 'Aktualisieren' : 'Hersteller hinzufügen' }}</button>
+						</div>
+					</form>
 				</div>
 			</div>
 		</div>
 
 		<!-- Add Software Modal -->
-		<div v-if="showAddSoftwareForm" class="modal-overlay" @click="closeModal">
+		<div v-if="showAddSoftwareForm" class="modal-overlay" @click="closeModals">
 			<div class="modal-content" @click.stop>
 				<div class="modal-header">
-					<h3>Neue Software hinzufügen</h3>
-					<button @click="closeModal" class="close-btn">×</button>
+					<h3>{{ editingSoftware ? 'Software bearbeiten' : 'Neue Software hinzufügen' }}</h3>
+					<button @click="closeModals" class="close-btn">×</button>
 				</div>
 				<div class="modal-body">
 					<form @submit.prevent="addSoftware">
@@ -149,30 +172,17 @@
 							<input v-model="newSoftware.name" type="text" required class="form-input">
 						</div>
 						<div class="form-group">
-							<label>Kategorie</label>
-							<select v-model="newSoftware.category" required class="form-input">
-								<option value="">Kategorie wählen</option>
-								<option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
-							</select>
-						</div>
-						<div class="form-group">
 							<label>Hersteller</label>
-							<select v-model="newSoftware.manufacturer" required class="form-input">
+							<select v-model="newSoftware.manufacturer_id" required class="form-input">
 								<option value="">Hersteller wählen</option>
-								<option v-for="manufacturer in manufacturers" :key="manufacturer" :value="manufacturer">{{ manufacturer }}</option>
+								<option v-for="manufacturer in manufacturers" :key="manufacturer.id" :value="manufacturer.id">
+									{{ manufacturer.name }}
+								</option>
 							</select>
-						</div>
-						<div class="form-group">
-							<label>Beschreibung</label>
-							<textarea v-model="newSoftware.description" required class="form-input" rows="3"></textarea>
-						</div>
-						<div class="form-group">
-							<label>Version</label>
-							<input v-model="newSoftware.version" type="text" class="form-input">
 						</div>
 						<div class="modal-actions">
-							<button type="button" @click="closeModal" class="btn-secondary">Abbrechen</button>
-							<button type="submit" class="btn-primary">Software hinzufügen</button>
+							<button type="button" @click="closeModals" class="btn-secondary">Abbrechen</button>
+							<button type="submit" class="btn-primary">{{ editingSoftware ? 'Aktualisieren' : 'Software hinzufügen' }}</button>
 						</div>
 					</form>
 				</div>
@@ -185,184 +195,175 @@
 
 <script setup>
 import { onMounted, ref, computed } from 'vue';
+import adminService from '@/services/adminService';
 
 const emit = defineEmits(['go-back']);
 
-const searchQuery = ref('');
-const selectedCategory = ref('');
-const selectedManufacturer = ref('');
-const searchResults = ref(null);
-const searchTimeout = ref(null);
+const activeTab = ref('software');
+const softwareSearchQuery = ref('');
+const selectedManufacturerFilter = ref('');
 
-const softwareItems = ref([]);
-const categories = ref([]);
 const manufacturers = ref([]);
-const expandedManufacturers = ref(new Set(['Microsoft', 'Adobe'])); // Default expanded
+const softwareItems = ref([]);
 
+const showAddManufacturerForm = ref(false);
 const showAddSoftwareForm = ref(false);
-const newSoftware = ref({
-	name: '',
-	category: '',
-	manufacturer: '',
-	description: '',
-	version: ''
-});
 
-const loadSoftware = async () => {
-	try {
-		const response = await fetch('/api/software');
-		if (response.ok) {
-			const data = await response.json();
-			softwareItems.value = data.software || [];
-		}
-	} catch (error) {
-		console.error('Fehler beim Laden der Software:', error);
-	}
-};
+const editingManufacturer = ref(null);
+const editingSoftware = ref(null);
+
+const newManufacturer = ref({ name: '' });
+const newSoftware = ref({ name: '', manufacturer_id: '' });
 
 const loadManufacturers = async () => {
 	try {
-		const response = await fetch('/api/software/manufacturers');
-		if (response.ok) {
-			const data = await response.json();
-			manufacturers.value = data.manufacturers || [];
-		}
+		const data = await adminService.getSoftwareManufacturers();
+		manufacturers.value = data || [];
 	} catch (error) {
 		console.error('Fehler beim Laden der Hersteller:', error);
+		manufacturers.value = [];
 	}
 };
 
-// Extract categories from software items
-const extractCategories = () => {
-	const categorySet = new Set();
-	softwareItems.value.forEach(item => {
-		if (item.category) {
-			categorySet.add(item.category);
-		}
-	});
-	categories.value = Array.from(categorySet).sort();
-};
-
-const filteredManufacturers = computed(() => {
-	let items = [...softwareItems.value];
-	
-	if (selectedCategory.value) {
-		items = items.filter(item => item.category === selectedCategory.value);
-	}
-	
-	if (selectedManufacturer.value) {
-		items = items.filter(item => getItemManufacturer(item) === selectedManufacturer.value);
-	}
-	
-	// Group by manufacturer
-	const grouped = {};
-	items.forEach(item => {
-		const manufacturer = getItemManufacturer(item);
-		if (!grouped[manufacturer]) {
-			grouped[manufacturer] = [];
-		}
-		grouped[manufacturer].push(item);
-	});
-	
-	return Object.keys(grouped).map(manufacturer => ({
-		name: manufacturer,
-		items: grouped[manufacturer]
-	}));
-});
-
-const getItemManufacturer = (item) => {
-	// Derive manufacturer from item name or use a default categorization
-	if (item.name.includes('Microsoft') || item.name.includes('Office') || item.name.includes('Teams') || item.name.includes('Visual Studio')) {
-		return 'Microsoft';
-	} else if (item.name.includes('Adobe') || item.name.includes('Photoshop') || item.name.includes('Illustrator')) {
-		return 'Adobe';
-	} else if (item.name.includes('Google') || item.name.includes('Chrome')) {
-		return 'Google';
-	} else if (item.name.includes('Apple') || item.name.includes('Final Cut') || item.name.includes('Logic') || item.name.includes('Xcode')) {
-		return 'Apple';
-	} else if (item.name.includes('JetBrains') || item.name.includes('IntelliJ') || item.name.includes('PyCharm')) {
-		return 'JetBrains';
-	} else {
-		return 'Sonstige';
-	}
-};
-
-const searchSoftware = async (query) => {
-	if (!query.trim()) {
-		searchResults.value = null;
-		return;
-	}
-	
+const loadSoftware = async () => {
 	try {
-		const response = await fetch(`/api/software/search?query=${encodeURIComponent(query)}`);
-		if (response.ok) {
-			const data = await response.json();
-			searchResults.value = data;
+		const data = await adminService.getSoftwareItems();
+		if (data && data.data) {
+			softwareItems.value = data.data;
+		} else {
+			softwareItems.value = data || [];
 		}
 	} catch (error) {
-		console.error('Fehler bei der Software Suche:', error);
-		searchResults.value = { categories: [], total_results: 0 };
+		console.error('Fehler beim Laden der Software:', error);
+		softwareItems.value = [];
 	}
 };
 
-const onSearchInput = () => {
-	if (searchTimeout.value) {
-		clearTimeout(searchTimeout.value);
+const filteredSoftware = computed(() => {
+	let filtered = softwareItems.value;
+	
+	if (softwareSearchQuery.value) {
+		const query = softwareSearchQuery.value.toLowerCase();
+		filtered = filtered.filter(item => 
+			item.name.toLowerCase().includes(query)
+		);
 	}
 	
-	searchTimeout.value = setTimeout(() => {
-		searchSoftware(searchQuery.value);
-	}, 300);
+	if (selectedManufacturerFilter.value) {
+		filtered = filtered.filter(item => item.manufacturer_id == selectedManufacturerFilter.value);
+	}
+	
+	return filtered;
+});
+
+const getManufacturerName = (manufacturerId) => {
+	const manufacturer = manufacturers.value.find(m => m.id === manufacturerId);
+	return manufacturer ? manufacturer.name : 'Unbekannt';
 };
 
-const toggleManufacturer = (manufacturerName) => {
-	if (expandedManufacturers.value.has(manufacturerName)) {
-		expandedManufacturers.value.delete(manufacturerName);
-	} else {
-		expandedManufacturers.value.add(manufacturerName);
+const addManufacturer = async () => {
+	try {
+		if (editingManufacturer.value) {
+			// Update existing manufacturer
+			const response = await adminService.updateSoftwareManufacturer(editingManufacturer.value, newManufacturer.value);
+			if (response && response.manufacturer) {
+				const index = manufacturers.value.findIndex(m => m.id === editingManufacturer.value);
+				if (index !== -1) {
+					manufacturers.value[index] = response.manufacturer;
+				}
+			}
+		} else {
+			// Create new manufacturer
+			const response = await adminService.createSoftwareManufacturer(newManufacturer.value);
+			if (response && response.manufacturer) {
+				manufacturers.value.push(response.manufacturer);
+			}
+		}
+		closeModals();
+		await loadManufacturers(); // Reload to get fresh data
+	} catch (error) {
+		console.error('Fehler beim Speichern des Herstellers:', error);
+		alert('Fehler beim Speichern des Herstellers: ' + (error.response?.data?.message || error.message));
+	}
+};
+
+const addSoftware = async () => {
+	try {
+		if (editingSoftware.value) {
+			// Update existing software
+			const response = await adminService.updateSoftwareItem(editingSoftware.value, newSoftware.value);
+			if (response && response.software) {
+				const index = softwareItems.value.findIndex(s => s.id === editingSoftware.value);
+				if (index !== -1) {
+					softwareItems.value[index] = response.software;
+				}
+			}
+		} else {
+			// Create new software
+			const response = await adminService.createSoftwareItem(newSoftware.value);
+			if (response && response.software) {
+				softwareItems.value.push(response.software);
+			}
+		}
+		closeModals();
+		await loadSoftware(); // Reload to get fresh data
+	} catch (error) {
+		console.error('Fehler beim Speichern der Software:', error);
+		alert('Fehler beim Speichern der Software: ' + (error.response?.data?.message || error.message));
+	}
+};
+
+const editManufacturer = (manufacturer) => {
+	newManufacturer.value = { ...manufacturer };
+	editingManufacturer.value = manufacturer.id;
+	showAddManufacturerForm.value = true;
+};
+
+const deleteManufacturer = async (manufacturer) => {
+	if (confirm(`Hersteller "${manufacturer.name}" wirklich löschen?`)) {
+		try {
+			await adminService.deleteSoftwareManufacturer(manufacturer.id);
+			manufacturers.value = manufacturers.value.filter(m => m.id !== manufacturer.id);
+		} catch (error) {
+			console.error('Fehler beim Löschen des Herstellers:', error);
+			alert('Fehler beim Löschen des Herstellers: ' + (error.response?.data?.message || error.message));
+		}
 	}
 };
 
 const editSoftware = (item) => {
-	console.log('Edit software:', item);
-	// TODO: Implement edit functionality
+	newSoftware.value = { 
+		name: item.name,
+		manufacturer_id: item.manufacturer_id
+	};
+	editingSoftware.value = item.id;
+	showAddSoftwareForm.value = true;
 };
 
-const deleteSoftware = (item) => {
+const deleteSoftware = async (item) => {
 	if (confirm(`Software "${item.name}" wirklich löschen?`)) {
-		const index = softwareItems.value.findIndex(s => s.id === item.id);
-		if (index > -1) {
-			softwareItems.value.splice(index, 1);
+		try {
+			await adminService.deleteSoftwareItem(item.id);
+			softwareItems.value = softwareItems.value.filter(s => s.id !== item.id);
+		} catch (error) {
+			console.error('Fehler beim Löschen der Software:', error);
+			alert('Fehler beim Löschen der Software: ' + (error.response?.data?.message || error.message));
 		}
 	}
 };
 
-const addSoftware = () => {
-	const software = {
-		id: Date.now(),
-		...newSoftware.value
-	};
-	
-	softwareItems.value.push(software);
-	extractCategories(); // Update categories
-	closeModal();
-};
-
-const closeModal = () => {
+const closeModals = () => {
+	showAddManufacturerForm.value = false;
 	showAddSoftwareForm.value = false;
-	newSoftware.value = {
-		name: '',
-		category: '',
-		manufacturer: '',
-		description: '',
-		version: ''
-	};
+	editingManufacturer.value = null;
+	editingSoftware.value = null;
+	newManufacturer.value = { name: '' };
+	newSoftware.value = { name: '', manufacturer_id: '' };
 };
 
 onMounted(async () => {
-	await loadSoftware();
 	await loadManufacturers();
-	extractCategories();
+	await loadSoftware();
 });
 </script>
 
@@ -372,44 +373,76 @@ onMounted(async () => {
 	margin: 0 auto;
 }
 
-.controls-section {
+.tab-navigation {
+	display: flex;
+	gap: 1rem;
 	margin-bottom: 2rem;
+	border-bottom: 1px solid var(--color-border);
 }
 
-.search-input-container {
-	position: relative;
-	margin-bottom: 1rem;
-}
-
-.search-input {
-	width: 100%;
-	padding: 0.75rem 2.5rem 0.75rem 1rem;
-	border: 2px solid var(--color-border);
-	border-radius: 0.5rem;
-	background: var(--color-background);
-	color: var(--color-text);
-	font-size: 1rem;
+.tab-button {
+	padding: 0.75rem 1.5rem !important;
+	background: none !important;
+	border: none !important;
+	color: var(--color-text-muted) !important;
+	cursor: pointer;
 	transition: all 0.2s ease;
+	border-bottom: 2px solid transparent !important;
 }
 
-.search-input:focus {
-	outline: none;
-	border-color: var(--color-button);
+.tab-button:hover {
+	color: var(--color-text) !important;
 }
 
-.search-icon {
-	position: absolute;
-	right: 0.75rem;
-	top: 50%;
-	transform: translateY(-50%);
-	color: var(--color-text-muted);
+.tab-button.active {
+	color: var(--color-button) !important;
+	border-bottom-color: var(--color-button) !important;
 }
 
-.filter-controls {
+.tab-content {
+	margin-top: 1rem;
+}
+
+.section-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 2rem;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.section-header h3 {
+	margin: 0;
+	color: var(--color-text);
+}
+
+.software-controls {
 	display: flex;
 	gap: 1rem;
 	align-items: center;
 	flex-wrap: wrap;
+}
+
+.search-input-container {
+	position: relative;
+}
+
+.search-input {
+	padding: 0.5rem 2rem 0.5rem 0.75rem;
+	border: 1px solid var(--color-border);
+	border-radius: 0.25rem;
+	background: var(--color-background);
+	color: var(--color-text);
+	width: 250px;
+}
+
+.search-icon {
+	position: absolute;
+	right: 0.5rem;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--color-text-muted);
 }
 
 .filter-select {
@@ -437,70 +470,13 @@ onMounted(async () => {
 	background: var(--color-button-hover) !important;
 }
 
-.search-results,
-.manufacturers-display {
-	margin-top: 2rem;
-}
-
-.search-category,
-.manufacturer-section {
-	margin-bottom: 2rem;
-}
-
-.search-category h3 {
-	color: var(--color-text);
-	margin-bottom: 1rem;
-	padding-bottom: 0.5rem;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.manufacturer-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 1rem;
-	padding: 1rem;
-	background: var(--color-background-mute);
-	border-radius: 0.5rem;
-	cursor: pointer;
-}
-
-.manufacturer-header h3 {
-	margin: 0;
-	color: var(--color-text);
-}
-
-.toggle-btn {
-	background: none !important;
-	border: 1px solid var(--color-border) !important;
-	color: var(--color-text) !important;
-	width: 2rem;
-	height: 2rem;
-	border-radius: 50%;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-weight: bold;
-	transition: all 0.2s ease;
-}
-
-.toggle-btn:hover {
-	background: var(--color-button) !important;
-	color: var(--color-text) !important;
-}
-
-.toggle-btn span.expanded {
-	transform: rotate(180deg);
-}
-
-.software-grid {
+.manufacturers-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
 	gap: 1.5rem;
 }
 
-.software-card {
+.manufacturer-card {
 	background: var(--color-background);
 	border: 1px solid var(--color-border);
 	border-radius: 0.5rem;
@@ -508,78 +484,93 @@ onMounted(async () => {
 	transition: all 0.2s ease;
 }
 
-.software-card:hover {
+.manufacturer-card:hover {
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	transform: translateY(-1px);
 }
 
-.card-header {
+.manufacturer-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: flex-start;
 	margin-bottom: 1rem;
 }
 
-.card-header h4 {
+.manufacturer-header h4 {
 	margin: 0;
 	color: var(--color-text);
 	font-size: 1.1rem;
-	font-weight: 600;
 }
 
-.card-actions {
+.manufacturer-actions {
 	display: flex;
 	gap: 0.5rem;
 }
 
-.card-content {
-	margin-top: 1rem;
-}
-
-.item-info {
+.manufacturer-stats {
 	display: flex;
 	gap: 0.5rem;
 	margin-bottom: 1rem;
-	flex-wrap: wrap;
 }
 
-.category-badge {
-	background: var(--color-button);
-	color: var(--color-text);
-	padding: 0.25rem 0.5rem;
-	border-radius: 0.25rem;
-	font-size: 0.8rem;
-	font-weight: 500;
-}
-
-.version-badge {
+.stat-badge {
 	background: var(--color-background-soft);
 	color: var(--color-text);
 	padding: 0.25rem 0.5rem;
 	border-radius: 0.25rem;
 	font-size: 0.8rem;
-	font-family: monospace;
 }
 
-.description {
-	color: var(--color-text-muted);
-	margin: 0 0 1rem 0;
-	font-size: 0.9rem;
-	line-height: 1.4;
+.software-table-container {
+	overflow-x: auto;
+	border: 1px solid var(--color-border);
+	border-radius: 0.5rem;
 }
 
-.item-meta {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-top: 1rem;
-	padding-top: 1rem;
-	border-top: 1px solid var(--color-border);
+.software-table {
+	width: 100%;
+	border-collapse: collapse;
 }
 
-.item-id {
+.software-table th {
+	background: var(--color-background-mute);
+	color: var(--color-text);
+	padding: 1rem;
+	text-align: left;
+	font-weight: 600;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.software-row {
+	border-bottom: 1px solid var(--color-border);
+	transition: background-color 0.2s ease;
+}
+
+.software-row:hover {
+	background: var(--color-background-soft);
+}
+
+.software-table td {
+	padding: 1rem;
+	vertical-align: middle;
+}
+
+.software-name {
+	font-weight: 500;
+	color: var(--color-text);
+}
+
+.manufacturer-badge {
+	background: var(--color-background-soft);
+	color: var(--color-text);
+	padding: 0.25rem 0.5rem;
+	border-radius: 0.25rem;
 	font-size: 0.8rem;
-	color: var(--color-text-muted);
+}
+
+.action-buttons {
+	display: flex;
+	gap: 0.5rem;
+	justify-content: flex-end;
 }
 
 .action-btn {
@@ -612,13 +603,6 @@ onMounted(async () => {
 	color: white !important;
 }
 
-.no-results {
-	text-align: center;
-	padding: 3rem;
-	color: var(--color-text-muted);
-	font-style: italic;
-}
-
 /* Modal Styles */
 .modal-overlay {
 	position: fixed;
@@ -630,7 +614,7 @@ onMounted(async () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	z-index: 1000;
+	z-index: 9999;
 }
 
 .modal-content {
@@ -640,6 +624,8 @@ onMounted(async () => {
 	max-width: 500px;
 	max-height: 90vh;
 	overflow-y: auto;
+	z-index: 10000;
+	position: relative;
 }
 
 .modal-header {
@@ -717,20 +703,6 @@ onMounted(async () => {
 	cursor: pointer;
 }
 
-.navigation-buttons {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 1rem;
-	margin-top: 2rem;
-}
-
-.back-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-
 .shadow-line {
 	border: 0;
 	height: 1px;
@@ -739,21 +711,34 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-	.software-grid {
-		grid-template-columns: 1fr;
-	}
-	
-	.filter-controls {
+	.section-header {
 		flex-direction: column;
 		align-items: stretch;
 	}
 	
-	.manufacturer-header {
-		padding: 0.75rem;
+	.software-controls {
+		flex-direction: column;
 	}
 	
-	.software-card {
-		padding: 1rem;
+	.search-input {
+		width: 100%;
 	}
+	
+	.manufacturers-grid {
+		grid-template-columns: 1fr;
+	}
+	
+	.software-table {
+		font-size: 0.9rem;
+	}
+	
+	.software-table th,
+	.software-table td {
+		padding: 0.5rem;
+	}
+}
+
+.text-right {
+	text-align: right !important;
 }
 </style>
