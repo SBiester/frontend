@@ -91,10 +91,16 @@
 								class="search-input"
 								placeholder="Profile durchsuchen..."
 							/>
-							<div class="search-icon">
+							<!-- <div class="search-icon">
 								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 									<circle cx="11" cy="11" r="8"></circle>
 									<path d="m21 21-4.35-4.35"></path>
+								</svg>
+							</div> -->
+							<div class="search-icon">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<circle cx="11" cy="11" r="7"></circle>
+									<line x1="16.65" y1="16.65" x2="21" y2="21"></line>
 								</svg>
 							</div>
 						</div>
@@ -124,7 +130,7 @@
 							</tr>
 						</thead>
 						<tbody>
-							<tr v-for="profile in filteredProfiles" :key="profile.SammelrollenID" class="profile-row">
+							<tr v-for="profile in sammelrollen" :key="profile.SammelrollenID" class="profile-row">
 								<td class="profile-name">{{ profile.Bezeichnung }}</td>
 								<td>
 									<code class="profile-key">{{ profile.Schluessel }}</code>
@@ -151,6 +157,52 @@
 							</tr>
 						</tbody>
 					</table>
+				</div>
+
+				<!-- Pagination Controls -->
+				<div v-if="paginationData.last_page > 1" class="pagination-container">
+					<div class="pagination-info">
+						Zeige {{ ((paginationData.current_page - 1) * paginationData.per_page) + 1 }} - 
+						{{ Math.min(paginationData.current_page * paginationData.per_page, paginationData.total) }} von 
+						{{ paginationData.total }} Profilen
+					</div>
+					<div class="pagination-controls">
+						<button 
+							@click="prevPage" 
+							:disabled="paginationData.current_page <= 1"
+							class="pagination-btn"
+						>
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<polyline points="15,18 9,12 15,6"></polyline>
+							</svg>
+							Zurück
+						</button>
+						
+						<div class="page-numbers">
+							<template v-for="page in getVisiblePages()" :key="page">
+								<button 
+									v-if="page !== '...'"
+									@click="goToPage(page)"
+									:class="{ 'active': page === paginationData.current_page }"
+									class="page-btn"
+								>
+									{{ page }}
+								</button>
+								<span v-else class="page-ellipsis">...</span>
+							</template>
+						</div>
+						
+						<button 
+							@click="nextPage" 
+							:disabled="paginationData.current_page >= paginationData.last_page"
+							class="pagination-btn"
+						>
+							Weiter
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<polyline points="9,18 15,12 9,6"></polyline>
+							</svg>
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -217,7 +269,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref, computed, watch } from 'vue';
 import adminService from '@/services/adminService';
 
 const emit = defineEmits(['go-back']);
@@ -228,6 +280,13 @@ const selectedGroupFilter = ref('');
 
 const rollengruppen = ref([]);
 const sammelrollen = ref([]);
+const paginationData = ref({
+	current_page: 1,
+	last_page: 1,
+	per_page: 20,
+	total: 0
+});
+const isLoadingProfiles = ref(false);
 
 const showAddGroupForm = ref(false);
 const showAddProfileForm = ref(false);
@@ -265,11 +324,34 @@ const loadRollengruppen = async () => {
 	}
 };
 
-const loadSammelrollen = async () => {
+const loadSammelrollen = async (page = 1) => {
 	try {
-		const data = await adminService.getSapRoles();
+		isLoadingProfiles.value = true;
+		const params = { 
+			page: page, 
+			per_page: paginationData.value.per_page 
+		};
+		
+		// Add search if active
+		if (profileSearchQuery.value) {
+			params.search = profileSearchQuery.value;
+		}
+		
+		// Add group filter if active
+		if (selectedGroupFilter.value) {
+			params.group = selectedGroupFilter.value;
+		}
+		
+		const data = await adminService.getSapRoles(params);
+		
 		if (data && data.data) {
 			sammelrollen.value = data.data;
+			paginationData.value = {
+				current_page: data.current_page,
+				last_page: data.last_page,
+				per_page: data.per_page,
+				total: data.total
+			};
 		} else {
 			sammelrollen.value = data || [];
 		}
@@ -292,26 +374,80 @@ const loadSammelrollen = async () => {
 				rollengruppe: { Bezeichnung: 'Erweiterte Berechtigungen' }
 			}
 		];
+	} finally {
+		isLoadingProfiles.value = false;
 	}
 };
 
-const filteredProfiles = computed(() => {
-	let filtered = sammelrollen.value;
-	
-	if (profileSearchQuery.value) {
-		const query = profileSearchQuery.value.toLowerCase();
-		filtered = filtered.filter(profile => 
-			profile.Bezeichnung.toLowerCase().includes(query) ||
-			profile.Schluessel.toLowerCase().includes(query)
-		);
+// Pagination functions
+const goToPage = (page) => {
+	if (page >= 1 && page <= paginationData.value.last_page) {
+		loadSammelrollen(page);
 	}
-	
-	if (selectedGroupFilter.value) {
-		filtered = filtered.filter(profile => profile.RollengruppeID == selectedGroupFilter.value);
+};
+
+const nextPage = () => {
+	if (paginationData.value.current_page < paginationData.value.last_page) {
+		goToPage(paginationData.value.current_page + 1);
 	}
-	
-	return filtered;
+};
+
+const prevPage = () => {
+	if (paginationData.value.current_page > 1) {
+		goToPage(paginationData.value.current_page - 1);
+	}
+};
+
+// Search and filter watchers
+watch(profileSearchQuery, () => {
+	loadSammelrollen(1); // Reset to first page when searching
 });
+
+watch(selectedGroupFilter, () => {
+	loadSammelrollen(1); // Reset to first page when filtering
+});
+
+// Function to get visible page numbers for pagination
+const getVisiblePages = () => {
+	const current = paginationData.value.current_page;
+	const last = paginationData.value.last_page;
+	const pages = [];
+
+	if (last <= 7) {
+		// Show all pages if 7 or fewer
+		for (let i = 1; i <= last; i++) {
+			pages.push(i);
+		}
+	} else {
+		// Complex pagination with ellipsis
+		if (current <= 4) {
+			// Show first 5 pages + ellipsis + last page
+			for (let i = 1; i <= 5; i++) {
+				pages.push(i);
+			}
+			pages.push('...');
+			pages.push(last);
+		} else if (current >= last - 3) {
+			// Show first page + ellipsis + last 5 pages
+			pages.push(1);
+			pages.push('...');
+			for (let i = last - 4; i <= last; i++) {
+				pages.push(i);
+			}
+		} else {
+			// Show first page + ellipsis + current-1, current, current+1 + ellipsis + last page
+			pages.push(1);
+			pages.push('...');
+			for (let i = current - 1; i <= current + 1; i++) {
+				pages.push(i);
+			}
+			pages.push('...');
+			pages.push(last);
+		}
+	}
+	
+	return pages;
+};
 
 const getProfileCount = (groupId) => {
 	const group = rollengruppen.value.find(g => g.RollengruppeID === groupId);
@@ -708,7 +844,7 @@ onMounted(async () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	z-index: 1000;
+	z-index: 1001;
 }
 
 .modal-content {
@@ -842,9 +978,119 @@ onMounted(async () => {
 	.profiles-table td {
 		padding: 0.5rem;
 	}
+	
+	.pagination-container {
+		flex-direction: column;
+		align-items: stretch;
+		text-align: center;
+	}
+	
+	.pagination-controls {
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+	
+	.pagination-btn {
+		font-size: 0.8rem;
+		padding: 0.4rem 0.8rem !important;
+	}
+	
+	.page-btn {
+		width: 2rem;
+		height: 2rem;
+		font-size: 0.8rem;
+	}
 }
 
 .text-right {
 	text-align: right !important;
+}
+
+/* Pagination Styles */
+.pagination-container {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 1.5rem;
+	padding: 1rem;
+	background: var(--color-background-soft);
+	border-radius: 0.5rem;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.pagination-info {
+	color: var(--color-text-muted);
+	font-size: 0.9rem;
+}
+
+.pagination-controls {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.pagination-btn {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 1rem !important;
+	background: var(--color-background) !important;
+	color: var(--color-text) !important;
+	border: 1px solid var(--color-border) !important;
+	border-radius: 0.25rem;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	font-size: 0.9rem;
+}
+
+.pagination-btn:hover:not(:disabled) {
+	background: var(--color-button) !important;
+	border-color: var(--color-button) !important;
+}
+
+.pagination-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.page-numbers {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	margin: 0 0.5rem;
+}
+
+.page-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	padding: 0 !important;
+	background: var(--color-background) !important;
+	color: var(--color-text) !important;
+	border: 1px solid var(--color-border) !important;
+	border-radius: 0.25rem;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	font-size: 0.9rem;
+}
+
+.page-btn:hover {
+	background: var(--color-button) !important;
+	border-color: var(--color-button) !important;
+}
+
+.page-btn.active {
+	background: var(--color-button) !important;
+	border-color: var(--color-button) !important;
+	font-weight: 600;
+}
+
+.page-ellipsis {
+	color: var(--color-text-muted);
+	padding: 0 0.5rem;
+	font-size: 0.9rem;
 }
 </style>

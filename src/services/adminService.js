@@ -340,6 +340,127 @@ class AdminService {
       throw error
     }
   }
+
+  // Master Data Management
+  async getBereiche() {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/admin/bereiche`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching bereiche:', error)
+      throw error
+    }
+  }
+
+  async createBereich(bereichData) {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/admin/bereiche`, bereichData)
+      return response.data
+    } catch (error) {
+      console.error('Error creating bereich:', error)
+      throw error
+    }
+  }
+
+  async updateBereich(id, bereichData) {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/admin/bereiche/${id}`, bereichData)
+      return response.data
+    } catch (error) {
+      console.error('Error updating bereich:', error)
+      throw error
+    }
+  }
+
+  async deleteBereich(id) {
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/admin/bereiche/${id}`)
+      return response.data
+    } catch (error) {
+      console.error('Error deleting bereich:', error)
+      throw error
+    }
+  }
+
+  async getTeams() {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/admin/teams`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching teams:', error)
+      throw error
+    }
+  }
+
+  async createTeam(teamData) {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/admin/teams`, teamData)
+      return response.data
+    } catch (error) {
+      console.error('Error creating team:', error)
+      throw error
+    }
+  }
+
+  async updateTeam(id, teamData) {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/admin/teams/${id}`, teamData)
+      return response.data
+    } catch (error) {
+      console.error('Error updating team:', error)
+      throw error
+    }
+  }
+
+  async deleteTeam(id) {
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/admin/teams/${id}`)
+      return response.data
+    } catch (error) {
+      console.error('Error deleting team:', error)
+      throw error
+    }
+  }
+
+  async getFunktionen() {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/admin/funktionen`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching funktionen:', error)
+      throw error
+    }
+  }
+
+  async createFunktion(funktionData) {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/admin/funktionen`, funktionData)
+      return response.data
+    } catch (error) {
+      console.error('Error creating funktion:', error)
+      throw error
+    }
+  }
+
+  async updateFunktion(id, funktionData) {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/admin/funktionen/${id}`, funktionData)
+      return response.data
+    } catch (error) {
+      console.error('Error updating funktion:', error)
+      throw error
+    }
+  }
+
+  async deleteFunktion(id) {
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/admin/funktionen/${id}`)
+      return response.data
+    } catch (error) {
+      console.error('Error deleting funktion:', error)
+      throw error
+    }
+  }
 }
 
 export default new AdminService()

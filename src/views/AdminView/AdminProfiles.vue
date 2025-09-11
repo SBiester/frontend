@@ -27,12 +27,10 @@
         
         <div class="filter-controls">
           <select v-model="selectedCategory" @change="filterProfiles" class="filter-select">
-            <option value="">Alle Kategorien</option>
-            <option value="Entwicklung">Entwicklung</option>
-            <option value="Design">Design</option>
-            <option value="Administration">Administration</option>
-            <option value="Marketing">Marketing</option>
-            <option value="Standard">Standard</option>
+            <option value="">Alle Bereiche</option>
+            <option v-for="bereich in bereiche" :key="bereich.BereichID" :value="bereich.Bezeichnung">
+              {{ bereich.Bezeichnung }}
+            </option>
           </select>
           
           <select v-model="selectedStatus" @change="filterProfiles" class="filter-select">
@@ -64,10 +62,18 @@
               <th>SAP Profile</th>
               <th>Status</th>
               <th>Erstellt</th>
-              <th>Aktionen</th>
+              <th class="text-right">Aktionen</th>
             </tr>
           </thead>
           <tbody>
+            <tr v-if="filteredProfiles.length === 0" class="empty-row">
+              <td colspan="8" class="empty-message">
+                <div class="empty-state">
+                  <p>Keine Profile vorhanden</p>
+                  <button @click="openCreateModal" class="btn-primary">Erstes Profil erstellen</button>
+                </div>
+              </td>
+            </tr>
             <tr v-for="profile in filteredProfiles" :key="profile.id" class="profile-row">
               <td>
                 <div class="profile-info">
@@ -80,7 +86,13 @@
               <td>
                 <span class="category-badge">{{ profile.bereich }}</span>
               </td>
-              <td class="description">{{ profile.description }}</td>
+              <td class="description">
+                <div v-if="profile.sachbereich || profile.team">
+                  <div v-if="profile.sachbereich" class="sachbereich">{{ profile.sachbereich }}</div>
+                  <div v-if="profile.team" class="team">{{ profile.team }}</div>
+                </div>
+                <div v-else class="no-data">-</div>
+              </td>
               <td class="count">{{ profile.hardwareCount }}</td>
               <td class="count">{{ profile.softwareCount }}</td>
               <td class="count">{{ profile.sapProfileCount }}</td>
@@ -88,7 +100,7 @@
                 <span :class="`status-badge ${profile.status}`">{{ getStatusLabel(profile.status) }}</span>
               </td>
               <td>{{ formatDate(profile.created_at) }}</td>
-              <td>
+              <td class="text-right">
                 <div class="action-buttons">
                   <button @click="editProfile(profile)" class="action-btn edit" title="Bearbeiten">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -148,26 +160,33 @@
                 </div>
                 
                 <div class="form-group">
-                  <label for="profileCategory">Kategorie *</label>
-                  <select id="profileCategory" v-model="profileForm.category" required class="form-select">
-                    <option value="">Kategorie wählen</option>
-                    <option value="Entwicklung">Entwicklung</option>
-                    <option value="Design">Design</option>
-                    <option value="Administration">Administration</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Standard">Standard</option>
+                  <label for="profileCategory">Bereich *</label>
+                  <select id="profileCategory" v-model="profileForm.bereich" required class="form-select">
+                    <option value="">Bereich wählen</option>
+                    <option v-for="bereich in bereiche" :key="bereich.BereichID" :value="bereich.Bezeichnung">
+                      {{ bereich.Bezeichnung }}
+                    </option>
                   </select>
                 </div>
                 
-                <div class="form-group full-width">
-                  <label for="profileDescription">Beschreibung</label>
-                  <textarea 
-                    id="profileDescription"
-                    v-model="profileForm.description" 
-                    class="form-textarea"
-                    placeholder="Beschreibung des Profils..."
-                    rows="3"
-                  ></textarea>
+                <div class="form-group">
+                  <label for="profileSachbereich">Sachbereich</label>
+                  <select id="profileSachbereich" v-model="profileForm.sachbereich" class="form-select">
+                    <option value="">Sachbereich wählen</option>
+                    <option v-for="sachbereich in sachbereiche" :key="sachbereich.SachbereichID" :value="sachbereich.Bezeichnung">
+                      {{ sachbereich.Bezeichnung }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label for="profileTeam">Team</label>
+                  <select id="profileTeam" v-model="profileForm.team" class="form-select">
+                    <option value="">Team wählen</option>
+                    <option v-for="team in teams" :key="team.TeamID" :value="team.Bezeichnung">
+                      {{ team.Bezeichnung }}
+                    </option>
+                  </select>
                 </div>
                 
                 <div class="form-group">
@@ -256,12 +275,12 @@
                 <div class="items-grid">
                   <div 
                     v-for="item in filteredSapProfiles" 
-                    :key="item.id" 
+                    :key="item?.id || item?.SammelrollenID || `sap-${Math.random()}`" 
                     :class="['item-card', { selected: isSapSelected(item) }]"
                     @click="toggleSapProfile(item)"
                   >
-                    <span class="item-name">{{ item.Bezeichnung }}</span>
-                    <span class="item-group">{{ item.Rollengruppe?.Bezeichnung }}</span>
+                    <span class="item-name">{{ item?.Bezeichnung || 'Unbekannt' }}</span>
+                    <span class="item-group">{{ item?.Rollengruppe?.Bezeichnung || 'Keine Gruppe' }}</span>
                   </div>
                 </div>
               </div>
@@ -344,8 +363,9 @@ const emit = defineEmits(['go-back'])
     // Form data
     const profileForm = reactive({
       name: '',
-      category: '',
-      description: '',
+      bereich: '',
+      sachbereich: '',
+      team: '',
       status: 'aktiv',
       isTemplate: false,
       hardwareItems: [],
@@ -353,71 +373,114 @@ const emit = defineEmits(['go-back'])
       sapItems: []
     })
     
-    // Mock data
-    const profiles = ref([
-      {
-        id: 1,
-        name: 'Frontend Entwickler',
-        category: 'Entwicklung',
-        description: 'Profil für Frontend-Entwicklung mit React/Vue',
-        hardwareCount: 8,
-        softwareCount: 12,
-        sapProfileCount: 5,
-        status: 'aktiv',
-        isTemplate: true,
-        created_at: '2024-01-15',
-        hardwareItems: [],
-        softwareItems: [],
-        sapItems: []
-      },
-      {
-        id: 2,
-        name: 'UI/UX Designer',
-        category: 'Design',
-        description: 'Profil für Design-Arbeitsplätze',
-        hardwareCount: 6,
-        softwareCount: 15,
-        sapProfileCount: 3,
-        status: 'aktiv',
-        isTemplate: false,
-        created_at: '2024-01-20',
-        hardwareItems: [],
-        softwareItems: [],
-        sapItems: []
-      },
-      {
-        id: 3,
-        name: 'Marketing Manager',
-        category: 'Marketing',
-        description: 'Standard Marketing Arbeitsplatz',
-        hardwareCount: 4,
-        softwareCount: 8,
-        sapProfileCount: 4,
-        status: 'inaktiv',
-        isTemplate: false,
-        created_at: '2024-02-01',
-        hardwareItems: [],
-        softwareItems: [],
-        sapItems: []
+    // Data from API
+    const profiles = ref([])
+    const bereiche = ref([])
+    const teams = ref([])
+    const sachbereiche = ref([])
+    
+    const availableHardware = ref([])
+    const availableSoftware = ref([])
+    const availableSapProfiles = ref([])
+    
+    // Loading data functions
+    const loadProfiles = async () => {
+      try {
+        console.log('Loading profiles...') // Debug log
+        const data = await adminService.getProfiles()
+        console.log('Loaded profiles data:', data) // Debug log
+        
+        // Check if data has the correct structure
+        if (data && Array.isArray(data)) {
+          profiles.value = data.filter(profile => profile && profile.id) // Filter out empty entries
+          console.log('Profiles set (array):', profiles.value.length, 'items')
+        } else if (data && data.data && Array.isArray(data.data)) {
+          profiles.value = data.data.filter(profile => profile && profile.id) // Handle paginated response
+          console.log('Profiles set (paginated):', profiles.value.length, 'items')
+        } else {
+          console.log('No valid profiles data received, using empty array')
+          profiles.value = []
+        }
+      } catch (error) {
+        console.error('Fehler beim Laden der Profile:', error)
+        profiles.value = []
       }
-    ])
+    }
     
-    const availableHardware = ref([
-      { id: 1, name: 'Dell Monitor 24"', category: 'Monitor' },
-      { id: 2, name: 'MacBook Pro M2', category: 'Laptop' },
-      { id: 3, name: 'Magic Mouse', category: 'Eingabegerät' }
-    ])
+    const loadBereiche = async () => {
+      try {
+        const response = await fetch('/api/bereiche')
+        const data = await response.json()
+        bereiche.value = data || []
+        console.log('Loaded bereiche:', bereiche.value) // Debug log
+      } catch (error) {
+        console.error('Fehler beim Laden der Bereiche:', error)
+        bereiche.value = []
+      }
+    }
     
-    const availableSoftware = ref([
-      { id: 1, name: 'Visual Studio Code', manufacturer: 'Microsoft' },
-      { id: 2, name: 'Adobe Creative Suite', manufacturer: 'Adobe' },
-      { id: 3, name: 'Slack', manufacturer: 'Slack Technologies' }
-    ])
+    const loadTeams = async () => {
+      try {
+        const response = await fetch('/api/teams')
+        const data = await response.json()
+        teams.value = data || []
+      } catch (error) {
+        console.error('Fehler beim Laden der Teams:', error)
+        teams.value = []
+      }
+    }
     
-    const availableSapProfiles = ref([
-      { id: 1, Bezeichnung: 'Basis Berechtigung', Rollengruppe: { Bezeichnung: 'Standard' } },
-      { id: 2, Bezeichnung: 'Entwickler Zugang', Rollengruppe: { Bezeichnung: 'Entwicklung' } }
-    ])
+    const loadSachbereiche = async () => {
+      try {
+        const response = await fetch('/api/sachbereiche')
+        const data = await response.json()
+        sachbereiche.value = data || []
+      } catch (error) {
+        console.error('Fehler beim Laden der Sachbereiche:', error)
+        sachbereiche.value = []
+      }
+    }
+    
+    const loadHardware = async () => {
+      try {
+        const data = await adminService.getHardwareItems()
+        availableHardware.value = data?.data || []
+      } catch (error) {
+        console.error('Fehler beim Laden der Hardware:', error)
+        availableHardware.value = []
+      }
+    }
+    
+    const loadSoftware = async () => {
+      try {
+        const data = await adminService.getSoftwareItems()
+        availableSoftware.value = data?.data || []
+      } catch (error) {
+        console.error('Fehler beim Laden der Software:', error)
+        availableSoftware.value = []
+      }
+    }
+    
+    const loadSapProfiles = async () => {
+      try {
+        const data = await adminService.getSapRoles()
+        console.log('Loaded SAP profiles data:', data) // Debug log
+        
+        // Handle different data structures and filter out null values
+        if (data && Array.isArray(data)) {
+          availableSapProfiles.value = data.filter(item => item && (item.id || item.SammelrollenID))
+        } else if (data && data.data && Array.isArray(data.data)) {
+          availableSapProfiles.value = data.data.filter(item => item && (item.id || item.SammelrollenID))
+        } else {
+          availableSapProfiles.value = []
+        }
+        
+        console.log('Filtered SAP profiles:', availableSapProfiles.value.length, 'items')
+      } catch (error) {
+        console.error('Fehler beim Laden der SAP Profile:', error)
+        availableSapProfiles.value = []
+      }
+    }
     
     // Computed properties
     const filteredProfiles = computed(() => {
@@ -427,12 +490,14 @@ const emit = defineEmits(['go-back'])
         const search = searchTerm.value.toLowerCase()
         filtered = filtered.filter(profile => 
           profile.name.toLowerCase().includes(search) ||
-          profile.description.toLowerCase().includes(search)
+          (profile.bereich && profile.bereich.toLowerCase().includes(search)) ||
+          (profile.sachbereich && profile.sachbereich.toLowerCase().includes(search)) ||
+          (profile.team && profile.team.toLowerCase().includes(search))
         )
       }
       
       if (selectedCategory.value) {
-        filtered = filtered.filter(profile => profile.category === selectedCategory.value)
+        filtered = filtered.filter(profile => profile.bereich === selectedCategory.value)
       }
       
       if (selectedStatus.value) {
@@ -471,11 +536,14 @@ const emit = defineEmits(['go-back'])
     })
     
     const filteredSapProfiles = computed(() => {
-      if (!sapSearch.value) return availableSapProfiles.value
+      // Filter out null/undefined items first
+      const validProfiles = availableSapProfiles.value.filter(item => item && (item.id || item.SammelrollenID))
+      
+      if (!sapSearch.value) return validProfiles
       const search = sapSearch.value.toLowerCase()
-      return availableSapProfiles.value.filter(item =>
-        item.Bezeichnung.toLowerCase().includes(search) ||
-        item.Rollengruppe?.Bezeichnung.toLowerCase().includes(search)
+      return validProfiles.filter(item =>
+        item.Bezeichnung?.toLowerCase().includes(search) ||
+        item.Rollengruppe?.Bezeichnung?.toLowerCase().includes(search)
       )
     })
     
@@ -495,11 +563,13 @@ const emit = defineEmits(['go-back'])
     }
     
     const editProfile = (profile) => {
+      console.log('Editing profile:', profile) // Debug log
       editingProfile.value = profile
       Object.assign(profileForm, {
         name: profile.name,
-        category: profile.category,
-        description: profile.description,
+        bereich: profile.bereich,
+        sachbereich: profile.sachbereich,
+        team: profile.team,
         status: profile.status,
         isTemplate: profile.isTemplate,
         hardwareItems: [...(profile.hardwareItems || [])],
@@ -518,8 +588,9 @@ const emit = defineEmits(['go-back'])
     const resetProfileForm = () => {
       Object.assign(profileForm, {
         name: '',
-        category: '',
-        description: '',
+        bereich: '',
+        sachbereich: '',
+        team: '',
         status: 'aktiv',
         isTemplate: false,
         hardwareItems: [],
@@ -531,49 +602,69 @@ const emit = defineEmits(['go-back'])
       sapSearch.value = ''
     }
     
-    const saveProfile = () => {
-      if (editingProfile.value) {
-        const index = profiles.value.findIndex(p => p.id === editingProfile.value.id)
-        if (index !== -1) {
-          profiles.value[index] = {
-            ...profiles.value[index],
-            ...profileForm,
-            hardwareCount: profileForm.hardwareItems.length,
-            softwareCount: profileForm.softwareItems.length,
-            sapProfileCount: profileForm.sapItems.length
-          }
+    const saveProfile = async () => {
+      try {
+        console.log('Saving profile - editing:', editingProfile.value) // Debug log
+        console.log('Profile form data:', profileForm) // Debug log
+        
+        const profileData = {
+          name: profileForm.name,
+          bereich_id: bereiche.value.find(b => b.Bezeichnung === profileForm.bereich)?.BereichID || null,
+          aktiv: profileForm.status === 'aktiv'
         }
-      } else {
-        const newProfile = {
-          id: Date.now(),
-          ...profileForm,
-          hardwareCount: profileForm.hardwareItems.length,
-          softwareCount: profileForm.softwareItems.length,
-          sapProfileCount: profileForm.sapItems.length,
-          created_at: new Date().toISOString().split('T')[0]
+        
+        console.log('Sending profile data to backend:', profileData) // Debug log
+        
+        if (editingProfile.value) {
+          console.log('Updating profile with ID:', editingProfile.value.id)
+          const response = await adminService.updateProfile(editingProfile.value.id, profileData)
+          console.log('Update response:', response)
+        } else {
+          const response = await adminService.createProfile(profileData)
+          console.log('Create response:', response)
         }
-        profiles.value.push(newProfile)
+        
+        await loadProfiles() // Reload profiles
+        closeProfileModal()
+      } catch (error) {
+        console.error('Fehler beim Speichern des Profils:', error)
+        console.error('Error details:', error.response) // More detailed error log
+        alert('Fehler beim Speichern des Profils: ' + (error.response?.data?.message || error.message))
       }
-      closeProfileModal()
     }
     
-    const deleteProfile = (profile) => {
+    const deleteProfile = async (profile) => {
       if (confirm(`Sind Sie sicher, dass Sie das Profil "${profile.name}" löschen möchten?`)) {
-        const index = profiles.value.findIndex(p => p.id === profile.id)
-        if (index !== -1) {
-          profiles.value.splice(index, 1)
+        try {
+          await adminService.deleteProfile(profile.id)
+          await loadProfiles() // Reload profiles
+        } catch (error) {
+          console.error('Fehler beim Löschen des Profils:', error)
+          alert('Fehler beim Löschen des Profils: ' + (error.response?.data?.message || error.message))
         }
       }
     }
     
-    const duplicateProfile = (profile) => {
-      const duplicate = {
-        ...profile,
-        id: Date.now(),
-        name: `${profile.name} (Kopie)`,
-        created_at: new Date().toISOString().split('T')[0]
+    const duplicateProfile = async (profile) => {
+      try {
+        const duplicateData = {
+          name: `${profile.name} (Kopie)`,
+          bereich: profile.bereich,
+          sachbereich: profile.sachbereich,
+          team: profile.team,
+          status: 'entwurf', // Set as draft
+          isTemplate: false,
+          hardwareItems: profile.hardwareItems || [],
+          softwareItems: profile.softwareItems || [],
+          sapItems: profile.sapItems || []
+        }
+        
+        await adminService.createProfile(duplicateData)
+        await loadProfiles() // Reload profiles
+      } catch (error) {
+        console.error('Fehler beim Duplizieren des Profils:', error)
+        alert('Fehler beim Duplizieren des Profils: ' + (error.response?.data?.message || error.message))
       }
-      profiles.value.push(duplicate)
     }
     
     const showProfilePreview = (profile) => {
@@ -617,7 +708,9 @@ const emit = defineEmits(['go-back'])
     }
     
     const isSapSelected = (item) => {
-      return profileForm.sapItems.some(selected => selected.id === item.id)
+      if (!item) return false
+      const itemId = item.id || item.SammelrollenID
+      return profileForm.sapItems.some(selected => (selected.id || selected.SammelrollenID) === itemId)
     }
     
     const toggleHardware = (item) => {
@@ -639,13 +732,28 @@ const emit = defineEmits(['go-back'])
     }
     
     const toggleSapProfile = (item) => {
-      const index = profileForm.sapItems.findIndex(selected => selected.id === item.id)
+      if (!item) return
+      const itemId = item.id || item.SammelrollenID
+      const index = profileForm.sapItems.findIndex(selected => (selected.id || selected.SammelrollenID) === itemId)
       if (index === -1) {
         profileForm.sapItems.push(item)
       } else {
         profileForm.sapItems.splice(index, 1)
       }
     }
+    
+    // Load all data on mount
+    onMounted(async () => {
+      await Promise.all([
+        loadProfiles(),
+        loadBereiche(),
+        loadTeams(),
+        loadSachbereiche(),
+        loadHardware(),
+        loadSoftware(),
+        loadSapProfiles()
+      ])
+    })
 </script>
 
 <style scoped>
@@ -791,10 +899,23 @@ const emit = defineEmits(['go-back'])
 
 .description {
   max-width: 200px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   color: var(--color-text-muted);
+}
+
+.sachbereich {
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 2px;
+}
+
+.team {
+  font-size: 0.9em;
+  color: var(--color-text-muted);
+}
+
+.no-data {
+  color: var(--color-text-muted);
+  font-style: italic;
 }
 
 .count {
@@ -828,6 +949,11 @@ const emit = defineEmits(['go-back'])
 .action-buttons {
   display: flex;
   gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.text-right {
+  text-align: right !important;
 }
 
 .action-btn {
@@ -886,6 +1012,24 @@ const emit = defineEmits(['go-back'])
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--color-border), transparent);
   margin: 2rem 0;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.empty-state p {
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  margin: 0;
 }
 
 @media (max-width: 768px) {

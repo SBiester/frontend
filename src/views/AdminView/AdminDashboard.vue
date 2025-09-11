@@ -94,7 +94,7 @@
 						</div>
 						<h3>Software</h3>
 					</div>
-					<p>Software katalog verwalten, Lizenzen und Hersteller organisieren</p>
+					<p>Software katalog verwalten, Software und Hersteller organisieren</p>
 					<div class="module-stats">
 						<span class="stat-item">{{ softwareStats.total }} Anwendungen</span>
 						<span class="stat-item">{{ softwareStats.manufacturers }} Hersteller</span>
@@ -119,6 +119,28 @@
 					<div class="module-stats">
 						<span class="stat-item">{{ profileStats.total }} Profile</span>
 						<span class="stat-item">{{ profileStats.departments }} Bereiche</span>
+					</div>
+				</div>
+
+				<!-- Stammdaten-Verwaltung -->
+				<div class="module-card" @click="$emit('show-masterdata')">
+					<div class="module-header">
+						<div class="module-icon">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M20 6H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"></path>
+								<line x1="8" y1="11" x2="8" y2="11"></line>
+								<line x1="12" y1="11" x2="12" y2="11"></line>
+								<line x1="16" y1="11" x2="16" y2="11"></line>
+								<path d="M6 6V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"></path>
+								<path d="M6 18v2a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2"></path>
+							</svg>
+						</div>
+						<h3>Stammdaten</h3>
+					</div>
+					<p>Bereiche, Sachbereiche, Teams und Funktionen verwalten</p>
+					<div class="module-stats">
+						<span class="stat-item">{{ masterdataStats.bereiche }} Bereiche</span>
+						<span class="stat-item">{{ masterdataStats.teams }} Teams</span>
 					</div>
 				</div>
 
@@ -152,7 +174,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
 
-const emit = defineEmits(['show-users', 'show-roles', 'show-hardware', 'show-software', 'show-profiles', 'back-to-navigation']);
+const emit = defineEmits(['show-users', 'show-roles', 'show-hardware', 'show-software', 'show-profiles', 'show-masterdata', 'show-orders', 'back-to-navigation']);
 
 // Mock Statistics - Diese sollten später aus der API geladen werden
 const userStats = ref({
@@ -179,6 +201,13 @@ const profileStats = ref({
 	departments: 0
 });
 
+const masterdataStats = ref({
+	bereiche: 0,
+	teams: 0,
+	sachbereiche: 0,
+	funktionen: 0
+});
+
 const systemStats = ref({
 	activeUsers: 0,
 	pendingRequests: 0
@@ -188,6 +217,25 @@ const isLoading = ref(false);
 const lastUpdate = ref(null);
 
 import adminService from '@/services/adminService';
+
+// Load master data statistics
+const loadMasterdataStats = async () => {
+	try {
+		const bereiche = await adminService.getBereiche();
+		const teams = await adminService.getTeams();
+		const funktionen = await adminService.getFunktionen();
+		
+		masterdataStats.value.bereiche = bereiche.length;
+		masterdataStats.value.teams = teams.length;
+		masterdataStats.value.funktionen = funktionen.length;
+	} catch (error) {
+		console.error('Fehler beim Laden der Stammdaten-Statistiken:', error);
+		// Fallback values if API fails
+		masterdataStats.value.bereiche = 5;
+		masterdataStats.value.teams = 12;
+		masterdataStats.value.funktionen = 8;
+	}
+};
 
 // Load statistics
 const loadStatistics = async () => {
@@ -220,6 +268,9 @@ const loadStatistics = async () => {
 			profileStats.value.total = stats.profiles.total;
 			profileStats.value.departments = stats.profiles.departments;
 		}
+		
+		// Stammdaten-Statistiken
+		await loadMasterdataStats();
 		
 		// Order/System-Statistiken
 		if (stats.orders) {

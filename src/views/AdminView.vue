@@ -19,6 +19,7 @@
                     <option value="AdminHardware">Hardware</option>
                     <option value="AdminSoftware">Software</option>
                     <option value="AdminProfiles">Profile</option>
+                    <option value="AdminMasterData">Stammdaten</option>
                     <option value="AdminOrders">Auftragsübersicht</option>
                 </select>
             </div>
@@ -32,6 +33,7 @@
                 @show-hardware="activeComponent = 'AdminHardware'"
                 @show-software="activeComponent = 'AdminSoftware'"
                 @show-profiles="activeComponent = 'AdminProfiles'"
+                @show-masterdata="activeComponent = 'AdminMasterData'"
                 @show-orders="activeComponent = 'AdminOrders'" />
             
             <AdminUsers v-if="activeComponent === 'AdminUsers'" 
@@ -47,6 +49,9 @@
                 @go-back="activeComponent = 'AdminDashboard'" />
                 
             <AdminProfiles v-if="activeComponent === 'AdminProfiles'" 
+                @go-back="activeComponent = 'AdminDashboard'" />
+                
+            <AdminMasterData v-if="activeComponent === 'AdminMasterData'" 
                 @go-back="activeComponent = 'AdminDashboard'" />
                 
             <AdminOrders v-if="activeComponent === 'AdminOrders'" 
@@ -70,6 +75,7 @@ import AdminRoles from './AdminView/AdminRoles.vue';
 import AdminHardware from './AdminView/AdminHardware.vue';
 import AdminSoftware from './AdminView/AdminSoftware.vue';
 import AdminProfiles from './AdminView/AdminProfiles.vue';
+import AdminMasterData from './AdminView/AdminMasterData.vue';
 import AdminOrders from './AdminView/AdminOrders.vue';
 
 const activeComponent = ref('AdminDashboard');
