@@ -2,7 +2,7 @@
 <div>
 	<hr class="shadow-line" />
 	<div class="ref">
-		<div class="dashboard-header">
+		<!--<div class="dashboard-header">
 			<div>
 				<h2>Administrationsbereich</h2>
 				<p>Verwalte Benutzer, Rollen, Hardware, Software und Referenzprofile</p>
@@ -23,7 +23,7 @@
 					{{ isLoading ? 'Lädt...' : 'Aktualisieren' }}
 				</button>
 			</div>
-		</div>
+		</div> -->
 		<hr class="shadow-line" />
 		
 		<div class="admin-modules">
@@ -135,7 +135,7 @@
 								<path d="M6 18v2a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2"></path>
 							</svg>
 						</div>
-						<h3>Stammdaten</h3>
+						<h3>Bereiche</h3>
 					</div>
 					<p>Bereiche, Sachbereiche, Teams und Funktionen verwalten</p>
 					<div class="module-stats">

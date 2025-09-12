@@ -224,26 +224,47 @@ watch(() => juStore.ju.refprofil, (newProfiles) => {
 
 const fetchCategories = async () => {
 	try {
-		const response = await fetch('/api/hardware/categories');
+		const response = await fetch('/api/admin/hardware');
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 		const data = await response.json();
-		categories.value = data.categories || [];
+		// Extract unique categories from hardware data
+		const uniqueCategories = [...new Set(data.data.map(item => item.category))];
+		categories.value = uniqueCategories.filter(cat => cat); // Filter out null/undefined
+		console.log('Categories loaded:', categories.value);
 	} catch (error) {
 		console.error('Fehler beim Laden der Kategorien:', error);
 		categories.value = [];
 	}
 };
 
+// Get IDs of hardware already assigned in reference profile
+const getAssignedHardwareIds = () => {
+	const assignedIds = hardwareItems.value.map(item => item.id);
+	return assignedIds;
+};
+
 const fetchHardwareByCategory = async (category: string) => {
 	try {
-		const response = await fetch(`/api/hardware/category?category=${encodeURIComponent(category)}`);
+		const response = await fetch('/api/admin/hardware');
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 		const data = await response.json();
-		sourceHardwareList.value = data.hardware || [];
+		// Filter hardware items by category and exclude already assigned items
+		const assignedIds = getAssignedHardwareIds();
+		const filteredHardware = data.data.filter(item => 
+			item.category === category && !assignedIds.includes(item.id)
+		);
+		sourceHardwareList.value = filteredHardware.map(item => ({
+			id: item.id,
+			name: item.name,
+			category: item.category,
+			manufacturer: item.manufacturer,
+			specifications: item.description || ''
+		}));
+		console.log(`Hardware loaded for category ${category} (excluding assigned):`, sourceHardwareList.value);
 	} catch (error) {
 		console.error('Fehler beim Laden der Hardware für Kategorie:', error);
 		sourceHardwareList.value = [];
@@ -361,12 +382,48 @@ const searchHardware = async (query) => {
 	}
 	
 	try {
-		const response = await fetch(`/api/hardware/search?query=${encodeURIComponent(query)}`);
+		const response = await fetch('/api/admin/hardware');
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 		const data = await response.json();
-		searchResults.value = data;
+		
+		// Filter hardware items by search query and exclude already assigned items
+		const assignedIds = getAssignedHardwareIds();
+		const filteredHardware = data.data.filter(item => 
+			!assignedIds.includes(item.id) && (
+				item.name.toLowerCase().includes(query.toLowerCase()) ||
+				item.category.toLowerCase().includes(query.toLowerCase()) ||
+				(item.description && item.description.toLowerCase().includes(query.toLowerCase()))
+			)
+		);
+		
+		// Group by category for search results display
+		const categorizedResults = {};
+		filteredHardware.forEach(item => {
+			if (!categorizedResults[item.category]) {
+				categorizedResults[item.category] = [];
+			}
+			categorizedResults[item.category].push({
+				id: item.id,
+				name: item.name,
+				category: item.category,
+				manufacturer: item.manufacturer,
+				specifications: item.description || ''
+			});
+		});
+		
+		const categories = Object.keys(categorizedResults).map(category => ({
+			category: category,
+			items: categorizedResults[category]
+		}));
+		
+		searchResults.value = {
+			categories: categories,
+			total_results: filteredHardware.length
+		};
+		
+		console.log(`Search results for "${query}":`, searchResults.value);
 	} catch (error) {
 		console.error('Fehler bei der Hardware Suche:', error);
 		searchResults.value = { categories: [], total_results: 0 };

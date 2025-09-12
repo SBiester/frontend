@@ -15,7 +15,7 @@
             @input="handleSearch"
             type="text" 
             class="search-input"
-            placeholder="Profile durchsuchen (Name, Bereich, Sachbereich & Team)..."
+            placeholder="Profile durchsuchen (Name, Bereich, Team)..."
           />
           <div class="search-icon">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -28,8 +28,8 @@
         <div class="filter-controls">
           <select v-model="selectedCategory" @change="filterProfiles" class="filter-select">
             <option value="">Alle Bereiche</option>
-            <option v-for="bereich in bereiche" :key="bereich.BereichID" :value="bereich.Bezeichnung">
-              {{ bereich.Bezeichnung }}
+            <option v-for="bereich in bereiche" :key="bereich.BereichID" :value="bereich.Bereich">
+              {{ bereich.Bereich }}
             </option>
           </select>
           
@@ -56,7 +56,7 @@
             <tr>
               <th>Profil Name</th>
               <th>Bereich</th>
-              <th>Sachbereich & Team</th>
+              <th>Team</th>
               <th>Hardware</th>
               <th>Software</th>
               <th>SAP Profile</th>
@@ -87,10 +87,7 @@
                 <span class="category-badge">{{ profile.bereich }}</span>
               </td>
               <td class="description">
-                <div v-if="profile.sachbereich || profile.team">
-                  <div v-if="profile.sachbereich" class="sachbereich">{{ profile.sachbereich }}</div>
-                  <div v-if="profile.team" class="team">{{ profile.team }}</div>
-                </div>
+                <div v-if="profile.team" class="team">{{ profile.team }}</div>
                 <div v-else class="no-data">-</div>
               </td>
               <td class="count">{{ profile.hardwareCount }}</td>
@@ -163,18 +160,8 @@
                   <label for="profileCategory">Bereich *</label>
                   <select id="profileCategory" v-model="profileForm.bereich" required class="form-select">
                     <option value="">Bereich wählen</option>
-                    <option v-for="bereich in bereiche" :key="bereich.BereichID" :value="bereich.Bezeichnung">
-                      {{ bereich.Bezeichnung }}
-                    </option>
-                  </select>
-                </div>
-                
-                <div class="form-group">
-                  <label for="profileSachbereich">Sachbereich</label>
-                  <select id="profileSachbereich" v-model="profileForm.sachbereich" class="form-select">
-                    <option value="">Sachbereich wählen</option>
-                    <option v-for="sachbereich in sachbereiche" :key="sachbereich.SachbereichID" :value="sachbereich.Bezeichnung">
-                      {{ sachbereich.Bezeichnung }}
+                    <option v-for="bereich in bereiche" :key="bereich.BereichID" :value="bereich.Bereich">
+                      {{ bereich.Bereich }}
                     </option>
                   </select>
                 </div>
@@ -183,8 +170,8 @@
                   <label for="profileTeam">Team</label>
                   <select id="profileTeam" v-model="profileForm.team" class="form-select">
                     <option value="">Team wählen</option>
-                    <option v-for="team in teams" :key="team.TeamID" :value="team.Bezeichnung">
-                      {{ team.Bezeichnung }}
+                    <option v-for="team in filteredTeams" :key="team.TeamID" :value="team.Team">
+                      {{ team.Team }}
                     </option>
                   </select>
                 </div>
@@ -280,7 +267,7 @@
                     @click="toggleSapProfile(item)"
                   >
                     <span class="item-name">{{ item?.Bezeichnung || 'Unbekannt' }}</span>
-                    <span class="item-group">{{ item?.Rollengruppe?.Bezeichnung || 'Keine Gruppe' }}</span>
+                    <span class="item-group">{{ item?.Rollengruppe?.Bezeichnung || item?.rollengruppe?.Bezeichnung || 'Keine Gruppe' }}</span>
                   </div>
                 </div>
               </div>
@@ -327,7 +314,7 @@
               <h4>SAP Profile ({{ previewProfile?.sapItems?.length || 0 }})</h4>
               <div class="preview-items">
                 <div v-for="item in previewProfile?.sapItems" :key="item.id" class="preview-item">
-                  {{ item.Bezeichnung }} ({{ item.Rollengruppe?.Bezeichnung }})
+                  {{ item.Bezeichnung }} ({{ item.Rollengruppe?.Bezeichnung || item.rollengruppe?.Bezeichnung }})
                 </div>
               </div>
             </div>
@@ -342,7 +329,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import adminService from '@/services/adminService'
 
 const emit = defineEmits(['go-back'])
@@ -364,7 +351,6 @@ const emit = defineEmits(['go-back'])
     const profileForm = reactive({
       name: '',
       bereich: '',
-      sachbereich: '',
       team: '',
       status: 'aktiv',
       isTemplate: false,
@@ -377,11 +363,35 @@ const emit = defineEmits(['go-back'])
     const profiles = ref([])
     const bereiche = ref([])
     const teams = ref([])
-    const sachbereiche = ref([])
     
     const availableHardware = ref([])
     const availableSoftware = ref([])
     const availableSapProfiles = ref([])
+    
+    // Computed properties
+    const filteredTeams = computed(() => {
+      if (!profileForm.bereich) {
+        return []
+      }
+      // Filter teams by selected Bereich
+      const selectedBereichData = bereiche.value.find(b => b.Bereich === profileForm.bereich)
+      if (!selectedBereichData) {
+        return []
+      }
+      
+      return teams.value.filter(team => team.BereichID === selectedBereichData.BereichID)
+    })
+    
+    // Watchers
+    watch(() => profileForm.bereich, (newBereich, oldBereich) => {
+      if (newBereich !== oldBereich && profileForm.team) {
+        // Check if current team is still valid for new bereich
+        const isTeamStillValid = filteredTeams.value.some(team => team.Team === profileForm.team)
+        if (!isTeamStillValid) {
+          profileForm.team = '' // Clear team if not valid for new bereich
+        }
+      }
+    })
     
     // Loading data functions
     const loadProfiles = async () => {
@@ -409,7 +419,7 @@ const emit = defineEmits(['go-back'])
     
     const loadBereiche = async () => {
       try {
-        const response = await fetch('/api/bereiche')
+        const response = await fetch('/api/admin/bereiche')
         const data = await response.json()
         bereiche.value = data || []
         console.log('Loaded bereiche:', bereiche.value) // Debug log
@@ -421,23 +431,13 @@ const emit = defineEmits(['go-back'])
     
     const loadTeams = async () => {
       try {
-        const response = await fetch('/api/teams')
+        const response = await fetch('/api/admin/teams')
         const data = await response.json()
         teams.value = data || []
+        console.log('Loaded teams:', teams.value) // Debug log
       } catch (error) {
         console.error('Fehler beim Laden der Teams:', error)
         teams.value = []
-      }
-    }
-    
-    const loadSachbereiche = async () => {
-      try {
-        const response = await fetch('/api/sachbereiche')
-        const data = await response.json()
-        sachbereiche.value = data || []
-      } catch (error) {
-        console.error('Fehler beim Laden der Sachbereiche:', error)
-        sachbereiche.value = []
       }
     }
     
@@ -543,7 +543,8 @@ const emit = defineEmits(['go-back'])
       const search = sapSearch.value.toLowerCase()
       return validProfiles.filter(item =>
         item.Bezeichnung?.toLowerCase().includes(search) ||
-        item.Rollengruppe?.Bezeichnung?.toLowerCase().includes(search)
+        item.Rollengruppe?.Bezeichnung?.toLowerCase().includes(search) ||
+        item.rollengruppe?.Bezeichnung?.toLowerCase().includes(search)
       )
     })
     
@@ -565,10 +566,13 @@ const emit = defineEmits(['go-back'])
     const editProfile = (profile) => {
       console.log('Editing profile:', profile) // Debug log
       editingProfile.value = profile
+      
+      // Find valid bereich - don't use "Unbekannt" if it's not in the list
+      const validBereich = bereiche.value.find(b => b.Bereich === profile.bereich)
+      
       Object.assign(profileForm, {
         name: profile.name,
-        bereich: profile.bereich,
-        sachbereich: profile.sachbereich,
+        bereich: validBereich ? profile.bereich : '', // Use empty string if bereich not found
         team: profile.team,
         status: profile.status,
         isTemplate: profile.isTemplate,
@@ -576,6 +580,8 @@ const emit = defineEmits(['go-back'])
         softwareItems: [...(profile.softwareItems || [])],
         sapItems: [...(profile.sapItems || [])]
       })
+      
+      console.log('Profile form after assignment:', profileForm) // Debug log
       showProfileModal.value = true
     }
     
@@ -589,7 +595,6 @@ const emit = defineEmits(['go-back'])
       Object.assign(profileForm, {
         name: '',
         bereich: '',
-        sachbereich: '',
         team: '',
         status: 'aktiv',
         isTemplate: false,
@@ -607,10 +612,26 @@ const emit = defineEmits(['go-back'])
         console.log('Saving profile - editing:', editingProfile.value) // Debug log
         console.log('Profile form data:', profileForm) // Debug log
         
+        // Extract IDs from the selected items
+        const hardwareIds = profileForm.hardwareItems.map(item => item.id || item.HardwareID).filter(id => id)
+        const softwareIds = profileForm.softwareItems.map(item => item.id || item.SoftwareID).filter(id => id)
+        const sapIds = profileForm.sapItems.map(item => item.id || item.SammelrollenID).filter(id => id)
+        
+        // Find bereich ID only if bereich is specified and valid
+        let bereichId = null
+        if (profileForm.bereich && profileForm.bereich !== '') {
+          const foundBereich = bereiche.value.find(b => b.Bereich === profileForm.bereich)
+          bereichId = foundBereich?.BereichID || null
+        }
+        
         const profileData = {
           name: profileForm.name,
-          bereich_id: bereiche.value.find(b => b.Bezeichnung === profileForm.bereich)?.BereichID || null,
-          aktiv: profileForm.status === 'aktiv'
+          bereich_id: bereichId,
+          team: profileForm.team, // Send team info for future compatibility
+          aktiv: profileForm.status === 'aktiv',
+          hardwareItems: hardwareIds,
+          softwareItems: softwareIds,
+          sapItems: sapIds
         }
         
         console.log('Sending profile data to backend:', profileData) // Debug log
@@ -626,6 +647,7 @@ const emit = defineEmits(['go-back'])
         
         await loadProfiles() // Reload profiles
         closeProfileModal()
+        alert('Profil erfolgreich gespeichert!') // Success message
       } catch (error) {
         console.error('Fehler beim Speichern des Profils:', error)
         console.error('Error details:', error.response) // More detailed error log
@@ -748,7 +770,6 @@ const emit = defineEmits(['go-back'])
         loadProfiles(),
         loadBereiche(),
         loadTeams(),
-        loadSachbereiche(),
         loadHardware(),
         loadSoftware(),
         loadSapProfiles()

@@ -4,6 +4,23 @@
         <h2>SAP Profile auswählen</h2>
         <p>Wähle die benötigten SAP Profile aus den verschiedenen Kategorien:</p>
         
+        <!-- Show pre-selected profiles from reference profile -->
+        <div v-if="selectedProfiles.some(p => p.fromReferenceProfile)" class="reference-profiles-section">
+            <h3>Durch Referenzprofil zugewiesene SAP Profile</h3>
+            <div class="profiles-grid">
+                <div 
+                    v-for="profile in selectedProfiles.filter(p => p.fromReferenceProfile)" 
+                    :key="`ref-${profile.id}`"
+                    class="profile-card selected"
+                >
+                    <div class="profile-header">
+                        <h5>{{ profile.name }}</h5>
+                    </div>
+                </div>
+            </div>
+            <hr class="shadow-line" />
+        </div>
+        
         <div class="search-section">
             <div class="search-input-container">
                 <input 
@@ -96,11 +113,16 @@
                 <div 
                     v-for="profile in selectedProfiles" 
                     :key="profile.id"
+                    :class="{ 'from-reference': profile.fromReferenceProfile }"
                     class="selected-profile-item"
                 >
                     <span class="selected-profile-name">{{ profile.name }}</span>
-                    <span class="selected-profile-code">{{ profile.code }}</span>
-                    <button @click="removeProfile(profile)" class="remove-button">×</button>
+                    <button 
+                        v-if="!profile.fromReferenceProfile"
+                        @click="removeProfile(profile)" 
+                        class="remove-button"
+                        title="Profil entfernen"
+                    >×</button>
                 </div>
             </div>
         </div>
@@ -137,8 +159,24 @@ const searchQuery = ref('');
 const searchResults = ref(null);
 const searchTimeout = ref(null);
 
+// Get IDs of SAP profiles already assigned from reference profile
+const getAssignedSapProfileIds = () => {
+    const assignedIds = selectedProfiles.value
+        .filter(profile => profile.fromReferenceProfile)
+        .map(profile => profile.id);
+    return assignedIds;
+};
+
 const currentProfileGroups = computed(() => {
-    return searchQuery.value && searchResults.value ? searchResults.value.groups : profileGroups.value;
+    const groups = searchQuery.value && searchResults.value ? searchResults.value.groups : profileGroups.value;
+    
+    // Filter out already assigned SAP profiles from reference profile
+    const assignedIds = getAssignedSapProfileIds();
+    
+    return groups.map(group => ({
+        ...group,
+        profiles: group.profiles.filter(profile => !assignedIds.includes(profile.id))
+    })).filter(group => group.profiles.length > 0); // Only show groups that have available profiles
 });
 
 const fetchSapProfiles = async () => {
@@ -175,6 +213,12 @@ const toggleProfile = (profile) => {
 };
 
 const removeProfile = (profile) => {
+    // Prevent removal of profiles from reference profile
+    if (profile.fromReferenceProfile) {
+        console.warn('Cannot remove SAP profile from reference profile:', profile.name);
+        return;
+    }
+    
     const index = selectedProfiles.value.findIndex(p => p.id === profile.id);
     if (index > -1) {
         selectedProfiles.value.splice(index, 1);
@@ -275,16 +319,65 @@ const clearSearch = () => {
     }
 };
 
+// Load SAP profiles from reference profile
+const loadSapProfilesFromReferenceProfile = async () => {
+    if (juStore.ju.refprofil && juStore.ju.refprofil.length > 0) {
+        try {
+            const profileName = juStore.ju.refprofil[0].name;
+            const response = await fetch('/api/admin/profiles');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            
+            // Find the profile by name
+            const profile = data.data.find(p => p.name === profileName);
+            if (profile && profile.sapItems && profile.sapItems.length > 0) {
+                // Map SAP items from reference profile to the expected format
+                const referenceSapProfiles = profile.sapItems.map(item => ({
+                    id: item.id,
+                    name: item.Bezeichnung,
+                    code: item.Bezeichnung, // Use Bezeichnung as code for now
+                    category: item.Rollengruppe?.Bezeichnung || 'Allgemein',
+                    fromReferenceProfile: true
+                }));
+                
+                console.log('SAP profiles loaded from reference profile:', referenceSapProfiles);
+                return referenceSapProfiles;
+            }
+        } catch (error) {
+            console.error('Error loading SAP profiles from reference profile:', error);
+        }
+    }
+    return [];
+};
+
 onMounted(async () => {
     await fetchSapProfiles();
     
+    // First load SAP profiles from reference profile
+    const referenceSapProfiles = await loadSapProfilesFromReferenceProfile();
+    
+    // Then load any additionally saved profiles from cookie
     const savedProfiles = loadSapProfilesFromCookie();
+    
+    // Combine reference profile SAP items with saved selections
+    const allSelectedProfiles = [...referenceSapProfiles];
     if (savedProfiles && savedProfiles.length > 0) {
-        selectedProfiles.value = savedProfiles;
+        // Add saved profiles that are not already in reference profile
+        savedProfiles.forEach(saved => {
+            if (!allSelectedProfiles.some(ref => ref.id === saved.id)) {
+                allSelectedProfiles.push(saved);
+            }
+        });
+    }
+    
+    if (allSelectedProfiles.length > 0) {
+        selectedProfiles.value = allSelectedProfiles;
         if (!juStore.ju.sapProfiles) {
             juStore.ju.sapProfiles = [];
         }
-        juStore.ju.sapProfiles = [...savedProfiles];
+        juStore.ju.sapProfiles = [...allSelectedProfiles];
     }
 });
 </script>

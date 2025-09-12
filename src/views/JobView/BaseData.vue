@@ -62,6 +62,72 @@ async function fetchData(endpoint, targetRef) {
     }
 }
 
+async function fetchBereiche() {
+    try {
+        const response = await fetch('/api/admin/bereiche');
+        if (!response.ok) {
+            throw new Error('Fehler beim Laden der Bereiche');
+        }
+        const data = await response.json();
+        bereiche.value = data.map(item => ({
+            value: item.Bereich,
+            label: item.Bereich,
+            name: item.Bereich,
+            BereichID: item.BereichID
+        }));
+        console.log('Bereiche geladen:', bereiche.value);
+    } catch (error) {
+        console.error('Fehler beim Laden der Bereiche:', error);
+        bereiche.value = [];
+    }
+}
+
+async function fetchTeams() {
+    try {
+        const response = await fetch('/api/admin/teams');
+        if (!response.ok) {
+            throw new Error('Fehler beim Laden der Teams');
+        }
+        const data = await response.json();
+        teams.value = data.map(item => ({
+            value: item.Team,
+            label: item.Team,
+            name: item.Team,
+            BereichID: item.BereichID
+        }));
+        console.log('Teams geladen:', teams.value);
+    } catch (error) {
+        console.error('Fehler beim Laden der Teams:', error);
+        teams.value = [];
+    }
+}
+
+// Computed properties for filtered teams
+const filteredTeams = computed(() => {
+    if (!ju.value.bereich) {
+        return [];
+    }
+    // Find the selected bereich by matching the name
+    const selectedBereich = bereiche.value.find(b => b.name === ju.value.bereich);
+    if (!selectedBereich) {
+        return [];
+    }
+    
+    // Filter teams by BereichID
+    return teams.value.filter(team => team.BereichID === selectedBereich.BereichID);
+});
+
+// Watch for bereich changes to clear team if not valid
+watch(() => ju.value.bereich, (newBereich, oldBereich) => {
+    if (newBereich !== oldBereich && ju.value.team) {
+        // Check if current team is still valid for new bereich
+        const isTeamStillValid = filteredTeams.value.some(team => team.name === ju.value.team);
+        if (!isTeamStillValid) {
+            ju.value.team = null; // Clear team if not valid for new bereich
+        }
+    }
+});
+
 function handleDateChange(field, value) {
     console.log(`Date changed for ${field}:`, value);
     if (value instanceof Date) {
@@ -169,10 +235,10 @@ const formSchema = computed(() => ({
         items: bereiche.value,
         columns: { default: 12, tablet: 4 }
     },
-    sachbereich: {
+    team: {
         type: 'select',
         placeholder: 'Sachbereich & Team',
-        items: sachbereiche.value,
+        items: filteredTeams.value,
         columns: { default: 12, tablet: 8 }
     },
     funktion: {
@@ -218,18 +284,13 @@ const commentSchema = computed(() => ({
 
 onMounted(async () => {
     await Promise.all([
-        fetchData('bereiche', bereiche),
+        fetchBereiche(),
         fetchData('sachbereiche', sachbereiche),
-        fetchData('teams', teams),
+        fetchTeams(),
         fetchData('funktionen', funktionen),
         fetchData('vorgesetzte', vorgesetzte),
         fetchData('positionen', positionen)
     ]);
-    
-    if (ju.value.funktion && !funktionen.value.includes(ju.value.funktion)) {
-        showCustomFunction.value = true;
-        ju.value.customFunktion = ju.value.funktion;
-    }
     
     setupDatepickerObserver();
 });

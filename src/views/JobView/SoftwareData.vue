@@ -226,15 +226,52 @@ const searchTimeout = ref(null);
 const fetchSoftwareForProfile = async (profileName: string) => {
 	loading.value = true;
 	try {
-		const response = await fetch(`/api/software/profile?profile=${encodeURIComponent(profileName)}`);
+		// Get profile details from admin API to fetch software items
+		const response = await fetch('/api/admin/profiles');
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 		const data = await response.json();
-		softwareItems.value = data.software || [];
+		
+		// Find the profile by name
+		const profile = data.data.find(p => p.name === profileName);
+		if (profile) {
+			// Map software items to the expected format
+			if (profile.softwareItems) {
+				softwareItems.value = profile.softwareItems.map(item => ({
+					id: item.id,
+					name: item.name,
+					manufacturer: item.manufacturer || 'Unbekannt',
+					category: item.manufacturer || 'Software',
+					description: item.description || '',
+					version: item.version || ''
+				}));
+				console.log('Software items loaded for profile:', profileName, softwareItems.value);
+			} else {
+				softwareItems.value = [];
+			}
+			
+			// Check if profile has SAP items and set SAP selection accordingly
+			if (profile.sapItems && profile.sapItems.length > 0) {
+				sapSelected.value = true;
+				juStore.ju.selectedSap = true;
+				console.log('SAP automatically selected - profile has SAP items:', profile.sapItems);
+			} else {
+				sapSelected.value = false;
+				juStore.ju.selectedSap = false;
+				console.log('SAP not selected - profile has no SAP items');
+			}
+		} else {
+			softwareItems.value = [];
+			sapSelected.value = false;
+			juStore.ju.selectedSap = false;
+			console.log('No profile found:', profileName);
+		}
 	} catch (error) {
-		console.error('Fehler beim Laden der Software:', error);
+		console.error('Fehler beim Laden der Software für Profil:', error);
 		softwareItems.value = [];
+		sapSelected.value = false;
+		juStore.ju.selectedSap = false;
 	} finally {
 		loading.value = false;
 	}
@@ -251,26 +288,48 @@ watch(() => juStore.ju.refprofil, (newProfiles) => {
 
 const fetchManufacturers = async () => {
 	try {
-		const response = await fetch('/api/software/manufacturers');
+		const response = await fetch('/api/admin/software');
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 		const data = await response.json();
-		manufacturers.value = data.manufacturers || [];
+		// Extract unique manufacturers from software data
+		const uniqueManufacturers = [...new Set(data.data.map(item => item.manufacturer))];
+		manufacturers.value = uniqueManufacturers.filter(manufacturer => manufacturer); // Filter out null/undefined
+		console.log('Manufacturers loaded:', manufacturers.value);
 	} catch (error) {
 		console.error('Fehler beim Laden der Hersteller:', error);
 		manufacturers.value = [];
 	}
 };
 
+// Get IDs of software already assigned in reference profile
+const getAssignedSoftwareIds = () => {
+	const assignedIds = softwareItems.value.map(item => item.id);
+	return assignedIds;
+};
+
 const fetchSoftwareByManufacturer = async (manufacturer: string) => {
 	try {
-		const response = await fetch(`/api/software/manufacturer?manufacturer=${encodeURIComponent(manufacturer)}`);
+		const response = await fetch('/api/admin/software');
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 		const data = await response.json();
-		sourceSoftwareList.value = data.software || [];
+		// Filter software items by manufacturer and exclude already assigned items
+		const assignedIds = getAssignedSoftwareIds();
+		const filteredSoftware = data.data.filter(item => 
+			item.manufacturer === manufacturer && !assignedIds.includes(item.id)
+		);
+		sourceSoftwareList.value = filteredSoftware.map(item => ({
+			id: item.id,
+			name: item.name,
+			manufacturer: item.manufacturer,
+			category: item.manufacturer, // Use manufacturer as category for consistency
+			description: item.description || '',
+			version: item.version || ''
+		}));
+		console.log(`Software loaded for manufacturer ${manufacturer} (excluding assigned):`, sourceSoftwareList.value);
 	} catch (error) {
 		console.error('Fehler beim Laden der Software für Hersteller:', error);
 		sourceSoftwareList.value = [];
@@ -423,12 +482,49 @@ const searchSoftware = async (query) => {
 	}
 	
 	try {
-		const response = await fetch(`/api/software/search?query=${encodeURIComponent(query)}`);
+		const response = await fetch('/api/admin/software');
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 		const data = await response.json();
-		searchResults.value = data;
+		
+		// Filter software items by search query and exclude already assigned items
+		const assignedIds = getAssignedSoftwareIds();
+		const filteredSoftware = data.data.filter(item => 
+			!assignedIds.includes(item.id) && (
+				item.name.toLowerCase().includes(query.toLowerCase()) ||
+				item.manufacturer.toLowerCase().includes(query.toLowerCase()) ||
+				(item.description && item.description.toLowerCase().includes(query.toLowerCase()))
+			)
+		);
+		
+		// Group by manufacturer for search results display
+		const manufacturerResults = {};
+		filteredSoftware.forEach(item => {
+			if (!manufacturerResults[item.manufacturer]) {
+				manufacturerResults[item.manufacturer] = [];
+			}
+			manufacturerResults[item.manufacturer].push({
+				id: item.id,
+				name: item.name,
+				manufacturer: item.manufacturer,
+				category: item.manufacturer,
+				description: item.description || '',
+				version: item.version || ''
+			});
+		});
+		
+		const categories = Object.keys(manufacturerResults).map(manufacturer => ({
+			category: manufacturer,
+			items: manufacturerResults[manufacturer]
+		}));
+		
+		searchResults.value = {
+			categories: categories,
+			total_results: filteredSoftware.length
+		};
+		
+		console.log(`Search results for "${query}":`, searchResults.value);
 	} catch (error) {
 		console.error('Fehler bei der Software Suche:', error);
 		searchResults.value = { categories: [], total_results: 0 };

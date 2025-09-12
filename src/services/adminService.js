@@ -222,8 +222,31 @@ class AdminService {
   // SAP Management
   async getSapRoles(params = {}) {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/sap/roles`, { params })
-      return response.data
+      // Fetch all pages of SAP roles
+      let allRoles = []
+      let currentPage = 1
+      let lastPage = 1
+      
+      do {
+        const response = await axios.get(`${API_BASE_URL}/admin/sap/roles`, { 
+          params: { ...params, page: currentPage } 
+        })
+        
+        if (response.data.data) {
+          allRoles = [...allRoles, ...response.data.data]
+          lastPage = response.data.last_page || 1
+          currentPage++
+        } else {
+          // Handle non-paginated response
+          return response.data
+        }
+      } while (currentPage <= lastPage)
+      
+      // Return data in the same structure but with all items
+      return {
+        data: allRoles,
+        total: allRoles.length
+      }
     } catch (error) {
       console.error('Error fetching SAP roles:', error)
       throw error

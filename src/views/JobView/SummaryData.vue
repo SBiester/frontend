@@ -227,23 +227,40 @@ const formatDate = (dateString) => {
 const fetchProfileData = async () => {
 	if (!ju.value.refprofil || ju.value.refprofil.length === 0) return;
 
+	console.log('Lade Profil-Daten für:', ju.value.refprofil);
+
 	for (const profil of ju.value.refprofil) {
 		try {
+			console.log(`Lade Hardware für Profil: ${profil.name}`);
+			// Fetch hardware for this profile using profile name
 			const hardwareResponse = await fetch(`/api/hardware/profile?profile=${encodeURIComponent(profil.name)}`);
+			console.log(`Hardware Response Status: ${hardwareResponse.status}`);
 			if (hardwareResponse.ok) {
 				const hardwareData = await hardwareResponse.json();
-				profileHardware.value[profil.name] = hardwareData.hardware || [];
+				console.log(`Hardware Data für ${profil.name}:`, hardwareData);
+				if (hardwareData.hardware && hardwareData.hardware.length > 0) {
+					profileHardware.value[profil.name] = hardwareData.hardware;
+				}
 			}
 
+			console.log(`Lade Software für Profil: ${profil.name}`);
+			// Fetch software for this profile using profile name
 			const softwareResponse = await fetch(`/api/software/profile?profile=${encodeURIComponent(profil.name)}`);
+			console.log(`Software Response Status: ${softwareResponse.status}`);
 			if (softwareResponse.ok) {
 				const softwareData = await softwareResponse.json();
-				profileSoftware.value[profil.name] = softwareData.software || [];
+				console.log(`Software Data für ${profil.name}:`, softwareData);
+				if (softwareData.software && softwareData.software.length > 0) {
+					profileSoftware.value[profil.name] = softwareData.software;
+				}
 			}
 		} catch (error) {
 			console.error(`Fehler beim Laden der Profil-Daten für ${profil.name}:`, error);
 		}
 	}
+
+	console.log('Final profileHardware:', profileHardware.value);
+	console.log('Final profileSoftware:', profileSoftware.value);
 };
 
 const getTelefonTypeName = (typeId) => {

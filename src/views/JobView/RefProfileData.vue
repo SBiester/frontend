@@ -4,13 +4,14 @@
 	<div class="ref">
 		<div class="buttons-row">
 			<p>Referenzprofile für Bereich: {{ selectedBereich || 'Alle' }}</p>
-			<select v-model="selectedBereich" @change="filterByBereich" class="bereich-select">
-				<option value="">Alle Bereiche</option>
-				<option value="IT">IT</option>
-				<option value="TK">TK</option>
-				<option value="PM">PM</option>
-				<option value="MK">MK</option>
-			</select>
+			<div class="controls-group">
+				<select v-model="selectedBereich" @change="filterByBereich" class="bereich-select">
+					<option value="">Alle Bereiche</option>
+					<option v-for="bereich in availableBereiche" :key="bereich" :value="bereich">
+						{{ bereich }}
+					</option>
+				</select>
+			</div>
 		</div>
 		<hr class="shadow-line"/>
 		<draggable class="list-group" :list="sourceList" group="items" item-key="id">
@@ -50,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch, computed } from 'vue';
+import { onMounted, ref, watch, computed, onUnmounted } from 'vue';
 import { storeToRefs } from 'pinia';
 
 import { useJuStore } from '@/stores/ju'
@@ -214,7 +215,8 @@ const testCookieWrite = () => {
 const sourceList = ref([]);
 const targetList = ref([]);
 const allReferenzprofile = ref([]);
-const selectedBereich = ref('IT');
+const availableBereiche = ref([]);
+const selectedBereich = ref('');
 
 const fetchReferenzprofile = async () => {
 	try {
@@ -223,14 +225,29 @@ const fetchReferenzprofile = async () => {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 		const data = await response.json();
+		console.log('Raw API response:', data); // Debug log
 		allReferenzprofile.value = data || [];
+		
+		// Extract available bereiche from loaded profiles
+		const bereiche = [...new Set(allReferenzprofile.value
+			.map(profile => profile.bereich)
+			.filter(bereich => bereich && bereich !== 'Unbekannt' && bereich !== 'Kein Bereich zugeordnet')
+		)].sort();
+		availableBereiche.value = bereiche;
+		
 		updateSourceList();
 		console.log('Referenzprofile geladen:', allReferenzprofile.value);
+		console.log('Verfügbare Bereiche:', availableBereiche.value);
 	} catch (error) {
 		console.error('Fehler beim Laden der Referenzprofile:', error);
 		allReferenzprofile.value = [];
+		availableBereiche.value = [];
 	}
 };
+
+
+// Check for updates every 30 seconds
+let intervalId = null;
 
 onMounted(async () => {
 	await fetchReferenzprofile();
@@ -243,6 +260,19 @@ onMounted(async () => {
 			updateSourceList();
 		}
 	}, 100);
+	
+	// Set up automatic refresh every 30 seconds
+	intervalId = setInterval(async () => {
+		console.log('Auto-refreshing profiles...');
+		await fetchReferenzprofile();
+	}, 30000);
+});
+
+// Clean up interval on unmount
+onUnmounted(() => {
+	if (intervalId) {
+		clearInterval(intervalId);
+	}
 });
 
 const updateSourceList = () => {
@@ -401,6 +431,12 @@ const filterByBereich = () => {
 	align-items: center;
 }
 
+.controls-group {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
 .bereich-select {
 	padding: 0.5rem;
 	border: 1px solid var(--color-border);
@@ -412,6 +448,24 @@ const filterByBereich = () => {
 
 .bereich-select:focus {
 	outline: none;
+	border-color: var(--color-button);
+}
+
+.refresh-button {
+	padding: 0.5rem;
+	border: 1px solid var(--color-border);
+	border-radius: 0.25rem;
+	background: var(--color-background);
+	color: var(--color-text);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.refresh-button:hover {
+	background: var(--color-button);
 	border-color: var(--color-button);
 }
 
