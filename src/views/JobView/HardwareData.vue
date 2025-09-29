@@ -8,30 +8,9 @@
 			</li>
 		</ul>
 		<hr class="shadow-line" />
-		<h2>Hardware</h2>
-		<div v-if="hardwareItems.length > 0">
-			<p>Durch Profil zugewiesene Hardware:</p>
-			<div class="hardware-grid">
-				<div v-for="item in hardwareItems" :key="item.id" class="hardware-card">
-					<div class="hardware-header">
-						<h4>{{ item.name }}</h4>
-						<span class="category-badge">{{ item.category }}</span>
-					</div>
-					<p class="specifications">{{ item.specifications }}</p>
-				</div>
-			</div>
-			<hr class="shadow-line" />
-		</div>
-		<div v-else-if="loading">
-			<p>Hardware wird geladen...</p>
-			<hr class="shadow-line" />
-		</div>
+		<h2>Hardware hinzufügen</h2>
 
-		
 		<div class="hardware-selection">
-			<div class="selection-header">
-				<h3>Zusätzliche Hardware hinzufügen</h3>
-			</div>
 			
 			<div class="search-section">
 				<div class="search-input-container">
@@ -137,10 +116,14 @@
 							<template #item="{ element, index }">
 								<div class="list-group-item">
 									<div class="hardware-info">
-										<span class="hardware-name">{{ element.name }}</span>
+										<span class="hardware-name">{{ element.quantity && element.quantity > 1 ? `${element.quantity}x ${element.name}` : element.name }}</span>
 										<span class="hardware-category">{{ element.category }}</span>
 									</div>
-									<button @click="removeHardware(index)" class="delete-button fa">&#xf014;</button>
+									<div class="quantity-controls">
+										<button @click="removeHardware(index)" class="quantity-button remove-quantity" title="Menge verringern/Entfernen">-</button>
+										<span class="quantity-display">{{ element.quantity || 1 }}</span>
+										<button @click="addHardwareItem(element)" class="quantity-button add-quantity" title="Menge erhöhen">+</button>
+									</div>
 								</div>
 							</template>
 						</draggable>
@@ -154,10 +137,10 @@
 		<hr class="shadow-line" />
 		<div class="navigation-buttons">
 			<button @click="$emit('go-back')" class="back-button">
-				Referenzprofil
+				← Referenzprofil
 			</button>
 			<button @click="$emit('show-software')" class="next-button">
-				Software
+				Software →
 			</button>
 		</div>
 		<hr class="shadow-line" />
@@ -308,27 +291,45 @@ const onHardwareAdd = (event: any) => {
 
 const removeHardware = (index: number) => {
 	if (index > -1) {
-		const [removedItem] = additionalHardwareList.value.splice(index, 1);
-		sourceHardwareList.value.push(removedItem);
+		const item = additionalHardwareList.value[index];
+		if (item.quantity && item.quantity > 1) {
+			// Decrement quantity
+			item.quantity -= 1;
+			console.log(`Hardware Menge verringert: ${item.name} (${item.quantity})`);
+		} else {
+			// Remove item completely
+			additionalHardwareList.value.splice(index, 1);
+			console.log(`Hardware entfernt: ${item.name}`);
+		}
+
 		juStore.ju.additionalHardware = [...additionalHardwareList.value];
 		saveAdditionalHardwareToCookie(additionalHardwareList.value);
 	}
 };
 
 const addHardwareItem = (item: any) => {
-	const sourceIndex = sourceHardwareList.value.findIndex(sourceItem => sourceItem.id === item.id);
-	if (sourceIndex > -1) {
-		const [movedItem] = sourceHardwareList.value.splice(sourceIndex, 1);
-		additionalHardwareList.value.push(movedItem);
-		
-		if (!juStore.ju.additionalHardware) {
-			juStore.ju.additionalHardware = [];
-		}
-		juStore.ju.additionalHardware = [...additionalHardwareList.value];
-		saveAdditionalHardwareToCookie(additionalHardwareList.value);
-		
-		console.log(`Hardware hinzugefügt: ${item.name}`);
+	// Check if item already exists in additional hardware list
+	const existingIndex = additionalHardwareList.value.findIndex(hardwareItem => hardwareItem.id === item.id);
+
+	if (existingIndex > -1) {
+		// Item exists, increment quantity
+		additionalHardwareList.value[existingIndex].quantity = (additionalHardwareList.value[existingIndex].quantity || 1) + 1;
+		console.log(`Hardware Menge erhöht: ${item.name} (${additionalHardwareList.value[existingIndex].quantity})`);
+	} else {
+		// Item doesn't exist, add with quantity 1
+		const newItem = {
+			...item,
+			quantity: 1
+		};
+		additionalHardwareList.value.push(newItem);
+		console.log(`Hardware hinzugefügt: ${item.name} (Menge: 1)`);
 	}
+
+	if (!juStore.ju.additionalHardware) {
+		juStore.ju.additionalHardware = [];
+	}
+	juStore.ju.additionalHardware = [...additionalHardwareList.value];
+	saveAdditionalHardwareToCookie(additionalHardwareList.value);
 };
 
 const saveAdditionalHardwareToCookie = (hardware) => {
@@ -473,28 +474,7 @@ onMounted(async () => {
 	}
 }
 
-.list-group-item {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	border: 1px solid var(--color-button);
-	border-radius: 0.2rem;
-	margin: 0.2rem;
-	padding: 0.4rem;
-	transition: transform 0.2s ease;
-}
-
-.list-group-item.selected {
-	background-color: transparent !important;
-	cursor: default;
-}
-
-.list-group {
-	user-select: none;
-	width: 100%;
-	padding: 0;
-	color: var(--color-text);
-}
+/* List group styling inherited from main.css */
 
 @media (min-width: 1025px) {
 	.list-group {
@@ -633,25 +613,14 @@ onMounted(async () => {
 	margin-bottom: 1rem;
 }
 
+/* Search input - using large variant from main.css */
 .search-input {
-	width: 100%;
 	padding: 0.75rem 2.5rem 0.75rem 1rem;
 	border: 2px solid var(--color-border);
-	border-radius: 0.5rem;
-	background: var(--color-background);
-	color: var(--color-text);
-	font-size: 1rem;
-	transition: all 0.2s ease;
 }
 
 .search-input:focus {
-	outline: none;
-	border-color: var(--color-button);
 	box-shadow: 0 0 0 3px rgba(var(--color-button-rgb, 59, 130, 246), 0.1);
-}
-
-.search-input::placeholder {
-	color: var(--color-text-muted);
 }
 
 .search-icon {
@@ -727,6 +696,7 @@ onMounted(async () => {
 	}
 }
 
+/* Add/delete button base styling moved to main.css */
 .add-button,
 .delete-button {
 	background: transparent	!important;
@@ -759,6 +729,53 @@ onMounted(async () => {
 	flex: 1;
 }
 
+.quantity-controls {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.quantity-button {
+	background: var(--color-button) !important;
+	color: var(--color-text-inverted) !important;
+	border: none !important;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 0.25rem;
+	font-size: 0.9rem;
+	font-weight: bold;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.quantity-button:hover {
+	background: var(--color-button-hover) !important;
+	transform: scale(1.1);
+}
+
+.add-quantity {
+	background: var(--color-button) !important;
+}
+
+.remove-quantity {
+	background: var(--color-text-muted) !important;
+}
+
+.remove-quantity:hover {
+	background: rgb(239, 68, 68) !important;
+}
+
+.quantity-display {
+	font-weight: bold;
+	color: var(--color-text);
+	font-size: 0.9rem;
+	min-width: 1rem;
+	text-align: center;
+}
+
 .hardware-name {
 	font-weight: 500;
 	color: var(--color-text);
@@ -778,27 +795,13 @@ onMounted(async () => {
 	width: fit-content;
 }
 
-.list-group-item {
-	cursor: grab;
-	user-select: none;
-	transition: transform 0.2s ease;
-}
+/* Draggable functionality inherited from main.css */
 
-.list-group-item:active {
-	cursor: grabbing;
-}
-
-.list-group-item:hover {
-	background-color: var(--color-button-hover);
-	transform: scale(1.01);
-	z-index: 10;
-}
-
+/* Hardware-specific button customizations */
 .delete-button {
 	background: none !important;
 	border: none;
 	color: var(--color-text-muted);
-	cursor: pointer;
 	padding: 0.25rem;
 	border-radius: 0.25rem;
 	transition: color 0.2s ease;
@@ -808,21 +811,6 @@ onMounted(async () => {
 	color: rgb(239, 68, 68);
 }
 
-.add-button {
-	cursor: pointer;
-	padding: 0.25rem 0.5rem;
-	font-size: 1rem;
-	font-weight: bold;	
-	transition: all 0.2s ease;
-	min-width: 2rem;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.add-button:hover {
-	transform: scale(1.05);
-}
 
 .placeholder-container {
 	position: absolute;
@@ -841,24 +829,7 @@ onMounted(async () => {
 	border-radius: 0.25rem;
 }
 
-.navigation-buttons {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 1rem;
-}
-
-.back-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.next-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
+/* Navigation buttons styling inherited from main.css */
 
 .arrow-left {
 	font-size: 1rem;

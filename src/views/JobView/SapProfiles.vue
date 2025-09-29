@@ -1,12 +1,12 @@
 <template>
 <div>
     <div v-if="juStore.ju.refprofil && juStore.ju.refprofil.length > 0" class="sap-profiles">
-        <h2>SAP Profile auswählen</h2>
-        <p>Wähle die benötigten SAP Profile aus den verschiedenen Kategorien:</p>
+        <h2>SAP Berechtigungen auswählen</h2>
+        <p>Wähle die benötigten SAP Berechtigungen aus den verschiedenen Kategorien:</p>
         
         <!-- Show pre-selected profiles from reference profile -->
         <div v-if="selectedProfiles.some(p => p.fromReferenceProfile)" class="reference-profiles-section">
-            <h3>Durch Referenzprofil zugewiesene SAP Profile</h3>
+            <h3>Durch Referenzprofil zugewiesene SAP Berechtigungen</h3>
             <div class="profiles-grid">
                 <div 
                     v-for="profile in selectedProfiles.filter(p => p.fromReferenceProfile)" 
@@ -27,7 +27,7 @@
                     v-model="searchQuery"
                     @input="onSearchInput"
                     type="text" 
-                    class="search-input"
+                    class="search-input large"
                     placeholder="Profile durchsuchen (Name oder Schlüssel)..."
                 />
                 <div class="search-icon">
@@ -50,7 +50,7 @@
         </div>
         
         <div v-if="loading" class="loading">
-            <p>SAP Profile werden geladen...</p>
+            <p>SAP Berechtigungen werden geladen...</p>
         </div>
         
         <div v-else-if="currentProfileGroups.length > 0" class="profile-groups">
@@ -104,11 +104,11 @@
         </div>
         
         <div v-else class="no-profiles">
-            <p>Keine SAP Profile gefunden.</p>
+            <p>Keine SAP Berechtigungen gefunden.</p>
         </div>
         
         <div v-if="selectedProfiles.length > 0" class="selected-summary">
-            <h3>Ausgewählte SAP Profile</h3>
+            <h3>Ausgewählte SAP Berechtigungen</h3>
             <div class="selected-profiles-list">
                 <div 
                     v-for="profile in selectedProfiles" 
@@ -130,10 +130,10 @@
         <hr class="shadow-line" />
         <div class="navigation-buttons">
             <button @click="goBack" class="back-button">
-                Software
+                ← Software
             </button>
             <button @click="continueToOptions" class="next-button">
-                Optionale Services
+                Optionale Services →
             </button>
         </div>
         <hr class="shadow-line" />
@@ -189,7 +189,7 @@ const fetchSapProfiles = async () => {
         const data = await response.json();
         profileGroups.value = data.groups || [];
     } catch (error) {
-        console.error('Fehler beim Laden der SAP Profile:', error);
+        console.error('Fehler beim Laden der SAP Berechtigungen:', error);
         profileGroups.value = [];
     } finally {
         loading.value = false;
@@ -244,7 +244,7 @@ const saveSapProfilesToCookie = () => {
     expires.setTime(expires.getTime() + (3 * 24 * 60 * 60 * 1000));
     const cookieValue = JSON.stringify(selectedProfiles.value);
     document.cookie = `sapProfiles=${encodeURIComponent(cookieValue)};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
-    console.log('SAP Profiles Cookie gespeichert:', selectedProfiles.value);
+    console.log('SAP Berechtigungen Cookie gespeichert:', selectedProfiles.value);
 };
 
 const loadSapProfilesFromCookie = () => {
@@ -254,10 +254,10 @@ const loadSapProfilesFromCookie = () => {
         if (name === 'sapProfiles') {
             try {
                 const profiles = JSON.parse(decodeURIComponent(value));
-                console.log('SAP Profiles Cookie geladen:', profiles);
+                console.log('SAP Berechtigungen Cookie geladen:', profiles);
                 return profiles;
             } catch (e) {
-                console.error('Fehler beim Laden des SAP Profile Cookies:', e);
+                console.error('Fehler beim Laden des SAP Berechtigungen Cookies:', e);
                 return [];
             }
         }
@@ -292,7 +292,7 @@ const searchSapProfiles = async (query) => {
             expandedGroups.value = new Set(data.groups.map(group => group.id));
         }
     } catch (error) {
-        console.error('Fehler bei der SAP Profile Suche:', error);
+        console.error('Fehler bei der SAP Berechtigungen Suche:', error);
         searchResults.value = { groups: [], total_results: 0 };
     }
 };
@@ -649,20 +649,9 @@ onMounted(async () => {
     font-style: italic;
 }
 
-.navigation-buttons {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 2rem;
-}
+/* Navigation buttons styling inherited from main.css */
 
 .back-button,
-.next-button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
 
 .search-section {
     margin-bottom: 2rem;
@@ -673,26 +662,9 @@ onMounted(async () => {
     margin-bottom: 1rem;
 }
 
-.search-input {
-    width: 100%;
-    padding: 0.75rem 2.5rem 0.75rem 1rem;
-    border: 2px solid var(--color-border);
-    border-radius: 0.5rem;
-    background: var(--color-background);
-    color: var(--color-text);
-    font-size: 1rem;
-    transition: all 0.2s ease;
-}
+/* Search input styling inherited from main.css */
 
-.search-input:focus {
-    outline: none;
-    border-color: var(--color-button);
-    box-shadow: 0 0 0 3px rgba(var(--color-button-rgb, 59, 130, 246), 0.1);
-}
 
-.search-input::placeholder {
-    color: var(--color-text-muted);
-}
 
 .search-icon {
     position: absolute;

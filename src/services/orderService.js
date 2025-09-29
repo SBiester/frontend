@@ -1,7 +1,7 @@
 // Order Service for handling job-update orders/requests
 class OrderService {
   constructor() {
-    this.baseURL = '/api/admin/orders';
+    this.baseURL = '/admin/orders';
   }
 
   // Get all orders with optional filtering

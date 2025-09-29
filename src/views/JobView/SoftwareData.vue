@@ -48,7 +48,7 @@
 								<p class="fa">⚙</p>
 							</span>
 							<span class="sap-text">
-								<strong>{{ sapSelected ? 'SAP Profile ausgewählt' : 'SAP Profile auswählen' }}</strong>
+								<strong>{{ sapSelected ? 'SAP Berechtigungen ausgewählt' : 'SAP Berechtigungen auswählen' }}</strong>
 								<small>{{ sapSelected ? 'Konfiguriere Profile im nächsten Schritt' : 'Rollenbasierte Berechtigungen' }}</small>
 							</span>
 							<span v-if="sapSelected" class="sap-checkmark">✓</span>
@@ -61,7 +61,7 @@
 								v-model="searchQuery"
 								@input="onSearchInput"
 								type="text" 
-								class="search-input"
+								class="search-input large"
 								placeholder="Standard-Software durchsuchen (Name, Kategorie, Beschreibung)..."
 							/>
 							<div class="search-icon">
@@ -181,10 +181,10 @@
 			<hr class="shadow-line" />
 			<div class="navigation-buttons">
 				<button @click="$emit('go-back')" class="back-button">
-					Hardware
+					← Hardware
 				</button>
 				<button @click="handleNextStep" class="next-button">
-					{{ sapSelected ? 'SAP Profile' : 'Optionale Services' }}
+					{{ sapSelected ? 'SAP Berechtigungen →' : 'Optionale Services →' }}
 				</button>
 			</div>
 			<hr class="shadow-line" />
@@ -587,28 +587,7 @@ onMounted(async () => {
 	}
 }
 
-.list-group-item {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	border: 1px solid var(--color-button);
-	border-radius: 0.2rem;
-	margin: 0.2rem;
-	padding: 0.4rem;
-	transition: transform 0.2s ease;
-}
-
-.list-group-item.selected {
-	background-color: transparent !important;
-	cursor: default;
-}
-
-.list-group {
-	user-select: none;
-	width: 100%;
-	padding: 0;
-	color: var(--color-text);
-}
+/* List group styling inherited from main.css */
 
 @media (min-width: 1025px) {
 	.list-group {
@@ -750,26 +729,9 @@ onMounted(async () => {
 	margin-bottom: 1rem;
 }
 
-.search-input {
-	width: 100%;
-	padding: 0.75rem 2.5rem 0.75rem 1rem;
-	border: 2px solid var(--color-border);
-	border-radius: 0.5rem;
-	background: var(--color-background);
-	color: var(--color-text);
-	font-size: 1rem;
-	transition: all 0.2s ease;
-}
+/* Search input styling inherited from main.css */
 
-.search-input:focus {
-	outline: none;
-	border-color: var(--color-button);
-	box-shadow: 0 0 0 3px rgba(var(--color-button-rgb, 59, 130, 246), 0.1);
-}
 
-.search-input::placeholder {
-	color: var(--color-text-muted);
-}
 
 .search-icon {
 	position: absolute;
@@ -844,6 +806,7 @@ onMounted(async () => {
 	}
 }
 
+/* Add/delete button base styling moved to main.css */
 .add-button,
 .delete-button {
 	background: transparent	!important;
@@ -901,27 +864,13 @@ onMounted(async () => {
 	font-style: italic;
 }
 
-.list-group-item {
-	cursor: grab;
-	user-select: none;
-	transition: transform 0.2s ease;
-}
+/* Draggable functionality inherited from main.css */
 
-.list-group-item:active {
-	cursor: grabbing;
-}
-
-.list-group-item:hover {
-	background-color: var(--color-button-hover);
-	transform: scale(1.01);
-	z-index: 10;
-}
-
+/* Software-specific button customizations */
 .delete-button {
 	background: none !important;
 	border: none;
 	color: var(--color-text-muted);
-	cursor: pointer;
 	padding: 0.25rem;
 	border-radius: 0.25rem;
 	transition: color 0.2s ease;
@@ -931,21 +880,6 @@ onMounted(async () => {
 	color: rgb(239, 68, 68);
 }
 
-.add-button {
-	cursor: pointer;
-	padding: 0.25rem 0.5rem;
-	font-size: 1rem;
-	font-weight: bold;	
-	transition: all 0.2s ease;
-	min-width: 2rem;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.add-button:hover {
-	transform: scale(1.05);
-}
 
 .placeholder-container {
 	position: absolute;
@@ -964,24 +898,9 @@ onMounted(async () => {
 	border-radius: 0.25rem;
 }
 
-.navigation-buttons {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 1rem;
-}
+/* Navigation buttons styling inherited from main.css */
 
-.back-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
 
-.next-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
 
 .arrow-left {
 	font-size: 1rem;

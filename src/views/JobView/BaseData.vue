@@ -30,7 +30,7 @@ const bereiche = ref([]);
 const sachbereiche = ref([]);
 const teams = ref([]);
 const funktionen = ref([]);
-const positionen = ref([]);
+// const positionen = ref([]); // Removed - Position is now a text field
 const vorgesetzte = ref([]);
 
 const isMobile = ref(false);
@@ -43,10 +43,6 @@ onMounted(() => {
   mq.addEventListener('change', update)
   onBeforeUnmount(() => {
     mq.removeEventListener('change', update)
-    if (datepickerObserver.value) {
-      datepickerObserver.value.disconnect();
-      datepickerObserver.value = null;
-    }
   })
 })
 
@@ -144,20 +140,8 @@ function handleDateChange(field, value) {
         ju.value[field] = value;
         console.log(`Updated ju.${field} to:`, value);
     }
-    setTimeout(() => applyHeaderStyling(), 100);
 }
 
-function applyHeaderStyling() {
-    const headers = document.querySelectorAll('.mx-calendar-header, .mx-time-header');
-    headers.forEach(header => {
-        header.style.backgroundColor = 'var(--color-button)';
-        header.style.color = 'white';
-        const buttonColor = getComputedStyle(document.documentElement).getPropertyValue('--color-button').trim();
-        if (buttonColor) {
-            header.style.backgroundColor = buttonColor;
-        }
-    });
-}
 
 function toggleCustomFunction() {
     showCustomFunction.value = !showCustomFunction.value;
@@ -188,12 +172,14 @@ function getDateValue(dateString) {
 }
 
 const formSchema = computed(() => ({
-    switchRole: {
-        type: 'button',
-        buttonLabel: 'Rolle wechseln',
-        onClick: () => userStore.switchRole(),
-        size: 'sm'
-    },
+    ...(userStore.canAccessAdmin && {
+        switchRole: {
+            type: 'button',
+            buttonLabel: 'Rolle wechseln',
+            onClick: () => userStore.switchRole(),
+            size: 'sm'
+        }
+    }),
     vorname: {
         type: 'text',
         placeholder: 'Vorname',
@@ -246,13 +232,13 @@ const formSchema = computed(() => ({
         placeholder: 'Funktion',
         items: funktionen.value,
         disabled: showCustomFunction.value,
-        columns: { default: 11, tablet: 11 }
+        columns: { default: 12, sm: 12, tablet: 11, desktop: 11 }
     },
     funktionAddButton: {
         type: 'button',
-        buttonLabel: '+',
+        buttonLabel: '✎',
         onClick: toggleCustomFunction,
-        columns: { default: 1, tablet: 1 },
+        columns: { default: 12, sm: 12, tablet: 1, desktop: 1 },
         align: 'right'
     },
     customFunktion: {
@@ -263,9 +249,8 @@ const formSchema = computed(() => ({
         ]
     },
     position: {
-        type: 'select',
-        placeholder: 'Position',
-        items: positionen.value
+        type: 'text',
+        placeholder: 'Position eingeben...'
     },
     vorgesetzt: {
         type: 'select',
@@ -289,13 +274,10 @@ onMounted(async () => {
         fetchTeams(),
         fetchData('funktionen', funktionen),
         fetchData('vorgesetzte', vorgesetzte),
-        fetchData('positionen', positionen)
+// Position is now a text field, no API data needed
     ]);
-    
-    setupDatepickerObserver();
 });
 
-const datepickerObserver = ref(null);
 
 const germanLocale = {
   formatLocale: {
@@ -317,29 +299,6 @@ const germanLocale = {
   }
 };
 
-function setupDatepickerObserver() {
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.type === 'childList') {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        if (node.classList?.contains('mx-datepicker-popup') || 
-                            node.querySelector?.('.mx-datepicker-popup')) {
-                            setTimeout(() => applyHeaderStyling(), 50);
-                        }
-                    }
-                });
-            }
-        });
-    });
-    
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-    
-    datepickerObserver.value = observer;
-}
 
 watch(() => ju.value.updateType, (newValue) => {
     if (newValue === 'Eintritt') {
@@ -496,7 +455,7 @@ watch(() => ju.value.updateType, (newValue) => {
         <hr class="shadow-line" />
     
         <div class="buttons-row">
-            <button v-if="userStore.role === 'fach'" @click="$emit('show-ref')">Referenzprofil</button>
+            <button v-if="userStore.role === 'fach' || userStore.role === 'admin'" @click="$emit('show-ref')">Referenzprofil →</button>
             <button v-if="userStore.role === 'pm'" @click="() => console.log('Gespeicherte Parameter: ', { ...ju }), clearCache(), $refs.basedata.reset()">Absenden</button>
         </div>
     </div>
@@ -521,8 +480,67 @@ watch(() => ju.value.updateType, (newValue) => {
   	background: var(--color-background) !important;
 }
 
+:deep(.vf-input-field) {
+	border: none !important;
+	box-shadow: none !important;
+}
+
+/* Fix spacing between Funktion field and button - make button fill column width */
+:deep(#funktionAddButton) {
+	margin-left: 0 !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+/* Force stacking at 767px and below (mobile breakpoint) */
+@media (max-width: 767px) {
+	:deep(.vf-col-11.vf-col-tablet-11),
+	:deep(.vf-col-12.vf-col-sm-12.vf-col-tablet-11) {
+		flex-basis: 100% !important;
+		width: 100% !important;
+		max-width: 100% !important;
+	}
+
+	:deep(.vf-col-1.vf-col-tablet-1),
+	:deep(.vf-col-12.vf-col-sm-12.vf-col-tablet-1) {
+		flex-basis: 100% !important;
+		width: 100% !important;
+		max-width: 100% !important;
+	}
+
+	/* Change button text to 'Funktion bearbeiten' on mobile */
+	:deep(#funktionAddButton) {
+		font-size: 0 !important; /* Hide original icon text */
+		transform: scaleX(1) !important; /* Override the mirror effect */
+	}
+
+	:deep(#funktionAddButton)::before {
+		content: "Funktion bearbeiten" !important;
+		font-size: 1rem !important;
+		display: inline !important;
+		transform: scaleX(1) !important; /* Ensure text is not mirrored */
+	}
+}
+
 :deep(input) {
 	color: var(--color-text) !important;
+	background: transparent !important;
+	border: 2px solid var(--color-border) !important;
+	border-radius: 0.5rem !important;
+	padding: 0.4rem 0.65rem !important;
+	height: 2.125rem !important;
+	line-height: 1.4 !important;
+	font-family: Arial, sans-serif !important;
+	font-size: 1rem !important;
+	box-sizing: border-box !important;
+	outline: none !important;
+}
+
+:deep(input:focus) {
+	border-color: var(--color-border) !important;
+	box-shadow: 0 0 6px 0px var(--color-button) !important;
 }
 
 :deep(.vf-floating-label) {
@@ -572,10 +590,16 @@ watch(() => ju.value.updateType, (newValue) => {
 :deep(.mx-input) {
 	background: var(--color-background) !important;
 	color: var(--color-text) !important;
-	border: 1px solid var(--color-border) !important;
-	border-radius: 4px;
-	padding: 0.75rem;
-	font-size: 1rem;
+	border: 1px solid var(--vf-border-color-input) !important;
+	border-radius: var(--vf-radius-input) !important;
+	padding: var(--vf-py-input) var(--vf-px-input) !important;
+	height: var(--vf-min-height-input) !important;
+	line-height: var(--vf-line-height) !important;
+	font-family: inherit !important;
+	font-size: var(--vf-font-size) !important;
+	box-sizing: border-box !important;
+	box-shadow: var(--vf-shadow-input) !important;
+	outline: none !important;
 }
 
 :deep(.mx-input::placeholder) {
@@ -613,10 +637,21 @@ watch(() => ju.value.updateType, (newValue) => {
 	opacity: 1 !important;
 }
 
+/* Calendar icons should match dropdown arrow colors */
+:deep(.mx-icon-calendar) {
+	color: var(--color-text) !important;
+	opacity: 1 !important;
+}
+
+:deep(.mx-icon-calendar svg) {
+	fill: currentColor !important;
+}
+
 
 :deep(.mx-input:focus) {
-	border-color: var(--color-button) !important;
-	box-shadow: 0 0 0 2px rgba(var(--color-button-rgb), 0.2);
+	outline: none !important;
+	border-color: var(--vf-border-color-input-focus) !important;
+	box-shadow: var(--vf-shadow-input-focus) !important;
 }
 
 :deep(.mx-datepicker-popup) {
@@ -653,25 +688,32 @@ watch(() => ju.value.updateType, (newValue) => {
 	color: white !important;
 }
 
-:deep(.mx-datepicker .mx-calendar-header),
-:deep(.mx-calendar .mx-calendar-header),
+/* Calendar header styling - comprehensive approach */
+:deep(.mx-datepicker-popup .mx-calendar-header),
+:deep(.mx-datepicker-popup .mx-time-header),
 :deep(.mx-calendar-header),
+:deep(.mx-time-header),
 :deep(.mx-calendar-header > *),
 :deep(.mx-calendar-header-label),
 :deep(.mx-calendar-decade-separator),
-:deep(.mx-btn-text) {
+:deep(.mx-btn-text),
+:deep(.mx-calendar-header .mx-btn),
+:deep(.mx-calendar-header .mx-btn-text) {
     background-color: var(--color-button) !important;
     background: var(--color-button) !important;
     color: white !important;
 }
 
-.date-picker-section :deep(.mx-calendar-header) {
+/* Additional specific targeting */
+.date-picker-section :deep(.mx-calendar-header),
+.date-picker-section :deep(.mx-time-header) {
     background-color: var(--color-button) !important;
     background: var(--color-button) !important;
     color: white !important;
 }
 
-.date-picker-section :deep(.mx-calendar-header *) {
+.date-picker-section :deep(.mx-calendar-header *),
+.date-picker-section :deep(.mx-time-header *) {
     background-color: var(--color-button) !important;
     background: var(--color-button) !important;
     color: white !important;
@@ -689,9 +731,74 @@ watch(() => ju.value.updateType, (newValue) => {
     color: white !important;
 }
 
+/* Force header styling on popup elements with highest specificity */
+:deep(.mx-datepicker-popup) {
+    --mx-primary-color: var(--color-button) !important;
+}
+
+:deep(.mx-datepicker-popup .mx-calendar-header),
+:deep(.mx-datepicker-popup .mx-time-header) {
+    background-color: var(--color-button) !important;
+    background: var(--color-button) !important;
+    color: white !important;
+}
+
+:deep(.mx-datepicker-popup .mx-calendar-header .mx-btn),
+:deep(.mx-datepicker-popup .mx-calendar-header .mx-btn-text),
+:deep(.mx-datepicker-popup .mx-time-header .mx-btn),
+:deep(.mx-datepicker-popup .mx-time-header .mx-btn-text) {
+    background-color: var(--color-button) !important;
+    background: var(--color-button) !important;
+    color: white !important;
+}
+
+/* Override any inline styles or component-specific styles */
+:deep(.mx-calendar-header[style]),
+:deep(.mx-time-header[style]) {
+    background-color: var(--color-button) !important;
+    background: var(--color-button) !important;
+    color: white !important;
+}
+
 .custom-datepicker {
     --mx-primary-color: var(--color-button);
     --mx-text-color-primary: white;
+}
+
+/* Global override for all mx-datepicker components */
+:deep(.mx-datepicker) {
+    --mx-primary-color: var(--color-button);
+    --mx-text-color-primary: white;
+}
+
+/* Direct targeting of mx-datepicker CSS variables */
+.date-picker-section {
+    --mx-primary-color: var(--color-button);
+    --mx-text-color-primary: white;
+}
+
+/* Global CSS variables for mx-datepicker popup (set on body/html) */
+:deep(body) {
+    --mx-primary-color: var(--color-button);
+    --mx-text-color-primary: white;
+}
+
+/* Make the edit icon larger and mirror it horizontally in the function button */
+:deep(#funktionAddButton) {
+    font-size: 1.5rem !important;
+    transform: scaleX(-1) !important;
+}
+
+:deep(.vf-btn-right) {
+    font-size: 1.5rem !important;
+    transform: scaleX(-1) !important;
+}
+
+/* Mobile override for button transform - must come after the above rules */
+@media (max-width: 767px) {
+	:deep(#funktionAddButton) {
+		transform: scaleX(1) !important; /* Override the mirror effect for mobile */
+	}
 }
 
 </style>

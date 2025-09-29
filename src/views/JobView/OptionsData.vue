@@ -17,13 +17,11 @@
 				:key="option.id" 
 				class="option-item"
 			>
-				<label class="option-label">
-					<input 
-						type="checkbox" 
-						v-model="selectedOptions[option.id]"
-						@change="saveOptionsData"
-						class="option-checkbox"
-					>
+				<button 
+					@click="toggleOption(option.id)"
+					:class="{ 'selected': selectedOptions[option.id] }"
+					class="option-button"
+				>
 					<div class="option-content">
 						<div class="option-icon">
 							<p class="fa">{{ option.icon }}</p>
@@ -33,7 +31,8 @@
 							<p>{{ option.description }}</p>
 						</div>
 					</div>
-				</label>
+					<span v-if="selectedOptions[option.id]" class="option-checkmark">✓</span>
+				</button>
 				
 				<div v-if="option.id === 'telefonnummer' && selectedOptions.telefonnummer" class="telefon-type-selection">
 					<h5>Telefontyp auswählen:</h5>
@@ -50,7 +49,7 @@
 								@change="saveOptionsData"
 								name="telefontyp"
 							>
-							<span class="telefon-type-label">{{ type.name }}</span>
+							<span class="telefon-type-label">{{ type.description }}</span>
 						</label>
 					</div>
 				</div>
@@ -60,10 +59,10 @@
 		<hr class="shadow-line" />
 		<div class="navigation-buttons">
 			<button @click="$emit('go-back')" class="back-button">
-				{{ backButtonText }}
+				← {{ backButtonText }}
 			</button>
 			<button @click="$emit('show-summary')" class="next-button">
-				Zusammenfassung
+				Zusammenfassung →
 			</button>
 		</div>
 		<hr class="shadow-line" />
@@ -120,7 +119,7 @@ const sapWasSelected = computed(() => {
 });
 
 const backButtonText = computed(() => {
-	return sapWasSelected.value ? 'SAP Profile' : 'Software';
+	return sapWasSelected.value ? 'SAP Berechtigungen' : 'Software';
 });
 
 const fetchOptions = async () => {
@@ -147,6 +146,11 @@ const fetchTelefonTypes = async () => {
 	} catch (error) {
 		console.error('Fehler beim Laden der Telefon Types:', error);
 	}
+};
+
+const toggleOption = (optionId) => {
+	selectedOptions[optionId] = !selectedOptions[optionId];
+	saveOptionsData();
 };
 
 const saveOptionsData = () => {
@@ -227,28 +231,7 @@ onMounted(async () => {
 	}
 }
 
-.list-group-item {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	border: 1px solid var(--color-button);
-	border-radius: 0.2rem;
-	margin: 0.2rem;
-	padding: 0.4rem;
-	transition: transform 0.2s ease;
-}
-
-.list-group-item.selected {
-	background-color: transparent !important;
-	cursor: default;
-}
-
-.list-group {
-	user-select: none;
-	width: 100%;
-	padding: 0;
-	color: var(--color-text);
-}
+/* List group styling inherited from main.css */
 
 @media (min-width: 1025px) {
 	.list-group {
@@ -265,33 +248,26 @@ onMounted(async () => {
 }
 
 .option-item {
-	border: 2px solid var(--color-border);
-	border-radius: 0.5rem;
-	transition: all 0.2s ease;
-	background: var(--color-background);
+	/* Container only for layout, styling moved to .option-button */
 }
 
-.option-item:hover {
-	border-color: var(--color-button);
-	transform: translateY(-2px);
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.option-button:hover {
+	border-color: var(--color-button) !important;
+	background: rgba(var(--color-button-rgb, 59, 130, 246), 0.05) !important;
+	transform: translateY(-2px) !important;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
-.option-label {
-	display: block;
-	cursor: pointer;
-	padding: 1.5rem;
-	width: 100%;
-}
+/* Option button base styling moved to main.css */
 
-.option-checkbox {
-	display: none;
-}
-
-.option-content {
-	display: flex;
-	align-items: center;
-	gap: 1rem;
+/* OptionsData-specific overrides */
+.option-button {
+	gap: 1rem !important;
+	padding: 1.5rem !important;
+	background: var(--color-background-mute) !important;
+	transition: all 0.3s ease !important;
+	text-align: left !important;
+	position: relative !important;
 }
 
 .option-icon {
@@ -331,38 +307,32 @@ onMounted(async () => {
 	line-height: 1.4;
 }
 
-.option-checkbox:checked + .option-content .option-icon {
+.option-button.selected .option-icon {
 	background: var(--color-button-hover);
 	transform: scale(1.1);
 }
 
-.option-checkbox:checked ~ * .option-text h4 {
+.option-button.selected .option-text h4 {
 	color: var(--color-button-hover);
 }
 
-.option-item:has(.option-checkbox:checked) {
-	border-color: var(--color-button-hover);
-	background: rgba(var(--color-button-hover-rgb), 0.05);
+.option-button.selected {
+	border-color: var(--color-button) !important;
+	background: rgba(var(--color-button-rgb, 59, 130, 246), 0.1) !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
-.navigation-buttons {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 1rem;
+.option-checkmark {
+	font-size: 1.5rem;
+	color: var(--color-button-hover);
+	font-weight: bold;
+	position: absolute;
+	right: 1.5rem;
+	top: 50%;
+	transform: translateY(-50%);
 }
 
-.back-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.next-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
+/* Navigation buttons styling inherited from main.css */
 
 .telefon-type-selection {
 	margin-top: 1rem;

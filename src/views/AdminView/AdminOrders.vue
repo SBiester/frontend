@@ -1,5 +1,46 @@
 <template>
 <div>
+	<!-- Order Details Modal -->
+	<BaseModal
+		:show="showOrderModal"
+		:title="`Auftrag Details - #${selectedOrder?.id}`"
+		:show-actions="false"
+		@close="closeOrderModal"
+	>
+		<div class="order-details" v-if="selectedOrder">
+			<div class="detail-section">
+				<h4>Mitarbeiter Information</h4>
+				<p><strong>Name:</strong> {{ selectedOrder.employee_name }}</p>
+				<p><strong>E-Mail:</strong> {{ selectedOrder.employee_email }}</p>
+				<p><strong>Abteilung:</strong> {{ selectedOrder.department }}</p>
+			</div>
+
+			<div class="detail-section">
+				<h4>Auftrag Information</h4>
+				<p><strong>Typ:</strong> {{ getTypeLabel(selectedOrder.type) }}</p>
+				<p><strong>Status:</strong> {{ getStatusLabel(selectedOrder.status) }}</p>
+				<p><strong>Erstellt:</strong> {{ formatDate(selectedOrder.created_at) }}</p>
+				<p><strong>Zuletzt bearbeitet:</strong> {{ formatDate(selectedOrder.updated_at) }}</p>
+			</div>
+
+			<div class="detail-section" v-if="selectedOrder.changes">
+				<h4>Änderungen</h4>
+				<div class="changes-list">
+					<div v-for="(change, key) in selectedOrder.changes" :key="key" class="change-item">
+						<strong>{{ getChangeLabel(key) }}:</strong>
+						<span class="old-value">{{ change.old }}</span> →
+						<span class="new-value">{{ change.new }}</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="detail-section" v-if="selectedOrder.notes">
+				<h4>Notizen</h4>
+				<p>{{ selectedOrder.notes }}</p>
+			</div>
+		</div>
+	</BaseModal>
+
 	<hr class="shadow-line" />
 	<div class="ref">
 		<h2>Auftragsübersicht</h2>
@@ -14,7 +55,7 @@
 						v-model="searchQuery"
 						@input="onSearchInput"
 						type="text" 
-						class="search-input"
+						class="search-input large"
 						placeholder="Aufträge durchsuchen (Mitarbeiter, Abteilung, Status)..."
 					/>
 					<div class="search-icon">
@@ -50,8 +91,8 @@
 			</div>
 
 			<!-- Orders Table -->
-			<div class="orders-table-container">
-				<table class="orders-table">
+			<div class="data-table-container">
+				<table class="data-table">
 					<thead>
 						<tr>
 							<th>Auftrag-ID</th>
@@ -118,49 +159,6 @@
 				</table>
 			</div>
 
-			<!-- Order Details Modal -->
-			<div v-if="showOrderModal" class="modal-overlay" @click="closeOrderModal">
-				<div class="modal-content" @click.stop>
-					<div class="modal-header">
-						<h3>Auftrag Details - #{{ selectedOrder?.id }}</h3>
-						<button @click="closeOrderModal" class="close-btn">×</button>
-					</div>
-					<div class="modal-body">
-						<div class="order-details" v-if="selectedOrder">
-							<div class="detail-section">
-								<h4>Mitarbeiter Information</h4>
-								<p><strong>Name:</strong> {{ selectedOrder.employee_name }}</p>
-								<p><strong>E-Mail:</strong> {{ selectedOrder.employee_email }}</p>
-								<p><strong>Abteilung:</strong> {{ selectedOrder.department }}</p>
-							</div>
-							
-							<div class="detail-section">
-								<h4>Auftrag Information</h4>
-								<p><strong>Typ:</strong> {{ getTypeLabel(selectedOrder.type) }}</p>
-								<p><strong>Status:</strong> {{ getStatusLabel(selectedOrder.status) }}</p>
-								<p><strong>Erstellt:</strong> {{ formatDate(selectedOrder.created_at) }}</p>
-								<p><strong>Zuletzt bearbeitet:</strong> {{ formatDate(selectedOrder.updated_at) }}</p>
-							</div>
-							
-							<div class="detail-section" v-if="selectedOrder.changes">
-								<h4>Änderungen</h4>
-								<div class="changes-list">
-									<div v-for="(change, key) in selectedOrder.changes" :key="key" class="change-item">
-										<strong>{{ getChangeLabel(key) }}:</strong>
-										<span class="old-value">{{ change.old }}</span> → 
-										<span class="new-value">{{ change.new }}</span>
-									</div>
-								</div>
-							</div>
-							
-							<div class="detail-section" v-if="selectedOrder.notes">
-								<h4>Notizen</h4>
-								<p>{{ selectedOrder.notes }}</p>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
 		</div>
 	</div>
 </div>
@@ -169,6 +167,7 @@
 <script setup>
 import { onMounted, ref, computed, watch } from 'vue';
 import orderService from '@/services/orderService';
+import BaseModal from '@/components/BaseModal.vue';
 
 const emit = defineEmits(['go-back']);
 
@@ -314,7 +313,7 @@ const getChangeLabel = (key) => {
 		department: 'Abteilung',
 		hardware: 'Hardware',
 		software: 'Software',
-		sap_profile: 'SAP Profil'
+		sap_profile: 'SAP Berechtigung'
 	};
 	return labels[key] || key;
 };
@@ -398,21 +397,8 @@ onMounted(() => {
 	margin-bottom: 1rem;
 }
 
-.search-input {
-	width: 100%;
-	padding: 0.75rem 2.5rem 0.75rem 1rem;
-	border: 2px solid var(--color-border);
-	border-radius: 0.5rem;
-	background: var(--color-background);
-	color: var(--color-text);
-	font-size: 1rem;
-	transition: all 0.2s ease;
-}
+/* Search input styling inherited from main.css */
 
-.search-input:focus {
-	outline: none;
-	border-color: var(--color-button);
-}
 
 .search-icon {
 	position: absolute;
@@ -437,25 +423,7 @@ onMounted(() => {
 	color: var(--color-text);
 }
 
-.orders-table-container {
-	overflow-x: auto;
-	border: 1px solid var(--color-border);
-	border-radius: 0.5rem;
-}
-
-.orders-table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.orders-table th {
-	background: var(--color-background-mute);
-	color: var(--color-text);
-	padding: 1rem;
-	text-align: left;
-	font-weight: 600;
-	border-bottom: 1px solid var(--color-border);
-}
+/* Table container and basic styling inherited from main.css */
 
 .order-row {
 	border-bottom: 1px solid var(--color-border);
@@ -466,7 +434,7 @@ onMounted(() => {
 	background: var(--color-background-soft);
 }
 
-.orders-table td {
+.data-table td {
 	padding: 1rem;
 	vertical-align: middle;
 }
@@ -514,12 +482,7 @@ onMounted(() => {
 	font-weight: 500;
 }
 
-.status-badge {
-	padding: 0.25rem 0.5rem;
-	border-radius: 0.25rem;
-	font-size: 0.8rem;
-	font-weight: 500;
-}
+/* Base status-badge styling inherited from main.css */
 
 .status-badge.pending {
 	background: rgba(251, 191, 36, 0.1);
@@ -541,22 +504,9 @@ onMounted(() => {
 	color: rgb(239, 68, 68);
 }
 
-.action-buttons {
-	display: flex;
-	gap: 0.5rem;
-}
+/* Action button styling moved to main.css */
 
-.action-btn {
-	padding: 0.5rem !important;
-	border: none !important;
-	border-radius: 0.25rem;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
+/* Orders-specific action button types */
 .action-btn.view {
 	background: rgba(59, 130, 246, 0.1) !important;
 	color: rgb(59, 130, 246) !important;
@@ -588,53 +538,7 @@ onMounted(() => {
 }
 
 
-/* Modal Styles */
-.modal-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.5);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 1000;
-}
-
-.modal-content {
-	background: var(--color-background);
-	border-radius: 0.5rem;
-	width: 90%;
-	max-width: 600px;
-	max-height: 90vh;
-	overflow-y: auto;
-}
-
-.modal-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 1.5rem;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.modal-header h3 {
-	margin: 0;
-	color: var(--color-text);
-}
-
-.close-btn {
-	background: none !important;
-	border: none !important;
-	font-size: 1.5rem;
-	cursor: pointer;
-	color: var(--color-text-muted) !important;
-}
-
-.modal-body {
-	padding: 1.5rem;
-}
+/* Modal styles moved to main.css */
 
 .detail-section {
 	margin-bottom: 1.5rem;
@@ -683,12 +587,12 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-	.orders-table {
+	.data-table {
 		font-size: 0.9rem;
 	}
 	
-	.orders-table th,
-	.orders-table td {
+	.data-table th,
+	.data-table td {
 		padding: 0.5rem;
 	}
 	

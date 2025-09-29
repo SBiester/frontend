@@ -1,5 +1,70 @@
 <template>
 <div>
+	<!-- Dark overlay for edit mode - moved to body level -->
+	<Teleport to="body">
+		<div
+			v-show="showEditOverlay"
+			class="edit-overlay"
+			@click="closeEditMode"
+		>
+	<!-- Add Group Modal -->
+		<div v-if="showAddGroupForm" class="modal-overlay" @click="closeModals">
+			<div class="modal-content" @click.stop>
+				<div class="modal-header">
+					<h3>{{ editingGroup ? 'Rollengruppe bearbeiten' : 'Neue Rollengruppe hinzufügen' }}</h3>
+					<button @click="closeModals" class="close-btn">×</button>
+				</div>
+				<div class="modal-body">
+					<form @submit.prevent="addGroup">
+						<div class="form-group">
+							<label>Bezeichnung</label>
+							<input v-model="newGroup.Bezeichnung" type="text" required class="form-input">
+						</div>
+						<div class="modal-actions">
+							<button type="button" @click="closeModals" class="btn-secondary">Abbrechen</button>
+							<button type="submit" class="btn-primary">{{ editingGroup ? 'Aktualisieren' : 'Rollengruppe hinzufügen' }}</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<!-- Add Profile Modal -->
+		<div v-if="showAddProfileForm" class="modal-overlay" @click="closeModals">
+			<div class="modal-content" @click.stop>
+				<div class="modal-header">
+					<h3>{{ editingProfile ? 'SAP Berechtigung bearbeiten' : 'Neues SAP Berechtigung hinzufügen' }}</h3>
+					<button @click="closeModals" class="close-btn">×</button>
+				</div>
+				<div class="modal-body">
+					<form @submit.prevent="addProfile">
+						<div class="form-group">
+							<label>Bezeichnung</label>
+							<input v-model="newProfile.Bezeichnung" type="text" required class="form-input">
+						</div>
+						<div class="form-group">
+							<label>Schlüssel</label>
+							<input v-model="newProfile.Schluessel" type="text" required class="form-input">
+						</div>
+						<div class="form-group">
+							<label>Rollengruppe</label>
+							<select v-model="newProfile.RollengruppeID" required class="form-input">
+								<option value="">Rollengruppe wählen</option>
+								<option v-for="group in rollengruppen" :key="group.RollengruppeID" :value="group.RollengruppeID">
+									{{ group.Bezeichnung }}
+								</option>
+							</select>
+						</div>
+						<div class="modal-actions">
+							<button type="button" @click="closeModals" class="btn-secondary">Abbrechen</button>
+							<button type="submit" class="btn-primary">{{ editingProfile ? 'Aktualisieren' : 'Profil hinzufügen' }}</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+	</Teleport>
 	<hr class="shadow-line" />
 	<div class="ref">
 		<h2>SAP - Rollen</h2>
@@ -14,7 +79,7 @@
 					:class="{ 'active': activeTab === 'profiles' }"
 					class="tab-button"
 				>
-					SAP Profile
+					SAP Berechtigungen
 				</button>
 				<button 
 					@click="activeTab = 'groups'" 
@@ -29,7 +94,7 @@
 			<div v-if="activeTab === 'groups'" class="tab-content">
 				<div class="section-header">
 					<h3>Rollengruppen</h3>
-					<button @click="showAddGroupForm = true" class="add-button">
+					<button @click="openAddGroupForm" class="add-button">
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 							<path d="M12 5v14m7-7H5"></path>
 						</svg>
@@ -40,7 +105,10 @@
 				<div class="groups-grid">
 					<div v-for="group in rollengruppen" :key="group.RollengruppeID" class="group-card">
 						<div class="group-header">
-							<h4>{{ group.Bezeichnung }}</h4>
+							<div class="group-title-section">
+								<h4>{{ group.Bezeichnung }}</h4>
+								<span class="profile-count-badge">{{ getProfileCountText(group.RollengruppeID) }}</span>
+							</div>
 							<div class="group-actions">
 								<button @click="editGroup(group)" class="action-btn edit">
 									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -56,12 +124,8 @@
 								</button>
 							</div>
 						</div>
-						<div class="group-stats">
-							<span class="stat-badge">ID: {{ group.RollengruppeID }}</span>
-							<span class="stat-badge">{{ getProfileCount(group.RollengruppeID) }} Profile</span>
-						</div>
 						<div v-if="group.sammelrollen && group.sammelrollen.length > 0" class="group-profiles">
-							<h5>Zugehörige Profile:</h5>
+							<h5>{{ getZugehoerigeProfileTitle(group.sammelrollen.length) }}:</h5>
 							<div class="profile-list">
 								<span 
 									v-for="profil in group.sammelrollen.slice(0, 3)" 
@@ -71,7 +135,7 @@
 									{{ profil.Bezeichnung }}
 								</span>
 								<span v-if="group.sammelrollen.length > 3" class="more-profiles">
-									+ {{ group.sammelrollen.length - 3 }} weitere
+									+ {{ getWeitereText(group.sammelrollen.length - 3) }}
 								</span>
 							</div>
 						</div>
@@ -79,24 +143,18 @@
 				</div>
 			</div>
 
-			<!-- SAP Profile Tab -->
+			<!-- SAP Berechtigungen Tab -->
 			<div v-if="activeTab === 'profiles'" class="tab-content">
 				<div class="section-header">
-					<h3>SAP Profile (Sammelrollen)</h3>
+					<h3>SAP Berechtigungen (Sammelrollen)</h3>
 					<div class="profile-controls">
 						<div class="search-input-container">
 							<input 
 								v-model="profileSearchQuery"
 								type="text" 
-								class="search-input"
+								class="search-input compact"
 								placeholder="Profile durchsuchen..."
 							/>
-							<!-- <div class="search-icon">
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-									<circle cx="11" cy="11" r="8"></circle>
-									<path d="m21 21-4.35-4.35"></path>
-								</svg>
-							</div> -->
 							<div class="search-icon">
 								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 									<circle cx="11" cy="11" r="7"></circle>
@@ -110,7 +168,7 @@
 								{{ group.Bezeichnung }}
 							</option>
 						</select>
-						<button @click="showAddProfileForm = true" class="add-button">
+						<button @click="openAddProfileForm" class="add-button">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 								<path d="M12 5v14m7-7H5"></path>
 							</svg>
@@ -119,8 +177,8 @@
 					</div>
 				</div>
 
-				<div class="profiles-table-container">
-					<table class="profiles-table">
+				<div class="data-table-container">
+					<table class="data-table">
 						<thead>
 							<tr>
 								<th>Bezeichnung</th>
@@ -207,62 +265,7 @@
 			</div>
 		</div>
 
-		<!-- Add Group Modal -->
-		<div v-if="showAddGroupForm" class="modal-overlay" @click="closeModals">
-			<div class="modal-content" @click.stop>
-				<div class="modal-header">
-					<h3>{{ editingGroup ? 'Rollengruppe bearbeiten' : 'Neue Rollengruppe hinzufügen' }}</h3>
-					<button @click="closeModals" class="close-btn">×</button>
-				</div>
-				<div class="modal-body">
-					<form @submit.prevent="addGroup">
-						<div class="form-group">
-							<label>Bezeichnung</label>
-							<input v-model="newGroup.Bezeichnung" type="text" required class="form-input">
-						</div>
-						<div class="modal-actions">
-							<button type="button" @click="closeModals" class="btn-secondary">Abbrechen</button>
-							<button type="submit" class="btn-primary">{{ editingGroup ? 'Aktualisieren' : 'Rollengruppe hinzufügen' }}</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-
-		<!-- Add Profile Modal -->
-		<div v-if="showAddProfileForm" class="modal-overlay" @click="closeModals">
-			<div class="modal-content" @click.stop>
-				<div class="modal-header">
-					<h3>{{ editingProfile ? 'SAP Profil bearbeiten' : 'Neues SAP Profil hinzufügen' }}</h3>
-					<button @click="closeModals" class="close-btn">×</button>
-				</div>
-				<div class="modal-body">
-					<form @submit.prevent="addProfile">
-						<div class="form-group">
-							<label>Bezeichnung</label>
-							<input v-model="newProfile.Bezeichnung" type="text" required class="form-input">
-						</div>
-						<div class="form-group">
-							<label>Schlüssel</label>
-							<input v-model="newProfile.Schluessel" type="text" required class="form-input">
-						</div>
-						<div class="form-group">
-							<label>Rollengruppe</label>
-							<select v-model="newProfile.RollengruppeID" required class="form-input">
-								<option value="">Rollengruppe wählen</option>
-								<option v-for="group in rollengruppen" :key="group.RollengruppeID" :value="group.RollengruppeID">
-									{{ group.Bezeichnung }}
-								</option>
-							</select>
-						</div>
-						<div class="modal-actions">
-							<button type="button" @click="closeModals" class="btn-secondary">Abbrechen</button>
-							<button type="submit" class="btn-primary">{{ editingProfile ? 'Aktualisieren' : 'Profil hinzufügen' }}</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
+		
 		
 	</div>
 </div>
@@ -277,13 +280,14 @@ const emit = defineEmits(['go-back']);
 const activeTab = ref('profiles');
 const profileSearchQuery = ref('');
 const selectedGroupFilter = ref('');
+const showEditOverlay = ref(false);
 
 const rollengruppen = ref([]);
 const sammelrollen = ref([]);
 const paginationData = ref({
 	current_page: 1,
 	last_page: 1,
-	per_page: 20,
+	per_page: 10,
 	total: 0
 });
 const isLoadingProfiles = ref(false);
@@ -454,6 +458,19 @@ const getProfileCount = (groupId) => {
 	return group && group.sammelrollen ? group.sammelrollen.length : 0;
 };
 
+const getProfileCountText = (groupId) => {
+	const count = getProfileCount(groupId);
+	return `${count} ${count === 1 ? 'Profil' : 'Profile'}`;
+};
+
+const getZugehoerigeProfileTitle = (count) => {
+	return count === 1 ? 'Zugehöriges Profil' : 'Zugehörige Profile';
+};
+
+const getWeitereText = (count) => {
+	return `${count} ${count === 1 ? 'weiteres' : 'weitere'}`;
+};
+
 const getGroupName = (groupId) => {
 	const group = rollengruppen.value.find(g => g.RollengruppeID === groupId);
 	return group ? group.Bezeichnung : 'Unbekannt';
@@ -506,15 +523,23 @@ const addProfile = async () => {
 		closeModals();
 		await loadSammelrollen(); // Reload to get fresh data
 	} catch (error) {
-		console.error('Fehler beim Speichern des SAP Profils:', error);
-		alert('Fehler beim Speichern des SAP Profils: ' + (error.response?.data?.message || error.message));
+		console.error('Fehler beim Speichern des SAP Berechtigungs:', error);
+		alert('Fehler beim Speichern des SAP Berechtigungs: ' + (error.response?.data?.message || error.message));
 	}
+};
+
+const openAddGroupForm = () => {
+	newGroup.value = { Bezeichnung: '' };
+	editingGroup.value = null;
+	showAddGroupForm.value = true;
+	showEditOverlay.value = true;
 };
 
 const editGroup = (group) => {
 	newGroup.value = { ...group };
 	editingGroup.value = group.RollengruppeID;
 	showAddGroupForm.value = true;
+	showEditOverlay.value = true;
 };
 
 const deleteGroup = async (group) => {
@@ -529,20 +554,28 @@ const deleteGroup = async (group) => {
 	}
 };
 
+const openAddProfileForm = () => {
+	newProfile.value = { Bezeichnung: '', Schluessel: '', RollengruppeID: '' };
+	editingProfile.value = null;
+	showAddProfileForm.value = true;
+	showEditOverlay.value = true;
+};
+
 const editProfile = (profile) => {
 	newProfile.value = { ...profile };
 	editingProfile.value = profile.SammelrollenID;
 	showAddProfileForm.value = true;
+	showEditOverlay.value = true;
 };
 
 const deleteProfile = async (profile) => {
-	if (confirm(`SAP Profil "${profile.Bezeichnung}" wirklich löschen?`)) {
+	if (confirm(`SAP Berechtigung "${profile.Bezeichnung}" wirklich löschen?`)) {
 		try {
 			await adminService.deleteSapRole(profile.SammelrollenID);
 			sammelrollen.value = sammelrollen.value.filter(p => p.SammelrollenID !== profile.SammelrollenID);
 		} catch (error) {
-			console.error('Fehler beim Löschen des SAP Profils:', error);
-			alert('Fehler beim Löschen des SAP Profils: ' + (error.response?.data?.message || error.message));
+			console.error('Fehler beim Löschen des SAP Berechtigungs:', error);
+			alert('Fehler beim Löschen des SAP Berechtigungs: ' + (error.response?.data?.message || error.message));
 		}
 	}
 };
@@ -554,6 +587,11 @@ const closeModals = () => {
 	editingProfile.value = null;
 	newGroup.value = { Bezeichnung: '' };
 	newProfile.value = { Bezeichnung: '', Schluessel: '', RollengruppeID: '' };
+	showEditOverlay.value = false;
+};
+
+const closeEditMode = () => {
+	closeModals();
 };
 
 onMounted(async () => {
@@ -568,35 +606,6 @@ onMounted(async () => {
 	margin: 0 auto;
 }
 
-.tab-navigation {
-	display: flex;
-	gap: 1rem;
-	margin-bottom: 2rem;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.tab-button {
-	padding: 0.75rem 1.5rem !important;
-	background: none !important;
-	border: none !important;
-	color: var(--color-text-muted) !important;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	border-bottom: 2px solid transparent !important;
-}
-
-.tab-button:hover {
-	color: var(--color-text) !important;
-}
-
-.tab-button.active {
-	color: var(--color-button) !important;
-	border-bottom-color: var(--color-button) !important;
-}
-
-.tab-content {
-	margin-top: 1rem;
-}
 
 .section-header {
 	display: flex;
@@ -619,17 +628,17 @@ onMounted(async () => {
 	flex-wrap: wrap;
 }
 
+.profile-controls > * {
+	margin: 0 !important;
+}
+
 .search-input-container {
 	position: relative;
 }
 
+/* Search input - using compact variant from main.css */
 .search-input {
-	padding: 0.5rem 2rem 0.5rem 0.75rem;
-	border: 1px solid var(--color-border);
-	border-radius: 0.25rem;
-	background: var(--color-background);
-	color: var(--color-text);
-	width: 250px;
+	border-radius: 0.25rem; /* Override for AdminView */
 }
 
 .search-icon {
@@ -646,23 +655,66 @@ onMounted(async () => {
 	border-radius: 0.25rem;
 	background: var(--color-background);
 	color: var(--color-text);
+	font-size: 0.8333rem;
 }
 
-.add-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0.5rem 1rem !important;
+
+.filter-select option {
+	background: var(--color-background) !important;
+	color: var(--color-text) !important;
+	padding: 0.5rem !important;
+}
+
+.filter-select option:checked,
+.filter-select option[selected] {
 	background: var(--color-button) !important;
 	color: var(--color-text) !important;
-	border: none !important;
-	border-radius: 0.25rem;
-	cursor: pointer;
-	transition: all 0.2s ease;
 }
 
-.add-button:hover {
-	background: var(--color-button-hover) !important;
+/* SAP-specific search input styling - match dropdown styling */
+.profile-controls .search-input.compact {
+	color: var(--color-text) !important;
+	font-size: 0.8333rem !important;
+}
+
+.profile-controls input.search-input {
+	color: var(--color-text) !important;
+	font-size: 0.8333rem !important;
+}
+
+/* Dark overlay for edit mode */
+.edit-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background-color: rgba(0, 0, 0, 0.5);
+	z-index: 999999;
+	cursor: pointer;
+}
+
+/* Add button styling moved to main.css */
+button.add-button {
+	display: flex !important;
+	align-items: center !important;
+	gap: 0.5rem !important;
+	line-height: 1 !important;
+	justify-content: center !important;
+}
+
+button.add-button svg {
+	flex-shrink: 0 !important;
+	vertical-align: middle !important;
+	margin: 0 !important;
+	position: static !important;
+}
+
+/* Even more specific targeting for the SAP roles panel */
+.profile-controls button.add-button {
+	display: flex !important;
+	align-items: center !important;
+	gap: 0.5rem !important;
 }
 
 .groups-grid {
@@ -690,6 +742,23 @@ onMounted(async () => {
 	margin-bottom: 1rem;
 }
 
+.group-title-section {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	flex: 1;
+}
+
+.profile-count-badge {
+	background: var(--color-button);
+	color: var(--color-button-text);
+	padding: 0.25rem 0.5rem;
+	border-radius: 0.25rem;
+	font-size: 0.75rem;
+	font-weight: 500;
+	width: fit-content;
+}
+
 .group-header h4 {
 	margin: 0;
 	color: var(--color-text);
@@ -701,11 +770,6 @@ onMounted(async () => {
 	gap: 0.5rem;
 }
 
-.group-stats {
-	display: flex;
-	gap: 0.5rem;
-	margin-bottom: 1rem;
-}
 
 .stat-badge {
 	background: var(--color-background-soft);
@@ -713,6 +777,15 @@ onMounted(async () => {
 	padding: 0.25rem 0.5rem;
 	border-radius: 0.25rem;
 	font-size: 0.8rem;
+}
+
+.stat-badge.primary {
+	background: var(--color-button);
+	color: var(--color-button-text);
+	font-weight: 500;
+	padding: 0.375rem 0.75rem;
+	border-radius: 0.375rem;
+	font-size: 0.85rem;
 }
 
 .group-profiles h5 {
@@ -741,25 +814,9 @@ onMounted(async () => {
 	font-style: italic;
 }
 
-.profiles-table-container {
-	overflow-x: auto;
-	border: 1px solid var(--color-border);
-	border-radius: 0.5rem;
-}
+/* Table container styling inherited from main.css */
 
-.profiles-table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.profiles-table th {
-	background: var(--color-background-mute);
-	color: var(--color-text);
-	padding: 1rem;
-	text-align: left;
-	font-weight: 600;
-	border-bottom: 1px solid var(--color-border);
-}
+/* Table styling moved to main.css */
 
 .profile-row {
 	border-bottom: 1px solid var(--color-border);
@@ -770,10 +827,7 @@ onMounted(async () => {
 	background: var(--color-background-soft);
 }
 
-.profiles-table td {
-	padding: 1rem;
-	vertical-align: middle;
-}
+/* Table cell styling moved to main.css */
 
 .profile-name {
 	font-weight: 500;
@@ -797,153 +851,20 @@ onMounted(async () => {
 	font-size: 0.8rem;
 }
 
+/* Action button styling moved to main.css */
 .action-buttons {
-	display: flex;
-	gap: 0.5rem;
-	justify-content: flex-end;
+	justify-content: flex-end; /* Roles-specific alignment */
 }
 
-.action-btn {
-	padding: 0.5rem !important;
-	border: none !important;
-	border-radius: 0.25rem;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
+/* Modal styles moved to main.css */
 
-.action-btn.edit {
-	background: var(--color-background-mute) !important;
-	color: var(--color-text) !important;
-}
+/* Form and button styling moved to main.css */
 
-.action-btn.edit:hover {
-	background: var(--color-button) !important;
-}
-
-.action-btn.delete {
-	background: rgba(239, 68, 68, 0.1) !important;
-	color: rgb(239, 68, 68) !important;
-}
-
-.action-btn.delete:hover {
-	background: rgb(239, 68, 68) !important;
-	color: white !important;
-}
-
-/* Modal Styles */
-.modal-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.5);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 1001;
-}
-
-.modal-content {
-	background: var(--color-background);
-	border-radius: 0.5rem;
-	width: 90%;
-	max-width: 500px;
-	max-height: 90vh;
-	overflow-y: auto;
-}
-
-.modal-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 1.5rem;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.modal-header h3 {
-	margin: 0;
-	color: var(--color-text);
-}
-
-.close-btn {
-	background: none !important;
-	border: none !important;
-	font-size: 1.5rem;
-	cursor: pointer;
-	color: var(--color-text-muted) !important;
-}
-
-.modal-body {
-	padding: 1.5rem;
-}
-
-.form-group {
-	margin-bottom: 1rem;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 0.5rem;
-	font-weight: 500;
-	color: var(--color-text);
-}
-
-.form-input {
-	width: 100%;
-	padding: 0.75rem;
-	border: 1px solid var(--color-border);
-	border-radius: 0.25rem;
-	background: var(--color-background);
-	color: var(--color-text);
-}
-
-.form-input:focus {
-	outline: none;
-	border-color: var(--color-button);
-}
-
-.modal-actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 1rem;
-	margin-top: 2rem;
-}
-
-.btn-secondary {
-	padding: 0.5rem 1rem !important;
-	background: var(--color-background-mute) !important;
-	color: var(--color-text) !important;
-	border: 1px solid var(--color-border) !important;
-	border-radius: 0.25rem;
-	cursor: pointer;
-}
-
-.btn-primary {
-	padding: 0.5rem 1rem !important;
-	background: var(--color-button) !important;
-	color: var(--color-text) !important;
-	border: none !important;
-	border-radius: 0.25rem;
-	cursor: pointer;
-}
-
+/* Navigation buttons styling inherited from main.css */
 .navigation-buttons {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 1rem;
-	margin-top: 2rem;
+	margin-top: 2rem; /* View-specific spacing */
 }
 
-.back-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
 
 .shadow-line {
 	border: 0;
@@ -961,45 +882,11 @@ onMounted(async () => {
 	.profile-controls {
 		flex-direction: column;
 	}
-	
-	.search-input {
-		width: 100%;
-	}
-	
-	.groups-grid {
-		grid-template-columns: 1fr;
-	}
-	
-	.profiles-table {
-		font-size: 0.9rem;
-	}
-	
-	.profiles-table th,
-	.profiles-table td {
-		padding: 0.5rem;
-	}
-	
-	.pagination-container {
-		flex-direction: column;
-		align-items: stretch;
-		text-align: center;
-	}
-	
-	.pagination-controls {
-		justify-content: center;
-		flex-wrap: wrap;
-	}
-	
-	.pagination-btn {
-		font-size: 0.8rem;
-		padding: 0.4rem 0.8rem !important;
-	}
-	
-	.page-btn {
-		width: 2rem;
-		height: 2rem;
-		font-size: 0.8rem;
-	}
+}
+
+/* Search input - using compact variant from main.css */
+.search-input {
+	border-radius: 0.25rem; /* Override for AdminView */
 }
 
 .text-right {

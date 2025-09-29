@@ -36,6 +36,7 @@
 
   --color-heading: var(--vt-c-teal);
   --color-text: var(--vt-c-text-light-1);
+  --color-text-muted: var(--vt-c-text-light-2);
   --color-text-inverted: var(--vt-c-text-dark-1);
 
   --color-button: var(--vt-c-teal);
@@ -55,6 +56,7 @@
 
     --color-heading: var(--vt-c-aqua-marine);
     --color-text: var(--vt-c-text-dark-1);
+    --color-text-muted: var(--vt-c-text-dark-2);
     --color-text-inverted: var(--vt-c-text-light-1);
 
     --color-button: var(--vt-c-aqua-marine);

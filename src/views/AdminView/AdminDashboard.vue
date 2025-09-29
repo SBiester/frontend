@@ -45,7 +45,7 @@
 					</div>
 				</div>
 
-				<!-- Rollen & SAP Profile -->
+				<!-- Rollen & SAP Berechtigungen -->
 				<div class="module-card" @click="$emit('show-roles')">
 					<div class="module-header">
 						<div class="module-icon">
@@ -55,12 +55,12 @@
 								<path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
 							</svg>
 						</div>
-						<h3>Rollen & SAP Profile</h3>
+						<h3>Rollen & SAP Berechtigungen</h3>
 					</div>
-					<p>Rollengruppen und SAP-Profile verwalten</p>
+					<p>Rollengruppen und SAP-Berechtigungen verwalten und organisieren</p>
 					<div class="module-stats">
 						<span class="stat-item">{{ roleStats.groups }} Rollengruppen</span>
-						<span class="stat-item">{{ roleStats.profiles }} SAP Profile</span>
+						<span class="stat-item">{{ roleStats.profiles }} SAP Berechtigungen</span>
 					</div>
 				</div>
 
@@ -479,19 +479,12 @@ onUnmounted(() => {
 	font-weight: 500;
 }
 
+/* Navigation buttons styling inherited from main.css */
 .navigation-buttons {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	gap: 1rem;
-	margin-top: 2rem;
+	justify-content: center; /* Override for AdminDashboard */
+	margin-top: 2rem; /* View-specific spacing */
 }
 
-.back-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
 
 .shadow-line {
 	border: 0;

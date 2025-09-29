@@ -95,8 +95,8 @@
 			<h4>Zusätzlich ausgewählte Hardware</h4>
 			<div class="summary-content">
 				<div v-for="item in ju.additionalHardware" :key="item.id" class="summary-item hardware-item">
-					<span class="item-name">{{ item.name }}</span>
-					<span class="item-category" v-if="item.kategorie">({{ item.kategorie }})</span>
+					<span class="item-name">{{ item.quantity && item.quantity > 1 ? `${item.quantity} x ${item.name}` : item.name }}</span>
+					<span class="item-category" v-if="item.category">({{ item.category }})</span>
 				</div>
 			</div>
 		</div>
@@ -112,17 +112,17 @@
 		</div>
 
 		<div class="summary-section" v-if="ju.sapProfiles && ju.sapProfiles.length > 0">
-			<h4>Ausgewählte SAP Profile</h4>
+			<h4>Ausgewählte SAP Berechtigungen</h4>
 			<div class="summary-content">
-				<div v-for="profile in ju.sapProfiles" :key="profile.id" class="summary-item sap-profile-item">
-					<div class="sap-profile-header">
-						<span class="sap-profile-name">{{ profile.name }}</span>
-						<span class="sap-profile-code">{{ profile.code }}</span>
+				<div v-for="profile in ju.sapProfiles" :key="profile.id" class="summary-item sap-berechtigung-item">
+					<div class="sap-berechtigung-header">
+						<span class="sap-berechtigung-name">{{ profile.name }}</span>
+						<span class="sap-berechtigung-code">{{ profile.code }}</span>
 					</div>
-					<!-- <div v-if="profile.description" class="sap-profile-description">
+					<!-- <div v-if="profile.description" class="sap-berechtigung-description">
 						{{ profile.description }}
 					</div>
-					<div v-if="profile.permissions && profile.permissions.length > 0" class="sap-profile-permissions">
+					<div v-if="profile.permissions && profile.permissions.length > 0" class="sap-berechtigung-permissions">
 						<span class="permissions-label">Berechtigungen:</span>
 						<div class="permissions-tags">
 							<span 
@@ -146,7 +146,7 @@
 			<div class="summary-content">
 				<div v-if="ju.additionalOptions.telefonnummer" class="summary-item option-item">
 					<div class="option-main">
-						<span>Telefonnummer - Firmennummer mit persönlicher Durchwahl</span>
+						<span>SWN-Festnetznummer - Firmennummer mit persönlicher Durchwahl</span>
 					</div>
 					<div v-if="ju.additionalOptions.telefontyp" class="profile-items">
 						<h5>Telefontyp:</h5>
@@ -173,7 +173,7 @@
 		<hr class="shadow-line" />
 		<div class="navigation-buttons">
 			<button @click="$emit('go-back')" class="back-button">
-				Optionale Services
+				← Optionale Services
 			</button>
 			<button @click="submitJobUpdate" class="submit-button">
 				Job-Update abschicken
@@ -264,6 +264,7 @@ const fetchProfileData = async () => {
 };
 
 const getTelefonTypeName = (typeId) => {
+	if (typeId === 'softphone') return 'Softphone';
 	if (typeId === 'standard') return 'Standard';
 	if (typeId === 'komfort') return 'Komfort';
 	return typeId;
@@ -371,22 +372,7 @@ onMounted(() => {
 	}
 }
 
-.summary-section {
-	margin-bottom: 2rem;
-	padding: 1.5rem;
-	background: var(--color-background);
-	border: 1px solid var(--color-border);
-	border-radius: 0.5rem;
-}
-
-.summary-section h4 {
-	margin: 0 0 1rem 0;
-	color: var(--color-button-hover);
-	font-size: 1.1rem;
-	font-weight: 600;
-	border-bottom: 2px solid var(--color-button-hover);
-	padding-bottom: 0.5rem;
-}
+/* Summary section styling moved to main.css */
 
 .summary-content {
 	display: flex;
@@ -448,23 +434,11 @@ onMounted(() => {
 
 
 
-.navigation-buttons {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 1rem;
-}
+/* Navigation buttons styling inherited from main.css */
 
-.back-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
 
+/* Submit button - specific override for SummaryData */
 .submit-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
 	background: var(--color-button-hover);
 	color: white;
 }
@@ -521,25 +495,25 @@ onMounted(() => {
 	padding-bottom: 0.3rem;
 }
 
-.sap-profile-item {
+.sap-berechtigung-item {
 	background: var(--color-background-mute);
 	border-left-color: var(--color-button);
 }
 
-.sap-profile-header {
+.sap-berechtigung-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	margin-bottom: 0.5rem;
 }
 
-.sap-profile-name {
+.sap-berechtigung-name {
 	font-weight: 600;
 	color: var(--color-text);
 	font-size: 1rem;
 }
 
-.sap-profile-code {
+.sap-berechtigung-code {
 	background: var(--color-button);
 	color: var(--color-text);
 	padding: 0.25rem 0.5rem;
@@ -549,14 +523,14 @@ onMounted(() => {
 	font-family: monospace;
 }
 
-.sap-profile-description {
+.sap-berechtigung-description {
 	color: var(--color-text-muted);
 	font-size: 0.9rem;
 	line-height: 1.4;
 	margin-bottom: 0.75rem;
 }
 
-.sap-profile-permissions {
+.sap-berechtigung-permissions {
 	margin-top: 0.75rem;
 }
 

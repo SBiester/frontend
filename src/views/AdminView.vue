@@ -1,5 +1,8 @@
 <template>
-    <div class="admin-view-container">
+    <!-- Role Check Component -->
+    <UnauthorizedMessage v-if="!hasAccess" />
+
+    <div v-else class="admin-view-container">
         <!-- Header Section -->
         <div class="cell-wide">
             <h1 :class="{ 'fade-in': showHeadLine }">Administration</h1>
@@ -9,9 +12,9 @@
         <!-- Navigation Buttons -->
         <div class="navigation-buttons-fixed">
             <button @click="goBackToNavigation" class="back-button-header">Navigation</button>
-            <button v-if="!isDirectOrderAccess" @click="activeComponent = 'AdminDashboard'" class="dashboard-button-header">Dashboard</button>
+            <button v-if="!isDirectOrderAccess && userStore.canAccessAdmin" @click="activeComponent = 'AdminDashboard'" class="dashboard-button-header">Dashboard</button>
             <!-- Navigation between admin sections -->
-            <div class="admin-navigation" v-if="activeComponent !== 'AdminDashboard' && !isDirectOrderAccess">
+            <div class="admin-navigation" v-if="activeComponent !== 'AdminDashboard' && !isDirectOrderAccess && userStore.canAccessAdmin">
                 <select v-model="activeComponent" @change="navigateToSection" class="section-select">
                     <option value="AdminDashboard">Übersicht</option>
                     <option value="AdminUsers">Benutzer</option>
@@ -23,45 +26,47 @@
                     <option value="AdminOrders">Auftragsübersicht</option>
                 </select>
             </div>
-            <Link href="http://localhost:8000/logout" method="post" as="button" type="button">Abmelden</Link>
+            <Link :href="`${backendUrl}/logout`" method="post" as="button" type="button">Abmelden</Link>
         </div>
         
         <div :class="{ 'fade-in': showWorkArea }" class="new-div">
-            <AdminDashboard v-if="activeComponent === 'AdminDashboard'" 
+            <!-- Admin Dashboard und alle Bereiche für Admin User -->
+            <AdminDashboard v-if="activeComponent === 'AdminDashboard' && userStore.canAccessAdmin"
                 @show-users="activeComponent = 'AdminUsers'"
-                @show-roles="activeComponent = 'AdminRoles'" 
+                @show-roles="activeComponent = 'AdminRoles'"
                 @show-hardware="activeComponent = 'AdminHardware'"
                 @show-software="activeComponent = 'AdminSoftware'"
                 @show-profiles="activeComponent = 'AdminProfiles'"
                 @show-masterdata="activeComponent = 'AdminMasterData'"
                 @show-orders="activeComponent = 'AdminOrders'" />
-            
-            <AdminUsers v-if="activeComponent === 'AdminUsers'" 
+
+            <AdminUsers v-if="activeComponent === 'AdminUsers' && userStore.canAccessAdmin"
                 @go-back="activeComponent = 'AdminDashboard'" />
-                
-            <AdminRoles v-if="activeComponent === 'AdminRoles'" 
+
+            <AdminRoles v-if="activeComponent === 'AdminRoles' && userStore.canAccessAdmin"
                 @go-back="activeComponent = 'AdminDashboard'" />
-                
-            <AdminHardware v-if="activeComponent === 'AdminHardware'" 
+
+            <AdminHardware v-if="activeComponent === 'AdminHardware' && userStore.canAccessAdmin"
                 @go-back="activeComponent = 'AdminDashboard'" />
-                
-            <AdminSoftware v-if="activeComponent === 'AdminSoftware'" 
+
+            <AdminSoftware v-if="activeComponent === 'AdminSoftware' && userStore.canAccessAdmin"
                 @go-back="activeComponent = 'AdminDashboard'" />
-                
-            <AdminProfiles v-if="activeComponent === 'AdminProfiles'" 
+
+            <AdminProfiles v-if="activeComponent === 'AdminProfiles' && userStore.canAccessAdmin"
                 @go-back="activeComponent = 'AdminDashboard'" />
-                
-            <AdminMasterData v-if="activeComponent === 'AdminMasterData'" 
+
+            <AdminMasterData v-if="activeComponent === 'AdminMasterData' && userStore.canAccessAdmin"
                 @go-back="activeComponent = 'AdminDashboard'" />
-                
-            <AdminOrders v-if="activeComponent === 'AdminOrders'" 
-                @go-back="activeComponent = 'AdminDashboard'" />
+
+            <!-- AdminOrders für alle berechtigten User (Admin, PM, Fach) -->
+            <AdminOrders v-if="activeComponent === 'AdminOrders' && (userStore.canAccessAdmin || canAccessOrders)"
+                @go-back="goBackToNavigation" />
         </div>
     </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Link } from '@inertiajs/vue3';
 
@@ -69,6 +74,10 @@ const emit = defineEmits(['back-to-navigation']);
 const router = useRouter();
 const route = useRoute();
 
+import { useUserStore } from '@/stores/userStore';
+import UnauthorizedMessage from '@/components/UnauthorizedMessage.vue';
+
+const userStore = useUserStore();
 import AdminDashboard from './AdminView/AdminDashboard.vue';
 import AdminUsers from './AdminView/AdminUsers.vue';
 import AdminRoles from './AdminView/AdminRoles.vue';
@@ -82,6 +91,31 @@ const activeComponent = ref('AdminDashboard');
 const showHeadLine = ref(false);
 const showWorkArea = ref(false);
 const isDirectOrderAccess = ref(false);
+
+// Computed property für Orders-Zugriff
+const canAccessOrders = computed(() => {
+    // PM und Fach User können auf Orders zugreifen, wenn sie direkt darauf zugreifen
+    return isDirectOrderAccess.value && ['pm', 'fach'].includes(userStore.role) && route.query.section === 'orders';
+});
+
+// Computed property für Zugriffskontrolle
+const hasAccess = computed(() => {
+    // Admin hat immer Zugriff
+    if (userStore.canAccessAdmin) return true;
+
+    // PM/Fach User haben nur Zugriff auf Orders wenn direkt aufgerufen
+    if (isDirectOrderAccess.value && route.query.section === 'orders') {
+        return userStore.canAccessOrders;
+    }
+
+    // Sonst kein Zugriff
+    return false;
+});
+
+// Backend URL for external links
+const backendUrl = computed(() => {
+    return import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:8080';
+});
 
 const goBackToNavigation = () => {
     router.push('/');
@@ -112,6 +146,7 @@ onMounted(() => {
 .admin-view-container {
     min-height: 100vh;
 }
+
 
 /* Header styles from HomeView */
 .cell-wide {

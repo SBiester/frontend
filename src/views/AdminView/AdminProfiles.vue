@@ -1,5 +1,135 @@
 <template>
 <div>
+  <!-- Dark overlay for edit mode - moved to body level -->
+  <Teleport to="body">
+    <div
+      v-show="showEditOverlay"
+      class="edit-overlay"
+      @click="closeEditMode"
+    >
+    <!-- Create/Edit Profile Modal -->
+    <div v-if="showProfileModal" class="modal-overlay" @click="closeProfileModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>{{ editingProfile ? 'Profil bearbeiten' : 'Neues Profil erstellen' }}</h3>
+          <button @click="closeProfileModal" class="modal-close">×</button>
+        </div>
+
+        <form @submit.prevent="saveProfile" class="modal-form">
+          <div class="form-sections">
+            <!-- Basic Information -->
+            <div class="form-section">
+              <h4>Grundinformationen</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="profileName">Profil Name *</label>
+                  <input
+                    id="profileName"
+                    v-model="profileForm.name"
+                    type="text"
+                    required
+                    class="form-input"
+                    placeholder="z.B. Frontend Entwickler"
+                  >
+                </div>
+
+                <div class="form-group">
+                  <label for="profileCategory">Bereich *</label>
+                  <select id="profileCategory" v-model="profileForm.bereich" required class="form-select">
+                    <option value="">Bereich wählen</option>
+                    <option v-for="bereich in bereiche" :key="bereich.BereichID" :value="bereich.Bereich">
+                      {{ bereich.Bereich }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="profileTeam">Team</label>
+                  <select id="profileTeam" v-model="profileForm.team" class="form-select">
+                    <option value="">Team wählen</option>
+                    <option v-for="team in teams" :key="team.TeamID" :value="team.Team">
+                      {{ team.Team }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="profileStatus">Status</label>
+                  <select id="profileStatus" v-model="profileForm.status" class="form-select">
+                    <option value="entwurf">Entwurf</option>
+                    <option value="aktiv">Aktiv</option>
+                    <option value="inaktiv">Inaktiv</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="checkbox-label">
+                    <input v-model="profileForm.isTemplate" type="checkbox">
+                    Als Vorlage markieren
+                  </label>
+                </div>
+
+                <div class="form-group full-width">
+                  <label for="profileDescription">Beschreibung</label>
+                  <textarea
+                    id="profileDescription"
+                    v-model="profileForm.description"
+                    rows="3"
+                    class="form-input"
+                    placeholder="Beschreibung des Profils..."
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" @click="closeProfileModal" class="btn-secondary">Abbrechen</button>
+            <button type="submit" class="btn-primary">{{ editingProfile ? 'Speichern' : 'Erstellen' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Profile Preview Modal -->
+    <div v-if="showPreviewModal" class="modal-overlay" @click="closePreviewModal">
+      <div class="modal-content large" @click.stop>
+        <div class="modal-header">
+          <h3>Profil Vorschau: {{ previewProfile?.name }}</h3>
+          <button @click="closePreviewModal" class="modal-close">×</button>
+        </div>
+
+        <div class="preview-content">
+          <div class="profile-info">
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Name:</label>
+                <span>{{ previewProfile?.name }}</span>
+              </div>
+              <div class="info-item">
+                <label>Bereich:</label>
+                <span>{{ previewProfile?.bereich }}</span>
+              </div>
+              <div class="info-item">
+                <label>Team:</label>
+                <span>{{ previewProfile?.team || 'Nicht zugewiesen' }}</span>
+              </div>
+              <div class="info-item">
+                <label>Status:</label>
+                <span :class="`status-${previewProfile?.status}`">{{ previewProfile?.status }}</span>
+              </div>
+            </div>
+
+            <div v-if="previewProfile?.description" class="description">
+              <label>Beschreibung:</label>
+              <p>{{ previewProfile.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </Teleport>
   <hr class="shadow-line" />
   <div class="ref">
     <h2>Referenz-Profile verwalten</h2>
@@ -14,7 +144,7 @@
             v-model="searchTerm" 
             @input="handleSearch"
             type="text" 
-            class="search-input"
+            class="search-input large"
             placeholder="Profile durchsuchen (Name, Bereich, Team)..."
           />
           <div class="search-icon">
@@ -51,7 +181,7 @@
 
       <!-- Profiles Table -->
       <div class="profiles-table-container">
-        <table class="profiles-table">
+        <table class="data-table">
           <thead>
             <tr>
               <th>Profil Name</th>
@@ -59,7 +189,7 @@
               <th>Team</th>
               <th>Hardware</th>
               <th>Software</th>
-              <th>SAP Profile</th>
+              <th>SAP Berechtigungen</th>
               <th>Status</th>
               <th>Erstellt</th>
               <th class="text-right">Aktionen</th>
@@ -92,7 +222,7 @@
               </td>
               <td class="count">{{ profile.hardwareCount }}</td>
               <td class="count">{{ profile.softwareCount }}</td>
-              <td class="count">{{ profile.sapProfileCount }}</td>
+              <td class="count">{{ profile.sapBerechtigungCount }}</td>
               <td>
                 <span :class="`status-badge ${profile.status}`">{{ getStatusLabel(profile.status) }}</span>
               </td>
@@ -130,200 +260,7 @@
         </table>
       </div>
 
-    <!-- Create/Edit Profile Modal -->
-    <div v-if="showProfileModal" class="modal-overlay" @click="closeProfileModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>{{ editingProfile ? 'Profil bearbeiten' : 'Neues Profil erstellen' }}</h3>
-          <button @click="closeProfileModal" class="modal-close">×</button>
-        </div>
-        
-        <form @submit.prevent="saveProfile" class="modal-form">
-          <div class="form-sections">
-            <!-- Basic Information -->
-            <div class="form-section">
-              <h4>Grundinformationen</h4>
-              <div class="form-grid">
-                <div class="form-group">
-                  <label for="profileName">Profil Name *</label>
-                  <input 
-                    id="profileName"
-                    v-model="profileForm.name" 
-                    type="text" 
-                    required 
-                    class="form-input"
-                    placeholder="z.B. Frontend Entwickler"
-                  >
-                </div>
-                
-                <div class="form-group">
-                  <label for="profileCategory">Bereich *</label>
-                  <select id="profileCategory" v-model="profileForm.bereich" required class="form-select">
-                    <option value="">Bereich wählen</option>
-                    <option v-for="bereich in bereiche" :key="bereich.BereichID" :value="bereich.Bereich">
-                      {{ bereich.Bereich }}
-                    </option>
-                  </select>
-                </div>
-                
-                <div class="form-group">
-                  <label for="profileTeam">Team</label>
-                  <select id="profileTeam" v-model="profileForm.team" class="form-select">
-                    <option value="">Team wählen</option>
-                    <option v-for="team in filteredTeams" :key="team.TeamID" :value="team.Team">
-                      {{ team.Team }}
-                    </option>
-                  </select>
-                </div>
-                
-                <div class="form-group">
-                  <label for="profileStatus">Status</label>
-                  <select id="profileStatus" v-model="profileForm.status" class="form-select">
-                    <option value="aktiv">Aktiv</option>
-                    <option value="inaktiv">Inaktiv</option>
-                    <option value="entwurf">Entwurf</option>
-                  </select>
-                </div>
-                
-                <div class="form-group">
-                  <label class="checkbox-label">
-                    <input v-model="profileForm.isTemplate" type="checkbox">
-                    <span class="checkmark"></span>
-                    Als Template markieren
-                  </label>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Hardware Selection -->
-            <div class="form-section">
-              <h4>Hardware Auswahl</h4>
-              <div class="selection-area">
-                <div class="search-box small">
-                  <input 
-                    v-model="hardwareSearch" 
-                    type="text" 
-                    placeholder="Hardware suchen..."
-                    class="search-input"
-                  >
-                </div>
-                <div class="items-grid">
-                  <div 
-                    v-for="item in filteredHardware" 
-                    :key="item.id" 
-                    :class="['item-card', { selected: isHardwareSelected(item) }]"
-                    @click="toggleHardware(item)"
-                  >
-                    <span class="item-name">{{ item.name }}</span>
-                    <span class="item-category">{{ item.category }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Software Selection -->
-            <div class="form-section">
-              <h4>Software Auswahl</h4>
-              <div class="selection-area">
-                <div class="search-box small">
-                  <input 
-                    v-model="softwareSearch" 
-                    type="text" 
-                    placeholder="Software suchen..."
-                    class="search-input"
-                  >
-                </div>
-                <div class="items-grid">
-                  <div 
-                    v-for="item in filteredSoftware" 
-                    :key="item.id" 
-                    :class="['item-card', { selected: isSoftwareSelected(item) }]"
-                    @click="toggleSoftware(item)"
-                  >
-                    <span class="item-name">{{ item.name }}</span>
-                    <span class="item-manufacturer">{{ item.manufacturer }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- SAP Profile Selection -->
-            <div class="form-section">
-              <h4>SAP Profile Auswahl</h4>
-              <div class="selection-area">
-                <div class="search-box small">
-                  <input 
-                    v-model="sapSearch" 
-                    type="text" 
-                    placeholder="SAP Profile suchen..."
-                    class="search-input"
-                  >
-                </div>
-                <div class="items-grid">
-                  <div 
-                    v-for="item in filteredSapProfiles" 
-                    :key="item?.id || item?.SammelrollenID || `sap-${Math.random()}`" 
-                    :class="['item-card', { selected: isSapSelected(item) }]"
-                    @click="toggleSapProfile(item)"
-                  >
-                    <span class="item-name">{{ item?.Bezeichnung || 'Unbekannt' }}</span>
-                    <span class="item-group">{{ item?.Rollengruppe?.Bezeichnung || item?.rollengruppe?.Bezeichnung || 'Keine Gruppe' }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="modal-actions">
-            <button type="button" @click="closeProfileModal" class="btn-secondary">Abbrechen</button>
-            <button type="submit" class="btn-primary">{{ editingProfile ? 'Speichern' : 'Erstellen' }}</button>
-          </div>
-        </form>
-      </div>
     </div>
-
-    <!-- Profile Preview Modal -->
-    <div v-if="showPreviewModal" class="modal-overlay" @click="closePreviewModal">
-      <div class="modal-content large" @click.stop>
-        <div class="modal-header">
-          <h3>Profil Vorschau: {{ previewProfile?.name }}</h3>
-          <button @click="closePreviewModal" class="modal-close">×</button>
-        </div>
-        
-        <div class="preview-content">
-          <div class="preview-sections">
-            <div class="preview-section">
-              <h4>Hardware ({{ previewProfile?.hardwareItems?.length || 0 }})</h4>
-              <div class="preview-items">
-                <div v-for="item in previewProfile?.hardwareItems" :key="item.id" class="preview-item">
-                  {{ item.name }} ({{ item.category }})
-                </div>
-              </div>
-            </div>
-            
-            <div class="preview-section">
-              <h4>Software ({{ previewProfile?.softwareItems?.length || 0 }})</h4>
-              <div class="preview-items">
-                <div v-for="item in previewProfile?.softwareItems" :key="item.id" class="preview-item">
-                  {{ item.name }} - {{ item.manufacturer }}
-                </div>
-              </div>
-            </div>
-            
-            <div class="preview-section">
-              <h4>SAP Profile ({{ previewProfile?.sapItems?.length || 0 }})</h4>
-              <div class="preview-items">
-                <div v-for="item in previewProfile?.sapItems" :key="item.id" class="preview-item">
-                  {{ item.Bezeichnung }} ({{ item.Rollengruppe?.Bezeichnung || item.rollengruppe?.Bezeichnung }})
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    </div>
-    
   </div>
 </div>
 </template>
@@ -339,6 +276,7 @@ const emit = defineEmits(['go-back'])
     const selectedStatus = ref('')
     const showProfileModal = ref(false)
     const showPreviewModal = ref(false)
+    const showEditOverlay = ref(false)
     const editingProfile = ref(null)
     const previewProfile = ref(null)
     
@@ -477,7 +415,7 @@ const emit = defineEmits(['go-back'])
         
         console.log('Filtered SAP profiles:', availableSapProfiles.value.length, 'items')
       } catch (error) {
-        console.error('Fehler beim Laden der SAP Profile:', error)
+        console.error('Fehler beim Laden der SAP Berechtigungen:', error)
         availableSapProfiles.value = []
       }
     }
@@ -561,6 +499,7 @@ const emit = defineEmits(['go-back'])
       editingProfile.value = null
       resetProfileForm()
       showProfileModal.value = true
+      showEditOverlay.value = true
     }
     
     const editProfile = (profile) => {
@@ -583,10 +522,12 @@ const emit = defineEmits(['go-back'])
       
       console.log('Profile form after assignment:', profileForm) // Debug log
       showProfileModal.value = true
+      showEditOverlay.value = true
     }
     
     const closeProfileModal = () => {
       showProfileModal.value = false
+      showEditOverlay.value = false
       editingProfile.value = null
       resetProfileForm()
     }
@@ -692,11 +633,17 @@ const emit = defineEmits(['go-back'])
     const showProfilePreview = (profile) => {
       previewProfile.value = profile
       showPreviewModal.value = true
+      showEditOverlay.value = true
     }
     
     const closePreviewModal = () => {
       showPreviewModal.value = false
+      showEditOverlay.value = false
       previewProfile.value = null
+    }
+
+    const closeEditMode = () => {
+      showEditOverlay.value = false
     }
     
     const exportProfiles = () => {
@@ -792,21 +739,8 @@ const emit = defineEmits(['go-back'])
   margin-bottom: 1rem;
 }
 
-.search-input {
-  width: 100%;
-  padding: 0.75rem 2.5rem 0.75rem 1rem;
-  border: 2px solid var(--color-border);
-  border-radius: 0.5rem;
-  background: var(--color-background);
-  color: var(--color-text);
-  font-size: 1rem;
-  transition: all 0.2s ease;
-}
+/* Search input styling inherited from main.css */
 
-.search-input:focus {
-  outline: none;
-  border-color: var(--color-button);
-}
 
 .search-icon {
   position: absolute;
@@ -831,42 +765,11 @@ const emit = defineEmits(['go-back'])
   color: var(--color-text);
 }
 
-.add-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem !important;
-  background: var(--color-button) !important;
-  color: var(--color-text) !important;
-  border: none !important;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
+/* Add button styling moved to main.css */
 
-.add-button:hover {
-  background: var(--color-button-hover) !important;
-}
+/* Table container styling inherited from main.css */
 
-.profiles-table-container {
-  overflow-x: auto;
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-}
-
-.profiles-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.profiles-table th {
-  background: var(--color-background-mute);
-  color: var(--color-text);
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  border-bottom: 1px solid var(--color-border);
-}
+/* Table styling moved to main.css */
 
 .profile-row {
   border-bottom: 1px solid var(--color-border);
@@ -877,10 +780,7 @@ const emit = defineEmits(['go-back'])
   background: var(--color-background-soft);
 }
 
-.profiles-table td {
-  padding: 1rem;
-  vertical-align: middle;
-}
+/* Table cell styling moved to main.css */
 
 .profile-info {
   display: flex;
@@ -945,59 +845,26 @@ const emit = defineEmits(['go-back'])
   color: var(--color-text);
 }
 
-.status-badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
+/* Status badge styling moved to main.css */
 
-.status-badge.aktiv {
-  background: rgba(34, 197, 94, 0.1);
-  color: rgb(34, 197, 94);
-}
-
-.status-badge.inaktiv {
-  background: rgba(239, 68, 68, 0.1);
-  color: rgb(239, 68, 68);
-}
-
+/* Additional status type */
 .status-badge.entwurf {
   background: rgba(251, 191, 36, 0.1);
   color: rgb(251, 191, 36);
 }
 
+/* Action buttons container moved to main.css */
 .action-buttons {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
+  justify-content: flex-end; /* Profile-specific alignment */
 }
 
 .text-right {
   text-align: right !important;
 }
 
-.action-btn {
-  padding: 0.5rem !important;
-  border: none !important;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+/* Action button styling moved to main.css */
 
-.action-btn.edit {
-  background: var(--color-background-mute) !important;
-  color: var(--color-text) !important;
-}
-
-.action-btn.edit:hover {
-  background: var(--color-button) !important;
-  color: var(--color-text) !important;
-}
-
+/* Additional profile-specific action buttons */
 .action-btn.preview {
   background: rgba(59, 130, 246, 0.1) !important;
   color: rgb(59, 130, 246) !important;
@@ -1015,16 +882,6 @@ const emit = defineEmits(['go-back'])
 
 .action-btn.duplicate:hover {
   background: rgb(168, 85, 247) !important;
-  color: white !important;
-}
-
-.action-btn.delete {
-  background: rgba(239, 68, 68, 0.1) !important;
-  color: rgb(239, 68, 68) !important;
-}
-
-.action-btn.delete:hover {
-  background: rgb(239, 68, 68) !important;
   color: white !important;
 }
 
@@ -1054,12 +911,12 @@ const emit = defineEmits(['go-back'])
 }
 
 @media (max-width: 768px) {
-  .profiles-table {
+  .data-table {
     font-size: 0.9rem;
   }
   
-  .profiles-table th,
-  .profiles-table td {
+  .data-table th,
+  .data-table td {
     padding: 0.5rem;
   }
   
@@ -1069,83 +926,17 @@ const emit = defineEmits(['go-back'])
   }
 }
 
-/* Navigation buttons in JobView style */
+/* Navigation buttons styling inherited from main.css */
 .navigation-buttons {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 2rem;
+  margin-top: 2rem; /* View-specific spacing */
 }
 
-.back-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
 
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-}
+/* Modal styles moved to main.css */
 
-.modal-content {
-  background: white;
-  border-radius: 12px;
-  width: 100%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.3);
-}
-
+/* Profile-specific modal customizations */
 .modal-content.large {
   max-width: 1000px;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24px;
-  border-bottom: 1px solid #e1e5e9;
-  background: #f8f9fa;
-  border-radius: 12px 12px 0 0;
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: #2d3748;
-  font-size: 1.3em;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5em;
-  cursor: pointer;
-  color: #6c757d;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
-}
-
-.modal-close:hover {
-  background: rgba(0, 0, 0, 0.1);
 }
 
 .modal-form {
@@ -1166,35 +957,11 @@ const emit = defineEmits(['go-back'])
   padding-bottom: 8px;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-}
+/* Form styling moved to main.css */
 
+/* Profile-specific form customizations */
 .form-group.full-width {
   grid-column: 1 / -1;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 600;
-  color: #495057;
-}
-
-.form-input, .form-select, .form-textarea {
-  width: 100%;
-  padding: 12px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 1em;
-  transition: border-color 0.3s ease;
-}
-
-.form-input:focus, .form-select:focus, .form-textarea:focus {
-  outline: none;
-  border-color: #667eea;
 }
 
 .form-textarea {
@@ -1260,30 +1027,7 @@ const emit = defineEmits(['go-back'])
   color: #6c757d;
 }
 
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 32px;
-  padding-top: 20px;
-  border-top: 1px solid #e1e5e9;
-}
-
-.btn-primary {
-  background: #667eea;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 1em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.btn-primary:hover {
-  background: #5a67d8;
-}
+/* Modal actions and button styling moved to main.css */
 
 /* Preview Content */
 .preview-content {
@@ -1341,7 +1085,7 @@ const emit = defineEmits(['go-back'])
     align-items: stretch;
   }
   
-  .profiles-table {
+  .data-table {
     font-size: 0.9em;
   }
   
@@ -1358,26 +1102,12 @@ const emit = defineEmits(['go-back'])
   }
 }
 
-/* Navigation buttons in JobView style */
+/* Navigation buttons styling inherited from main.css */
 .navigation-buttons {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 2rem;
+  margin-top: 2rem; /* View-specific spacing */
 }
 
-.back-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
 
-.next-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
 
 .arrow-left {
   font-size: 1rem;

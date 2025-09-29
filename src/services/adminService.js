@@ -1,65 +1,61 @@
-import axios from 'axios'
+import { apiHelpers } from './apiClient';
 
-const API_BASE_URL = 'http://localhost:8000/api'
+// API_BASE_URL is empty since apiClient already has /api as baseURL
+const API_BASE_URL = '';
 
 class AdminService {
   // Dashboard
   async getDashboardStats() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/dashboard/stats`)
-      return response.data
+      return await apiHelpers.get(`${API_BASE_URL}/admin/dashboard/stats`);
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error)
-      throw error
+      console.error('Error fetching dashboard stats:', error);
+      throw error;
     }
   }
 
   // User Management
   async getUsers(params = {}) {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/users`, { params })
-      return response.data
+      return await apiHelpers.get(`${API_BASE_URL}/admin/users`, { params });
     } catch (error) {
-      console.error('Error fetching users:', error)
-      throw error
+      console.error('Error fetching users:', error);
+      throw error;
     }
   }
 
   async createUser(userData) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/admin/users`, userData)
-      return response.data
+      return await apiHelpers.post(`${API_BASE_URL}/admin/users`, userData);
     } catch (error) {
-      console.error('Error creating user:', error)
-      throw error
+      console.error('Error creating user:', error);
+      throw error;
     }
   }
 
   async updateUser(id, userData) {
     try {
-      const response = await axios.put(`${API_BASE_URL}/admin/users/${id}`, userData)
-      return response.data
+      return await apiHelpers.put(`${API_BASE_URL}/admin/users/${id}`, userData);
     } catch (error) {
-      console.error('Error updating user:', error)
-      throw error
+      console.error('Error updating user:', error);
+      throw error;
     }
   }
 
   async deleteUser(id) {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/admin/users/${id}`)
-      return response.data
+      return await apiHelpers.delete(`${API_BASE_URL}/admin/users/${id}`);
     } catch (error) {
-      console.error('Error deleting user:', error)
-      throw error
+      console.error('Error deleting user:', error);
+      throw error;
     }
   }
 
   // Hardware Management
   async getHardwareItems(params = {}) {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/hardware`, { params })
-      return response.data
+      const response = await apiHelpers.get(`${API_BASE_URL}/admin/hardware`, { params })
+      return response
     } catch (error) {
       console.error('Error fetching hardware items:', error)
       throw error
@@ -68,8 +64,8 @@ class AdminService {
 
   async createHardwareItem(hardwareData) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/admin/hardware`, hardwareData)
-      return response.data
+      const response = await apiHelpers.post(`${API_BASE_URL}/admin/hardware`, hardwareData)
+      return response
     } catch (error) {
       console.error('Error creating hardware item:', error)
       throw error
@@ -78,8 +74,8 @@ class AdminService {
 
   async updateHardwareItem(id, hardwareData) {
     try {
-      const response = await axios.put(`${API_BASE_URL}/admin/hardware/${id}`, hardwareData)
-      return response.data
+      const response = await apiHelpers.put(`${API_BASE_URL}/admin/hardware/${id}`, hardwareData)
+      return response
     } catch (error) {
       console.error('Error updating hardware item:', error)
       throw error
@@ -88,8 +84,8 @@ class AdminService {
 
   async deleteHardwareItem(id) {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/admin/hardware/${id}`)
-      return response.data
+      const response = await apiHelpers.delete(`${API_BASE_URL}/admin/hardware/${id}`)
+      return response
     } catch (error) {
       console.error('Error deleting hardware item:', error)
       throw error
@@ -99,8 +95,8 @@ class AdminService {
   // Hardware Categories Management
   async getHardwareCategories() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/hardware/categories`)
-      return response.data
+      const response = await apiHelpers.get(`${API_BASE_URL}/admin/hardware/categories`)
+      return response
     } catch (error) {
       console.error('Error fetching hardware categories:', error)
       throw error
@@ -109,8 +105,8 @@ class AdminService {
 
   async createHardwareCategory(categoryData) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/admin/hardware/categories`, categoryData)
-      return response.data
+      const response = await apiHelpers.post(`${API_BASE_URL}/admin/hardware/categories`, categoryData)
+      return response
     } catch (error) {
       console.error('Error creating hardware category:', error)
       throw error
@@ -119,8 +115,8 @@ class AdminService {
 
   async updateHardwareCategory(id, categoryData) {
     try {
-      const response = await axios.put(`${API_BASE_URL}/admin/hardware/categories/${id}`, categoryData)
-      return response.data
+      const response = await apiHelpers.put(`${API_BASE_URL}/admin/hardware/categories/${id}`, categoryData)
+      return response
     } catch (error) {
       console.error('Error updating hardware category:', error)
       throw error
@@ -129,8 +125,8 @@ class AdminService {
 
   async deleteHardwareCategory(id) {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/admin/hardware/categories/${id}`)
-      return response.data
+      const response = await apiHelpers.delete(`${API_BASE_URL}/admin/hardware/categories/${id}`)
+      return response
     } catch (error) {
       console.error('Error deleting hardware category:', error)
       throw error
@@ -140,8 +136,8 @@ class AdminService {
   // Software Management
   async getSoftwareItems(params = {}) {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/software`, { params })
-      return response.data
+      const response = await apiHelpers.get(`${API_BASE_URL}/admin/software`, { params })
+      return response
     } catch (error) {
       console.error('Error fetching software items:', error)
       throw error
@@ -150,8 +146,8 @@ class AdminService {
 
   async createSoftwareItem(softwareData) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/admin/software`, softwareData)
-      return response.data
+      const response = await apiHelpers.post(`${API_BASE_URL}/admin/software`, softwareData)
+      return response
     } catch (error) {
       console.error('Error creating software item:', error)
       throw error
@@ -160,8 +156,8 @@ class AdminService {
 
   async updateSoftwareItem(id, softwareData) {
     try {
-      const response = await axios.put(`${API_BASE_URL}/admin/software/${id}`, softwareData)
-      return response.data
+      const response = await apiHelpers.put(`${API_BASE_URL}/admin/software/${id}`, softwareData)
+      return response
     } catch (error) {
       console.error('Error updating software item:', error)
       throw error
@@ -170,8 +166,8 @@ class AdminService {
 
   async deleteSoftwareItem(id) {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/admin/software/${id}`)
-      return response.data
+      const response = await apiHelpers.delete(`${API_BASE_URL}/admin/software/${id}`)
+      return response
     } catch (error) {
       console.error('Error deleting software item:', error)
       throw error
@@ -181,8 +177,8 @@ class AdminService {
   // Software Manufacturers Management
   async getSoftwareManufacturers() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/software/manufacturers`)
-      return response.data
+      const response = await apiHelpers.get(`${API_BASE_URL}/admin/software/manufacturers`)
+      return response
     } catch (error) {
       console.error('Error fetching software manufacturers:', error)
       throw error
@@ -191,8 +187,8 @@ class AdminService {
 
   async createSoftwareManufacturer(manufacturerData) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/admin/software/manufacturers`, manufacturerData)
-      return response.data
+      const response = await apiHelpers.post(`${API_BASE_URL}/admin/software/manufacturers`, manufacturerData)
+      return response
     } catch (error) {
       console.error('Error creating software manufacturer:', error)
       throw error
@@ -201,8 +197,8 @@ class AdminService {
 
   async updateSoftwareManufacturer(id, manufacturerData) {
     try {
-      const response = await axios.put(`${API_BASE_URL}/admin/software/manufacturers/${id}`, manufacturerData)
-      return response.data
+      const response = await apiHelpers.put(`${API_BASE_URL}/admin/software/manufacturers/${id}`, manufacturerData)
+      return response
     } catch (error) {
       console.error('Error updating software manufacturer:', error)
       throw error
@@ -211,8 +207,8 @@ class AdminService {
 
   async deleteSoftwareManufacturer(id) {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/admin/software/manufacturers/${id}`)
-      return response.data
+      const response = await apiHelpers.delete(`${API_BASE_URL}/admin/software/manufacturers/${id}`)
+      return response
     } catch (error) {
       console.error('Error deleting software manufacturer:', error)
       throw error
@@ -222,31 +218,12 @@ class AdminService {
   // SAP Management
   async getSapRoles(params = {}) {
     try {
-      // Fetch all pages of SAP roles
-      let allRoles = []
-      let currentPage = 1
-      let lastPage = 1
+      const response = await apiHelpers.get(`${API_BASE_URL}/admin/sap/roles`, { 
+        params: params 
+      })
       
-      do {
-        const response = await axios.get(`${API_BASE_URL}/admin/sap/roles`, { 
-          params: { ...params, page: currentPage } 
-        })
-        
-        if (response.data.data) {
-          allRoles = [...allRoles, ...response.data.data]
-          lastPage = response.data.last_page || 1
-          currentPage++
-        } else {
-          // Handle non-paginated response
-          return response.data
-        }
-      } while (currentPage <= lastPage)
-      
-      // Return data in the same structure but with all items
-      return {
-        data: allRoles,
-        total: allRoles.length
-      }
+      // Return pagination data directly from API
+      return response
     } catch (error) {
       console.error('Error fetching SAP roles:', error)
       throw error
@@ -255,8 +232,8 @@ class AdminService {
 
   async getSapRoleGroups() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/sap/groups`)
-      return response.data
+      const response = await apiHelpers.get(`${API_BASE_URL}/admin/sap/groups`)
+      return response
     } catch (error) {
       console.error('Error fetching SAP role groups:', error)
       throw error
@@ -265,8 +242,8 @@ class AdminService {
 
   async createSapRole(roleData) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/admin/sap/roles`, roleData)
-      return response.data
+      const response = await apiHelpers.post(`${API_BASE_URL}/admin/sap/roles`, roleData)
+      return response
     } catch (error) {
       console.error('Error creating SAP role:', error)
       throw error
@@ -275,8 +252,8 @@ class AdminService {
 
   async updateSapRole(id, roleData) {
     try {
-      const response = await axios.put(`${API_BASE_URL}/admin/sap/roles/${id}`, roleData)
-      return response.data
+      const response = await apiHelpers.put(`${API_BASE_URL}/admin/sap/roles/${id}`, roleData)
+      return response
     } catch (error) {
       console.error('Error updating SAP role:', error)
       throw error
@@ -285,8 +262,8 @@ class AdminService {
 
   async deleteSapRole(id) {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/admin/sap/roles/${id}`)
-      return response.data
+      const response = await apiHelpers.delete(`${API_BASE_URL}/admin/sap/roles/${id}`)
+      return response
     } catch (error) {
       console.error('Error deleting SAP role:', error)
       throw error
@@ -295,8 +272,8 @@ class AdminService {
 
   async createSapRoleGroup(groupData) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/admin/sap/groups`, groupData)
-      return response.data
+      const response = await apiHelpers.post(`${API_BASE_URL}/admin/sap/groups`, groupData)
+      return response
     } catch (error) {
       console.error('Error creating SAP role group:', error)
       throw error
@@ -305,8 +282,8 @@ class AdminService {
 
   async updateSapRoleGroup(id, groupData) {
     try {
-      const response = await axios.put(`${API_BASE_URL}/admin/sap/groups/${id}`, groupData)
-      return response.data
+      const response = await apiHelpers.put(`${API_BASE_URL}/admin/sap/groups/${id}`, groupData)
+      return response
     } catch (error) {
       console.error('Error updating SAP role group:', error)
       throw error
@@ -315,8 +292,8 @@ class AdminService {
 
   async deleteSapRoleGroup(id) {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/admin/sap/groups/${id}`)
-      return response.data
+      const response = await apiHelpers.delete(`${API_BASE_URL}/admin/sap/groups/${id}`)
+      return response
     } catch (error) {
       console.error('Error deleting SAP role group:', error)
       throw error
@@ -326,8 +303,8 @@ class AdminService {
   // Profile Management
   async getProfiles(params = {}) {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/profiles`, { params })
-      return response.data
+      const response = await apiHelpers.get(`${API_BASE_URL}/admin/profiles`, { params })
+      return response
     } catch (error) {
       console.error('Error fetching profiles:', error)
       throw error
@@ -336,8 +313,8 @@ class AdminService {
 
   async createProfile(profileData) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/admin/profiles`, profileData)
-      return response.data
+      const response = await apiHelpers.post(`${API_BASE_URL}/admin/profiles`, profileData)
+      return response
     } catch (error) {
       console.error('Error creating profile:', error)
       throw error
@@ -346,8 +323,8 @@ class AdminService {
 
   async updateProfile(id, profileData) {
     try {
-      const response = await axios.put(`${API_BASE_URL}/admin/profiles/${id}`, profileData)
-      return response.data
+      const response = await apiHelpers.put(`${API_BASE_URL}/admin/profiles/${id}`, profileData)
+      return response
     } catch (error) {
       console.error('Error updating profile:', error)
       throw error
@@ -356,8 +333,8 @@ class AdminService {
 
   async deleteProfile(id) {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/admin/profiles/${id}`)
-      return response.data
+      const response = await apiHelpers.delete(`${API_BASE_URL}/admin/profiles/${id}`)
+      return response
     } catch (error) {
       console.error('Error deleting profile:', error)
       throw error
@@ -367,8 +344,8 @@ class AdminService {
   // Master Data Management
   async getBereiche() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/bereiche`)
-      return response.data
+      const response = await apiHelpers.get(`${API_BASE_URL}/admin/bereiche`)
+      return response
     } catch (error) {
       console.error('Error fetching bereiche:', error)
       throw error
@@ -377,8 +354,8 @@ class AdminService {
 
   async createBereich(bereichData) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/admin/bereiche`, bereichData)
-      return response.data
+      const response = await apiHelpers.post(`${API_BASE_URL}/admin/bereiche`, bereichData)
+      return response
     } catch (error) {
       console.error('Error creating bereich:', error)
       throw error
@@ -387,8 +364,8 @@ class AdminService {
 
   async updateBereich(id, bereichData) {
     try {
-      const response = await axios.put(`${API_BASE_URL}/admin/bereiche/${id}`, bereichData)
-      return response.data
+      const response = await apiHelpers.put(`${API_BASE_URL}/admin/bereiche/${id}`, bereichData)
+      return response
     } catch (error) {
       console.error('Error updating bereich:', error)
       throw error
@@ -397,8 +374,8 @@ class AdminService {
 
   async deleteBereich(id) {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/admin/bereiche/${id}`)
-      return response.data
+      const response = await apiHelpers.delete(`${API_BASE_URL}/admin/bereiche/${id}`)
+      return response
     } catch (error) {
       console.error('Error deleting bereich:', error)
       throw error
@@ -407,18 +384,28 @@ class AdminService {
 
   async getTeams() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/teams`)
-      return response.data
+      const response = await apiHelpers.get(`${API_BASE_URL}/admin/teams`)
+      return response
     } catch (error) {
       console.error('Error fetching teams:', error)
       throw error
     }
   }
 
+  async getTeamsByBereich(bereichId) {
+    try {
+      const response = await apiHelpers.get(`${API_BASE_URL}/admin/teams/bereich/${bereichId}`)
+      return response
+    } catch (error) {
+      console.error('Error fetching teams by bereich:', error)
+      throw error
+    }
+  }
+
   async createTeam(teamData) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/admin/teams`, teamData)
-      return response.data
+      const response = await apiHelpers.post(`${API_BASE_URL}/admin/teams`, teamData)
+      return response
     } catch (error) {
       console.error('Error creating team:', error)
       throw error
@@ -427,8 +414,8 @@ class AdminService {
 
   async updateTeam(id, teamData) {
     try {
-      const response = await axios.put(`${API_BASE_URL}/admin/teams/${id}`, teamData)
-      return response.data
+      const response = await apiHelpers.put(`${API_BASE_URL}/admin/teams/${id}`, teamData)
+      return response
     } catch (error) {
       console.error('Error updating team:', error)
       throw error
@@ -437,8 +424,8 @@ class AdminService {
 
   async deleteTeam(id) {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/admin/teams/${id}`)
-      return response.data
+      const response = await apiHelpers.delete(`${API_BASE_URL}/admin/teams/${id}`)
+      return response
     } catch (error) {
       console.error('Error deleting team:', error)
       throw error
@@ -447,18 +434,28 @@ class AdminService {
 
   async getFunktionen() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/funktionen`)
-      return response.data
+      const response = await apiHelpers.get(`${API_BASE_URL}/admin/funktionen`)
+      return response
     } catch (error) {
       console.error('Error fetching funktionen:', error)
       throw error
     }
   }
 
+  async getRollen() {
+    try {
+      const response = await apiHelpers.get(`${API_BASE_URL}/admin/rollen`)
+      return response
+    } catch (error) {
+      console.error('Error fetching rollen:', error)
+      throw error
+    }
+  }
+
   async createFunktion(funktionData) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/admin/funktionen`, funktionData)
-      return response.data
+      const response = await apiHelpers.post(`${API_BASE_URL}/admin/funktionen`, funktionData)
+      return response
     } catch (error) {
       console.error('Error creating funktion:', error)
       throw error
@@ -467,8 +464,8 @@ class AdminService {
 
   async updateFunktion(id, funktionData) {
     try {
-      const response = await axios.put(`${API_BASE_URL}/admin/funktionen/${id}`, funktionData)
-      return response.data
+      const response = await apiHelpers.put(`${API_BASE_URL}/admin/funktionen/${id}`, funktionData)
+      return response
     } catch (error) {
       console.error('Error updating funktion:', error)
       throw error
@@ -477,8 +474,8 @@ class AdminService {
 
   async deleteFunktion(id) {
     try {
-      const response = await axios.delete(`${API_BASE_URL}/admin/funktionen/${id}`)
-      return response.data
+      const response = await apiHelpers.delete(`${API_BASE_URL}/admin/funktionen/${id}`)
+      return response
     } catch (error) {
       console.error('Error deleting funktion:', error)
       throw error

@@ -24,6 +24,71 @@
 
 body {
   font-family: sans-serif;
+  /* MX-Datepicker global CSS variables */
+  --mx-primary-color: var(--color-button);
+  --mx-text-color-primary: white;
+}
+
+/* Global mx-datepicker calendar header styling */
+.mx-calendar-header,
+.mx-time-header {
+  background-color: var(--color-button) !important;
+  color: white !important;
+}
+
+.mx-calendar-header .mx-btn,
+.mx-time-header .mx-btn,
+.mx-calendar-header .mx-btn-text,
+.mx-time-header .mx-btn-text {
+  background-color: var(--color-button) !important;
+  color: white !important;
+  border-color: var(--color-button) !important;
+}
+
+/* mx-calendar with button color */
+.mx-calendar {
+  background-color: var(--color-button) !important;
+  color: white !important;
+}
+
+/* mx-calendar-content with background color */
+.mx-calendar-content {
+  background-color: var(--color-background) !important;
+}
+
+/* Weekday text color */
+.mx-table-date th {
+  color: var(--color-text) !important;
+}
+
+/* Calendar dates text color */
+.mx-table-date td,
+.mx-table-date .cell {
+  color: var(--color-text) !important;
+}
+
+/* Previous/next month dates muted - maximum specificity */
+.mx-datepicker-popup .mx-calendar .mx-calendar-content .mx-table-date .cell.not-current-month {
+  color: var(--color-text-muted) !important;
+  background: none !important;
+}
+
+/* Calendar date hover styling */
+.mx-table-date .cell:hover {
+  background-color: var(--color-button-hover) !important;
+  color: var(--color-text-inverted) !important;
+}
+
+/* Today's date styling */
+.mx-table-date .today {
+  color: var(--color-button) !important;
+  font-weight: bold !important;
+}
+
+/* Active/selected date styling */
+.mx-table-date .cell.active {
+  background-color: var(--color-button) !important;
+  color: white !important;
 }
 
 .fade-in {
@@ -173,5 +238,735 @@ input:focus {
   background-color: var(--vf-danger-lighter) !important;
   border: 1px solid var(--vf-danger) !important;
   padding: 0.7rem 1rem;
+  border-radius: 0.5rem;
+}
+
+/* Common component styles extracted from views */
+
+/* Navigation buttons - used across JobView, AdminView, and HomeView */
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.back-button,
+.next-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* List group items - used in draggable components */
+.list-group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--color-button);
+  border-radius: 0.2rem;
+  margin: 0.2rem;
+  padding: 0.4rem;
+  transition: transform 0.2s ease;
+}
+
+.list-group-item.selected {
+  background-color: transparent !important;
+  cursor: default;
+}
+
+.list-group {
+  user-select: none;
+  width: 100%;
+  padding: 0;
+  color: var(--color-text);
+}
+
+/* Draggable functionality */
+.list-group-item.draggable {
+  cursor: grab;
+  user-select: none;
+}
+
+.list-group-item.draggable:active {
+  cursor: grabbing;
+}
+
+.list-group-item:hover {
+  background-color: var(--color-button-hover);
+  transform: scale(1.01);
+  z-index: 10;
+}
+
+/* Search input - common base styles */
+.search-input {
+  width: 100%;
+  border-radius: 0.5rem;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: 0.8333rem;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-button);
+}
+
+.search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Search input container */
+.search-input-container {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.search-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+/* Search input variants - specific overrides remain in views */
+.search-input.large {
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 2px solid var(--color-border);
+  box-shadow: 0 0 0 3px rgba(var(--color-button-rgb, 59, 130, 246), 0.1);
+}
+
+.search-input.compact {
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  width: 250px;
+}
+
+/* Modal styling - used across multiple admin components */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: var(--color-background);
+  padding: 2rem;
+  border-radius: 0.5rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.modal-title {
+  margin: 0;
+  color: var(--color-heading);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-text);
+  padding: 0;
+}
+
+.modal-body {
+  margin-bottom: 1rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* Tab Navigation styling - used across admin components */
+.tab-navigation {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab-button {
+  padding: 0.75rem 1.5rem !important;
+  background: none !important;
+  border: none !important;
+  color: var(--color-text-muted) !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent !important;
+}
+
+.tab-button:hover {
+  color: var(--color-button-hover) !important;
+  background-color: transparent !important;
+}
+
+.tab-button.active {
+  color: var(--color-button) !important;
+  border-bottom-color: var(--color-button) !important;
+}
+
+.tab-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tab-content {
+  margin-top: 1rem;
+}
+
+/* Table styling - used across admin components */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.data-table th,
+.data-table td {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.data-table th {
+  background-color: var(--color-background-soft);
+  font-weight: bold;
+  color: var(--color-heading);
+}
+
+.data-table tr:hover {
+  background-color: var(--color-background-soft);
+}
+
+/* Action buttons - used throughout admin components */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn-edit,
+.btn-delete,
+.btn-view,
+.btn-details {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.btn-edit {
+  background-color: var(--color-button);
+  color: var(--color-text);
+}
+
+.btn-edit:hover {
+  background-color: var(--color-button-hover);
+}
+
+.btn-delete {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-delete:hover {
+  background-color: #c82333;
+}
+
+.btn-view,
+.btn-details {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-view:hover,
+.btn-details:hover {
+  background-color: #5a6268;
+}
+
+/* Module/Card styling - reusable card pattern */
+.module-card,
+.info-card {
+  background-color: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.module-card:hover,
+.info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.module-card h3,
+.info-card h3 {
+  margin-top: 0;
+  color: var(--color-heading);
+}
+
+/* Status badges - standardized across components */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.status-badge.active {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status-badge.inactive {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.status-badge.pending {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+/* Add/Delete button styling - generic action buttons */
+.add-button,
+.delete-button {
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  font-family: 'GT Pressura';
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.add-button {
+  background-color: var(--color-button);
+  color: var(--color-text);
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.add-button:hover {
+  background-color: var(--color-button-hover);
+}
+
+.delete-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
+}
+
+/* Option button styling - used in selection components */
+.option-button {
+  background-color: var(--color-background-soft);
+  border: 2px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.option-button:hover {
+  border-color: var(--color-button);
+  background-color: var(--color-background-mute);
+}
+
+.option-button.selected {
+  border-color: var(--color-button);
+  background-color: var(--color-button);
+  color: var(--color-text-inverted);
+}
+
+.option-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Summary section styling - reusable summary patterns */
+.summary-section {
+  background-color: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.summary-section h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--color-heading);
+  border-bottom: 2px solid var(--color-button);
+  padding-bottom: 0.5rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+}
+
+.summary-item strong {
+  color: var(--color-text);
+  min-width: 150px;
+}
+
+/* Statistics item styling - generic stats display */
+.stat-item {
+  text-align: center;
+  padding: 1rem;
+  background-color: var(--color-background-soft);
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+}
+
+.stat-item h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--color-heading);
+  font-size: 1.5rem;
+}
+
+.stat-item p {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 0.875rem;
+}
+
+/* Search input container with icon - repeated pattern */
+.search-input-with-icon {
+  position: relative;
+  width: 100%;
+}
+
+.search-input-with-icon input {
+  width: 100%;
+  padding-right: 2.5rem;
+}
+
+.search-input-with-icon .search-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text);
+  pointer-events: none;
+}
+
+/* Generic form grid layout */
+.form-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .form-grid.two-column {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .form-grid.three-column {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+/* Generic toggle switch styling */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 3rem;
+  height: 1.5rem;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 1.5rem;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 1.1rem;
+  width: 1.1rem;
+  left: 0.2rem;
+  bottom: 0.2rem;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--color-button);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(1.5rem);
+}
+
+/* Modal styling - used across admin components */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: var(--color-background);
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 1.5rem 0 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--color-heading);
+  font-family: 'GT Pressura', sans-serif;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+}
+
+.close-btn,
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 0.25rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover,
+.modal-close:hover {
+  background-color: var(--color-background-soft);
+  color: var(--color-text);
+}
+
+.modal-body {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Form styling for modals */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--color-text);
+  font-weight: 500;
+  font-family: 'GT Pressura', sans-serif;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-button);
+  box-shadow: 0 0 0 3px rgba(120, 198, 191, 0.1);
+}
+
+.form-input:invalid {
+  border-color: #dc3545;
+}
+
+.form-help {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+/* Modal button styling */
+.btn-primary {
+  background-color: var(--color-button) !important;
+  color: var(--color-text) !important;
+  border: none !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 0.25rem !important;
+  font-family: 'GT Pressura', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-button-hover) !important;
+  color: var(--color-text-inverted) !important;
+}
+
+.btn-secondary {
+  background-color: transparent !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 0.25rem !important;
+  font-family: 'GT Pressura', sans-serif !important;
+  text-transform: uppercase !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-button) !important;
+  color: var(--color-button) !important;
+  background-color: var(--color-background-soft) !important;
+}
+
+/* Responsive modal styling */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    max-height: 95vh;
+    margin: 1rem;
+  }
+
+  .modal-header,
+  .modal-body {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Table container styling - used across admin components */
+.data-table-container,
+.users-table-container,
+.profiles-table-container,
+.hardware-table-container,
+.software-table-container,
+.orders-table-container {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
 }

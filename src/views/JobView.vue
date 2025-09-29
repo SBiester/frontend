@@ -2,7 +2,7 @@
     <div :class="{ 'fade-in': showWorkArea }" class="new-div">
         <!-- Clear Data Button -->
         <hr class="shadow-line" />
-        <div class="clear-data-section">
+        <div v-if="userStore.canAccessAdmin" class="clear-data-section">
             <button @click="clearAllData" class="clear-data-button" title="Alle gespeicherten Daten löschen">
                 🗑️ Daten zurücksetzen
             </button>
@@ -35,6 +35,7 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { useJuStore } from '@/stores/ju';
+import { useUserStore } from '@/stores/userStore';
 import { useStoreCookieSync } from '@/components/useStoreCookieSync';
 
 const emit = defineEmits(['back-to-navigation']);
@@ -48,6 +49,7 @@ import SummaryData from './JobView/SummaryData.vue';
 
 // Store and cookie management
 const juStore = useJuStore();
+const userStore = useUserStore();
 const { clearCache } = useStoreCookieSync(juStore, 'juStore');
 
 const activeComponent = ref('BaseData');

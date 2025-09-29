@@ -14,38 +14,75 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore();
-  const userRole = userStore.role; // 'admin', 'pm', 'user', or null
 
-  // Prüfen, ob die Route eine Authentifizierung erfordert
-  if (to.meta.requiresAuth) {
-    // 1. Benutzer ist nicht angemeldet -> Weiterleitung zur Startseite mit Nachricht
-    if (!userRole) {
+  // Initialisiere Store falls noch nicht geschehen
+  if (!userStore.isAuthenticated && userStore.getToken()) {
+    userStore.initialize();
+  }
+
+  const userRole = userStore.role;
+  const isAuthenticated = userStore.isAuthenticated;
+
+  // Admin Route Protection
+  if (to.path.startsWith('/admin')) {
+    if (!isAuthenticated) {
       return next({ path: '/home', query: { message: 'unauthenticated' } });
     }
 
-    // 2. Benutzer ist angemeldet, Berechtigungen prüfen
+    // Spezielle Behandlung für Orders-Bereich - PM und Fach haben auch Zugriff
+    if (to.query.section === 'orders') {
+      if (!['admin', 'pm', 'fach'].includes(userRole)) {
+        return next({ path: '/home', query: { message: 'insufficient_permissions' } });
+      }
+    } else {
+      // Nur Admin hat Zugriff auf anderen Admin-Bereich
+      if (userRole !== 'admin') {
+        return next({ path: '/home', query: { message: 'insufficient_permissions' } });
+      }
+    }
+
+    return next();
+  }
+
+  // Job Route Protection
+  if (to.path.startsWith('/job')) {
+    if (!isAuthenticated) {
+      return next({ path: '/home', query: { message: 'unauthenticated' } });
+    }
+
+    // Admin, PM und User (fach) haben Zugriff auf Job-Bereich
+    if (!['admin', 'pm', 'fach'].includes(userRole)) {
+      return next({ path: '/home', query: { message: 'insufficient_permissions' } });
+    }
+
+    return next();
+  }
+
+  // Legacy meta-basierte Authentifizierung für andere Routen
+  if (to.meta.requiresAuth) {
+    if (!isAuthenticated) {
+      return next({ path: '/home', query: { message: 'unauthenticated' } });
+    }
+
     const requiredRole = to.meta.role;
     if (requiredRole) {
       // Admin hat Zugriff auf alles
       if (userRole === 'admin') {
         return next();
       }
-      // PM hat Zugriff auf 'pm'- und 'user'-Routen
 
-      if (userRole === 'admin') return next({ path: '/admin' });
-      if (userRole === 'pm') return next({ path: '/job' });
-      if (userRole === 'fach') return next({ path: '/job' }); 
-      // Fallback für andere Rollen
-      return next({ path: '/home' });
+      // Prüfe spezifische Rolle
+      if (userRole === requiredRole) {
+        return next();
+      }
 
-    } else {
-      // Route erfordert Authentifizierung, aber keine spezielle Rolle, also Zugriff erlauben
-      return next();
+      // Keine Berechtigung
+      return next({ path: '/home', query: { message: 'insufficient_permissions' } });
     }
-  } else {
-    // Öffentliche Route, Zugriff erlauben
-    return next();
   }
+
+  // Öffentliche Route oder keine speziellen Anforderungen
+  next();
 });
 
 export default router

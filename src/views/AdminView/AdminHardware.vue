@@ -1,5 +1,56 @@
 <template>
 <div>
+	<!-- Category Modal -->
+	<BaseModal
+		:show="showAddCategoryForm"
+		:title="editingCategory ? 'Kategorie bearbeiten' : 'Neue Kategorie hinzufügen'"
+		:show-actions="false"
+		@close="closeModals"
+	>
+		<form @submit.prevent="addCategory">
+			<div class="form-group">
+				<label>Name</label>
+				<input v-model="newCategory.name" type="text" required class="form-input">
+			</div>
+			<div class="modal-actions">
+				<button type="button" @click="closeModals" class="btn-secondary">Abbrechen</button>
+				<button type="submit" class="btn-primary">{{ editingCategory ? 'Aktualisieren' : 'Kategorie hinzufügen' }}</button>
+			</div>
+		</form>
+	</BaseModal>
+
+	<!-- Hardware Modal -->
+	<BaseModal
+		:show="showAddHardwareForm"
+		:title="editingHardware ? 'Hardware bearbeiten' : 'Neue Hardware hinzufügen'"
+		:show-actions="false"
+		@close="closeModals"
+	>
+		<form @submit.prevent="addHardware">
+			<div class="form-group">
+				<label>Name</label>
+				<input v-model="newHardware.name" type="text" required class="form-input">
+			</div>
+			<div class="form-group">
+				<label>Kategorie</label>
+				<select v-model="newHardware.category_id" required class="form-input">
+					<option value="">Kategorie wählen</option>
+					<option v-for="category in adminStore.hardwareCategories" :key="category.id" :value="category.id">
+						{{ category.name }}
+					</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<label>Maximale Anzahl</label>
+				<input v-model="newHardware.MaxAnzahl" type="number" min="1" class="form-input" placeholder="Leer lassen für unbegrenzt">
+				<small class="form-help">Maximale Anzahl, die von diesem Hardware-Typ bestellt werden darf. Leer lassen für unbegrenzte Bestellungen.</small>
+			</div>
+			<div class="modal-actions">
+				<button type="button" @click="closeModals" class="btn-secondary">Abbrechen</button>
+				<button type="submit" class="btn-primary">{{ editingHardware ? 'Aktualisieren' : 'Hardware hinzufügen' }}</button>
+			</div>
+		</form>
+	</BaseModal>
 	<hr class="shadow-line" />
 	<div class="ref">
 		<h2>Hardware verwalten</h2>
@@ -29,7 +80,7 @@
 			<div v-if="activeTab === 'categories'" class="tab-content">
 				<div class="section-header">
 					<h3>Hardware-Kategorien</h3>
-					<button @click="showAddCategoryForm = true" class="add-button">
+					<button @click="openAddCategoryForm" class="add-button">
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 							<path d="M12 5v14m7-7H5"></path>
 						</svg>
@@ -38,7 +89,7 @@
 				</div>
 				
 				<div class="categories-grid">
-					<div v-for="category in categories" :key="category.id" class="category-card">
+					<div v-for="category in adminStore.hardwareCategories" :key="category.id" class="category-card">
 						<div class="category-header">
 							<h4>{{ category.name }}</h4>
 							<div class="category-actions">
@@ -72,7 +123,7 @@
 							<input 
 								v-model="hardwareSearchQuery"
 								type="text" 
-								class="search-input"
+								class="search-input compact"
 								placeholder="Hardware durchsuchen..."
 							/>
 							<div class="search-icon">
@@ -84,11 +135,11 @@
 						</div>
 						<select v-model="selectedCategoryFilter" class="filter-select">
 							<option value="">Alle Kategorien</option>
-							<option v-for="category in categories" :key="category.id" :value="category.id">
+							<option v-for="category in adminStore.hardwareCategories" :key="category.id" :value="category.id">
 								{{ category.name }}
 							</option>
 						</select>
-						<button @click="showAddHardwareForm = true" class="add-button">
+						<button @click="openAddHardwareForm" class="add-button">
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 								<path d="M12 5v14m7-7H5"></path>
 							</svg>
@@ -97,12 +148,13 @@
 					</div>
 				</div>
 
-				<div class="hardware-table-container">
-					<table class="hardware-table">
+				<div class="data-table-container">
+					<table class="data-table">
 						<thead>
 							<tr>
 								<th>Name</th>
 								<th>Kategorie</th>
+								<th>Max. Anzahl</th>
 								<th class="text-right">Aktionen</th>
 							</tr>
 						</thead>
@@ -111,6 +163,9 @@
 								<td class="hardware-name">{{ item.name }}</td>
 								<td>
 									<span class="category-badge">{{ getCategoryName(item.category_id) }}</span>
+								</td>
+								<td>
+									<span class="max-anzahl-badge">{{ item.MaxAnzahl || 'Unbegrenzt' }}</span>
 								</td>
 								<td class="text-right">
 									<div class="action-buttons">
@@ -134,112 +189,34 @@
 				</div>
 			</div>
 		</div>
-
-		<!-- Add Category Modal -->
-		<div v-if="showAddCategoryForm" class="modal-overlay" @click="closeModals">
-			<div class="modal-content" @click.stop>
-				<div class="modal-header">
-					<h3>{{ editingCategory ? 'Kategorie bearbeiten' : 'Neue Kategorie hinzufügen' }}</h3>
-					<button @click="closeModals" class="close-btn">×</button>
-				</div>
-				<div class="modal-body">
-					<form @submit.prevent="addCategory">
-						<div class="form-group">
-							<label>Name</label>
-							<input v-model="newCategory.name" type="text" required class="form-input">
-						</div>
-						<div class="modal-actions">
-							<button type="button" @click="closeModals" class="btn-secondary">Abbrechen</button>
-							<button type="submit" class="btn-primary">{{ editingCategory ? 'Aktualisieren' : 'Kategorie hinzufügen' }}</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-
-		<!-- Add Hardware Modal -->
-		<div v-if="showAddHardwareForm" class="modal-overlay" @click="closeModals">
-			<div class="modal-content" @click.stop>
-				<div class="modal-header">
-					<h3>{{ editingHardware ? 'Hardware bearbeiten' : 'Neue Hardware hinzufügen' }}</h3>
-					<button @click="closeModals" class="close-btn">×</button>
-				</div>
-				<div class="modal-body">
-					<form @submit.prevent="addHardware">
-						<div class="form-group">
-							<label>Name</label>
-							<input v-model="newHardware.name" type="text" required class="form-input">
-						</div>
-						<div class="form-group">
-							<label>Kategorie</label>
-							<select v-model="newHardware.category_id" required class="form-input">
-								<option value="">Kategorie wählen</option>
-								<option v-for="category in categories" :key="category.id" :value="category.id">
-									{{ category.name }}
-								</option>
-							</select>
-						</div>
-						<div class="modal-actions">
-							<button type="button" @click="closeModals" class="btn-secondary">Abbrechen</button>
-							<button type="submit" class="btn-primary">{{ editingHardware ? 'Aktualisieren' : 'Hardware hinzufügen' }}</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-		
 	</div>
 </div>
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue';
-import adminService from '@/services/adminService';
+import { onMounted, ref, computed, nextTick } from 'vue'
+import { useAdminStore } from '@/stores/adminStore'
+import BaseModal from '@/components/BaseModal.vue'
 
-const emit = defineEmits(['go-back']);
+const emit = defineEmits(['go-back'])
 
-const activeTab = ref('hardware');
-const hardwareSearchQuery = ref('');
-const selectedCategoryFilter = ref('');
+const adminStore = useAdminStore()
 
-const categories = ref([]);
-const hardwareItems = ref([]);
+const activeTab = ref('hardware')
+const hardwareSearchQuery = ref('')
+const selectedCategoryFilter = ref('')
 
-const showAddCategoryForm = ref(false);
-const showAddHardwareForm = ref(false);
+const showAddCategoryForm = ref(false)
+const showAddHardwareForm = ref(false)
 
-const editingCategory = ref(null);
-const editingHardware = ref(null);
+const editingCategory = ref(null)
+const editingHardware = ref(null)
 
-const newCategory = ref({ name: '' });
-const newHardware = ref({ name: '', category_id: '' });
-
-const loadCategories = async () => {
-	try {
-		const data = await adminService.getHardwareCategories();
-		categories.value = data || [];
-	} catch (error) {
-		console.error('Fehler beim Laden der Kategorien:', error);
-		categories.value = [];
-	}
-};
-
-const loadHardware = async () => {
-	try {
-		const data = await adminService.getHardwareItems();
-		if (data && data.data) {
-			hardwareItems.value = data.data;
-		} else {
-			hardwareItems.value = data || [];
-		}
-	} catch (error) {
-		console.error('Fehler beim Laden der Hardware:', error);
-		hardwareItems.value = [];
-	}
-};
+const newCategory = ref({ name: '' })
+const newHardware = ref({ name: '', category_id: '', MaxAnzahl: '' })
 
 const filteredHardware = computed(() => {
-	let filtered = hardwareItems.value;
+	let filtered = adminStore.hardware
 	
 	if (hardwareSearchQuery.value) {
 		const query = hardwareSearchQuery.value.toLowerCase();
@@ -256,111 +233,105 @@ const filteredHardware = computed(() => {
 });
 
 const getCategoryName = (categoryId) => {
-	const category = categories.value.find(c => c.id === categoryId);
-	return category ? category.name : 'Unbekannt';
-};
+	const category = adminStore.hardwareCategories.find(c => c.id === categoryId)
+	return category ? category.name : 'Unbekannt'
+}
 
 const addCategory = async () => {
 	try {
+		let result
 		if (editingCategory.value) {
-			// Update existing category
-			const response = await adminService.updateHardwareCategory(editingCategory.value, newCategory.value);
-			if (response && response.category) {
-				const index = categories.value.findIndex(c => c.id === editingCategory.value);
-				if (index !== -1) {
-					categories.value[index] = response.category;
-				}
-			}
+			result = await adminStore.categoriesOps.update(editingCategory.value, newCategory.value)
 		} else {
-			// Create new category
-			const response = await adminService.createHardwareCategory(newCategory.value);
-			if (response && response.category) {
-				categories.value.push(response.category);
-			}
+			result = await adminStore.categoriesOps.create(newCategory.value)
 		}
-		closeModals();
-		await loadCategories(); // Reload to get fresh data
+
+		console.log('Category operation result:', result) // Debug log
+
+		// Verify the category was actually added to the store
+		console.log('Categories in store after creation:', adminStore.hardwareCategories)
+		const createdCategory = adminStore.hardwareCategories.find(cat => cat.name === result.name)
+		console.log('Created category found in store:', createdCategory)
+
+		closeModals()
+
+		// Force reactivity update if needed
+		await nextTick()
 	} catch (error) {
-		console.error('Fehler beim Speichern der Kategorie:', error);
-		alert('Fehler beim Speichern der Kategorie: ' + (error.response?.data?.message || error.message));
+		console.error('Fehler beim Speichern der Kategorie:', error)
+		alert('Fehler beim Speichern der Kategorie')
 	}
-};
+}
 
 const addHardware = async () => {
 	try {
 		if (editingHardware.value) {
-			// Update existing hardware
-			const response = await adminService.updateHardwareItem(editingHardware.value, newHardware.value);
-			if (response && response.hardware) {
-				const index = hardwareItems.value.findIndex(h => h.id === editingHardware.value);
-				if (index !== -1) {
-					hardwareItems.value[index] = response.hardware;
-				}
-			}
+			await adminStore.hardwareOps.update(editingHardware.value, newHardware.value)
 		} else {
-			// Create new hardware
-			const response = await adminService.createHardwareItem(newHardware.value);
-			if (response && response.hardware) {
-				hardwareItems.value.push(response.hardware);
-			}
+			await adminStore.hardwareOps.create(newHardware.value)
 		}
-		closeModals();
-		await loadHardware(); // Reload to get fresh data
+		closeModals()
 	} catch (error) {
-		console.error('Fehler beim Speichern der Hardware:', error);
-		alert('Fehler beim Speichern der Hardware: ' + (error.response?.data?.message || error.message));
+		console.error('Fehler beim Speichern der Hardware:', error)
+		alert('Fehler beim Speichern der Hardware: ' + (error.response?.data?.message || error.message))
 	}
-};
+}
+
+const openAddCategoryForm = () => {
+	newCategory.value = { name: '' }
+	editingCategory.value = null
+	showAddCategoryForm.value = true
+}
 
 const editCategory = (category) => {
-	newCategory.value = { ...category };
-	editingCategory.value = category.id;
-	showAddCategoryForm.value = true;
-};
+	newCategory.value = { ...category }
+	editingCategory.value = category.id
+	showAddCategoryForm.value = true
+}
 
 const deleteCategory = async (category) => {
-	if (confirm(`Kategorie "${category.name}" wirklich löschen?`)) {
-		try {
-			await adminService.deleteHardwareCategory(category.id);
-			categories.value = categories.value.filter(c => c.id !== category.id);
-		} catch (error) {
-			console.error('Fehler beim Löschen der Kategorie:', error);
-			alert('Fehler beim Löschen der Kategorie: ' + (error.response?.data?.message || error.message));
-		}
+	try {
+		await adminStore.categoriesOps.remove(category.id)
+	} catch (error) {
+		console.error('Fehler beim Löschen der Kategorie:', error)
+		alert('Fehler beim Löschen der Kategorie: ' + (error.response?.data?.message || error.message))
 	}
-};
+}
+
+const openAddHardwareForm = () => {
+	newHardware.value = { name: '', category_id: '', MaxAnzahl: '' }
+	editingHardware.value = null
+	showAddHardwareForm.value = true
+}
 
 const editHardware = (item) => {
-	newHardware.value = { ...item };
-	editingHardware.value = item.id;
-	showAddHardwareForm.value = true;
-};
+	newHardware.value = { ...item }
+	editingHardware.value = item.id
+	showAddHardwareForm.value = true
+}
 
 const deleteHardware = async (item) => {
-	if (confirm(`Hardware "${item.name}" wirklich löschen?`)) {
-		try {
-			await adminService.deleteHardwareItem(item.id);
-			hardwareItems.value = hardwareItems.value.filter(h => h.id !== item.id);
-		} catch (error) {
-			console.error('Fehler beim Löschen der Hardware:', error);
-			alert('Fehler beim Löschen der Hardware: ' + (error.response?.data?.message || error.message));
-		}
+	try {
+		await adminStore.hardwareOps.remove(item.id)
+	} catch (error) {
+		console.error('Fehler beim Löschen der Hardware:', error)
+		alert('Fehler beim Löschen der Hardware: ' + (error.response?.data?.message || error.message))
 	}
-};
+}
 
 const closeModals = () => {
-	showAddCategoryForm.value = false;
-	showAddHardwareForm.value = false;
-	editingCategory.value = null;
-	editingHardware.value = null;
-	newCategory.value = { name: '' };
-	newHardware.value = { name: '', category_id: '' };
-};
+	showAddCategoryForm.value = false
+	showAddHardwareForm.value = false
+	editingCategory.value = null
+	editingHardware.value = null
+	newCategory.value = { name: '' }
+	newHardware.value = { name: '', category_id: '', MaxAnzahl: '' }
+}
 
 onMounted(async () => {
-	await loadCategories();
-	await loadHardware();
-});
+	await adminStore.hardwareOps.load()
+	await adminStore.categoriesOps.load()
+})
 </script>
 
 <style scoped>
@@ -369,35 +340,6 @@ onMounted(async () => {
 	margin: 0 auto;
 }
 
-.tab-navigation {
-	display: flex;
-	gap: 1rem;
-	margin-bottom: 2rem;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.tab-button {
-	padding: 0.75rem 1.5rem !important;
-	background: none !important;
-	border: none !important;
-	color: var(--color-text-muted) !important;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	border-bottom: 2px solid transparent !important;
-}
-
-.tab-button:hover {
-	color: var(--color-text) !important;
-}
-
-.tab-button.active {
-	color: var(--color-button) !important;
-	border-bottom-color: var(--color-button) !important;
-}
-
-.tab-content {
-	margin-top: 1rem;
-}
 
 .section-header {
 	display: flex;
@@ -420,17 +362,20 @@ onMounted(async () => {
 	flex-wrap: wrap;
 }
 
+.hardware-controls > * {
+	margin: 0 !important;
+}
+
 .search-input-container {
 	position: relative;
 }
 
+/* Search input - using compact variant from main.css */
 .search-input {
-	padding: 0.5rem 2rem 0.5rem 0.75rem;
-	border: 1px solid var(--color-border);
-	border-radius: 0.25rem;
-	background: var(--color-background);
-	color: var(--color-text);
-	width: 250px;
+	border-radius: 0.25rem; /* Override for AdminView */
+	height: 2.5rem;
+	padding: 0.75rem 2.5rem 0.75rem 1rem;
+	box-sizing: border-box;
 }
 
 .search-icon {
@@ -442,28 +387,24 @@ onMounted(async () => {
 }
 
 .filter-select {
-	padding: 0.5rem;
+	padding: 0.75rem 0.5rem;
 	border: 1px solid var(--color-border);
 	border-radius: 0.25rem;
 	background: var(--color-background);
 	color: var(--color-text);
+	height: 2.5rem;
+	box-sizing: border-box;
 }
 
+/* Add button styling moved to main.css */
 .add-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0.5rem 1rem !important;
-	background: var(--color-button) !important;
-	color: var(--color-text) !important;
-	border: none !important;
-	border-radius: 0.25rem;
-	cursor: pointer;
-	transition: all 0.2s ease;
+	display: flex !important;
+	align-items: center !important;
+	gap: 0.5rem !important;
 }
 
-.add-button:hover {
-	background: var(--color-button-hover) !important;
+.add-button svg {
+	flex-shrink: 0;
 }
 
 .categories-grid {
@@ -516,25 +457,9 @@ onMounted(async () => {
 	font-size: 0.8rem;
 }
 
-.hardware-table-container {
-	overflow-x: auto;
-	border: 1px solid var(--color-border);
-	border-radius: 0.5rem;
-}
+/* Table container styling inherited from main.css */
 
-.hardware-table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.hardware-table th {
-	background: var(--color-background-mute);
-	color: var(--color-text);
-	padding: 1rem;
-	text-align: left;
-	font-weight: 600;
-	border-bottom: 1px solid var(--color-border);
-}
+/* Table styling moved to main.css */
 
 .hardware-row {
 	border-bottom: 1px solid var(--color-border);
@@ -545,10 +470,7 @@ onMounted(async () => {
 	background: var(--color-background-soft);
 }
 
-.hardware-table td {
-	padding: 1rem;
-	vertical-align: middle;
-}
+/* Table cell styling moved to main.css */
 
 .hardware-name {
 	font-weight: 500;
@@ -563,138 +485,30 @@ onMounted(async () => {
 	font-size: 0.8rem;
 }
 
-.action-buttons {
-	display: flex;
-	gap: 0.5rem;
-	justify-content: flex-end;
-}
-
-.action-btn {
-	padding: 0.5rem !important;
-	border: none !important;
+.max-anzahl-badge {
+	background: var(--color-button);
+	color: var(--color-text-inverted);
+	padding: 0.25rem 0.5rem;
 	border-radius: 0.25rem;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.action-btn.edit {
-	background: var(--color-background-mute) !important;
-	color: var(--color-text) !important;
-}
-
-.action-btn.edit:hover {
-	background: var(--color-button) !important;
-}
-
-.action-btn.delete {
-	background: rgba(239, 68, 68, 0.1) !important;
-	color: rgb(239, 68, 68) !important;
-}
-
-.action-btn.delete:hover {
-	background: rgb(239, 68, 68) !important;
-	color: white !important;
-}
-
-/* Modal Styles */
-.modal-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.5);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 1000;
-}
-
-.modal-content {
-	background: var(--color-background);
-	border-radius: 0.5rem;
-	width: 90%;
-	max-width: 500px;
-	max-height: 90vh;
-	overflow-y: auto;
-}
-
-.modal-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 1.5rem;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.modal-header h3 {
-	margin: 0;
-	color: var(--color-text);
-}
-
-.close-btn {
-	background: none !important;
-	border: none !important;
-	font-size: 1.5rem;
-	cursor: pointer;
-	color: var(--color-text-muted) !important;
-}
-
-.modal-body {
-	padding: 1.5rem;
-}
-
-.form-group {
-	margin-bottom: 1rem;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 0.5rem;
+	font-size: 0.8rem;
 	font-weight: 500;
-	color: var(--color-text);
 }
 
-.form-input {
-	width: 100%;
-	padding: 0.75rem;
-	border: 1px solid var(--color-border);
-	border-radius: 0.25rem;
-	background: var(--color-background);
-	color: var(--color-text);
+/* Action button styling moved to main.css */
+.action-buttons {
+	justify-content: flex-end; /* Hardware-specific alignment */
 }
 
-.form-input:focus {
-	outline: none;
-	border-color: var(--color-button);
-}
+/* Modal styles moved to main.css */
 
-.modal-actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 1rem;
-	margin-top: 2rem;
-}
+/* Form and button styling moved to main.css */
 
-.btn-secondary {
-	padding: 0.5rem 1rem !important;
-	background: var(--color-background-mute) !important;
-	color: var(--color-text) !important;
-	border: 1px solid var(--color-border) !important;
-	border-radius: 0.25rem;
-	cursor: pointer;
-}
-
-.btn-primary {
-	padding: 0.5rem 1rem !important;
-	background: var(--color-button) !important;
-	color: var(--color-text) !important;
-	border: none !important;
-	border-radius: 0.25rem;
-	cursor: pointer;
+.form-help {
+	display: block;
+	margin-top: 0.25rem;
+	color: var(--color-text-muted);
+	font-size: 0.8rem;
+	line-height: 1.3;
 }
 
 .shadow-line {
@@ -726,12 +540,12 @@ onMounted(async () => {
 		grid-template-columns: 1fr;
 	}
 	
-	.hardware-table {
+	.data-table {
 		font-size: 0.9rem;
 	}
 	
-	.hardware-table th,
-	.hardware-table td {
+	.data-table th,
+	.data-table td {
 		padding: 0.5rem;
 	}
 }

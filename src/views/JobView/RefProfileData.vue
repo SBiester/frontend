@@ -32,7 +32,7 @@
 					<div class="profile-info">
 						<span class="profile-name">{{ element.name }}</span>
 					</div>
-					<button @click="deleteItem(index)" class="delete-button fa">&#xf014;</button>
+					<button @click="deleteItem(index)" class="delete-button">&#xf014;</button>
 				</div>
 			</template>
     	</draggable>
@@ -42,8 +42,8 @@
 	</div>
 		<hr class="shadow-line" />
 		<div class="navigation-buttons">
-			<button @click="goBack" class="back-button">Basisdaten</button>
-			<button @click="showHardware" class="next-button">Hardware</button>
+			<button @click="goBack" class="back-button">← Basisdaten</button>
+			<button @click="showHardware" class="next-button">Hardware →</button>
 		</div>
 		<hr class="shadow-line" />
 	</div>
@@ -296,18 +296,8 @@ const filterByBereich = () => {
 
 
 <style scoped>
-.navigation-buttons {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 1rem;
-}
+/* Navigation buttons styling inherited from main.css */
 
-.back-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
 
 .arrow-left {
 	font-size: 1rem;
@@ -318,28 +308,7 @@ const filterByBereich = () => {
 	transform: translateX(-2px);
 }
 
-.list-group-item {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	border: 1px solid var(--color-button);
-	border-radius: 0.2rem;
-	margin: 0.2rem;
-	padding: 0.4rem;
-	transition: transform 0.2s ease;
-	cursor: grab;
-	user-select: none;
-}
-
-.list-group-item:hover {
-	background-color: var(--color-button-hover);
-	transform: scale(1.01);
-	z-index: 10;
-}
-
-.list-group-item:active {
-	cursor: grabbing;
-}
+/* List group and draggable functionality inherited from main.css */
 
 .profile-info {
 	display: flex;
@@ -405,25 +374,23 @@ const filterByBereich = () => {
 	border-radius: 0.25rem;
 }
 
+/* Add/delete button styling moved to main.css */
+
+/* RefProfile-specific button customizations */
 .delete-button {
 	background: none !important;
-}
-
-.add-button {
+	font-family: "FontAwesome" !important;
+	font-size: 1.2rem;
+	color: var(--color-text);
+	border: none;
 	cursor: pointer;
-	padding: 0.25rem 0.5rem;
-	font-size: 1rem;
-	font-weight: bold;
-	transition: all 0.2s ease;
-	min-width: 2rem;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+	padding: 0.25rem;
 }
 
-.add-button:hover {
-	transform: scale(1.05);
+.delete-button:hover {
+	color: #e74c3c;
 }
+
 
 .buttons-row {
 	display: flex;
@@ -481,16 +448,5 @@ const filterByBereich = () => {
 	min-height: calc(100vh - 14rem);
 }
 
-.add-button {
-	background: transparent !important;
-	border: none;
-	color: var(--color-text);
-	cursor: pointer;
-	font-size: 1.2rem;
-}
-
-.add-button:hover {
-	color: var(--color-text-hover);
-}
 
 </style>

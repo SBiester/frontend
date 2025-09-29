@@ -10,12 +10,12 @@
 			<!-- Search and Filters -->
 			<div class="search-section">
 				<div class="search-input-container">
-					<input 
+					<input
 						v-model="searchQuery"
 						@input="onSearchInput"
-						type="text" 
-						class="search-input"
-						placeholder="Benutzer durchsuchen (Name, E-Mail, Abteilung)..."
+						type="text"
+						class="search-input large"
+						placeholder="Benutzer durchsuchen (Name, E-Mail)..."
 					/>
 					<div class="search-icon">
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -26,14 +26,9 @@
 				</div>
 				
 				<div class="filter-controls">
-					<select v-model="selectedDepartment" class="filter-select">
-						<option value="">Alle Abteilungen</option>
-						<option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
-					</select>
-					
 					<select v-model="selectedRole" class="filter-select">
 						<option value="">Alle Rollen</option>
-						<option v-for="role in roles" :key="role" :value="role">{{ role }}</option>
+						<option v-for="role in roles" :key="role.RollenID" :value="role.RollenID">{{ role.Bezeichnung }}</option>
 					</select>
 					
 					<select v-model="selectedStatus" class="filter-select">
@@ -53,12 +48,13 @@
 
 			<!-- Users Table -->
 			<div class="users-table-container">
-				<table class="users-table">
+				<table class="data-table">
 					<thead>
 						<tr>
 							<th>Name</th>
 							<th>E-Mail</th>
-							<th>Abteilung</th>
+							<th>Bereich</th>
+							<th>Team</th>
 							<th>Rolle</th>
 							<th>Status</th>
 							<th>Letzte Aktivität</th>
@@ -70,18 +66,18 @@
 							<td>
 								<div class="user-info">
 									<div class="user-avatar">
-										{{ user.name.charAt(0).toUpperCase() }}
+										{{ user.name?.charAt(0)?.toUpperCase() || 'U' }}
 									</div>
 									<div class="user-details">
-										<div class="user-name">{{ user.name }}</div>
-										<div class="user-id">ID: {{ user.id }}</div>
+										<div class="user-name">{{ user.name || 'Unbekannt' }}</div>
 									</div>
 								</div>
 							</td>
-							<td>{{ user.email }}</td>
-							<td>{{ user.department }}</td>
+							<td>{{ user.email || '-' }}</td>
+							<td>{{ user.bereich?.Bezeichnung || '-' }}</td>
+							<td>{{ user.team?.Bezeichnung || '-' }}</td>
 							<td>
-								<span class="role-badge">{{ user.role }}</span>
+								<span class="role-badge">{{ user.rolle?.Bezeichnung || user.role || '-' }}</span>
 							</td>
 							<td>
 								<span :class="`status-badge ${user.status}`">{{ getStatusText(user.status) }}</span>
@@ -109,219 +105,423 @@
 			</div>
 
 			<!-- Add User Modal -->
-			<div v-if="showAddUserForm" class="modal-overlay" @click="closeModal">
-				<div class="modal-content" @click.stop>
-					<div class="modal-header">
-						<h3>Neuen Benutzer hinzufügen</h3>
-						<button @click="closeModal" class="close-btn">×</button>
+			<BaseModal
+				:show="showAddUserForm"
+				title="Neuen Benutzer hinzufügen"
+				:show-actions="false"
+				@close="closeModal"
+			>
+				<form @submit.prevent="addUser">
+					<div class="form-group">
+						<label>Name</label>
+						<input v-model="newUser.name" type="text" required class="form-input">
 					</div>
-					<div class="modal-body">
-						<form @submit.prevent="addUser">
-							<div class="form-group">
-								<label>Name</label>
-								<input v-model="newUser.name" type="text" required class="form-input">
-							</div>
-							<div class="form-group">
-								<label>E-Mail</label>
-								<input v-model="newUser.email" type="email" required class="form-input">
-							</div>
-							<div class="form-group">
-								<label>Abteilung</label>
-								<select v-model="newUser.department" required class="form-input">
-									<option value="">Abteilung wählen</option>
-									<option v-for="dept in departments" :key="dept" :value="dept">{{ dept }}</option>
-								</select>
-							</div>
-							<div class="form-group">
-								<label>Rolle</label>
-								<select v-model="newUser.role" required class="form-input">
-									<option value="">Rolle wählen</option>
-									<option v-for="role in roles" :key="role" :value="role">{{ role }}</option>
-								</select>
-							</div>
-							<div class="modal-actions">
-								<button type="button" @click="closeModal" class="btn-secondary">Abbrechen</button>
-								<button type="submit" class="btn-primary">Benutzer hinzufügen</button>
-							</div>
-						</form>
+					<div class="form-group">
+						<label>E-Mail</label>
+						<input v-model="newUser.email" type="email" required class="form-input">
 					</div>
-				</div>
-			</div>
+					<div class="form-group">
+						<label>Bereich</label>
+						<select v-model="newUser.BereichID" class="form-input">
+							<option value="">Bereich wählen</option>
+							<option v-for="bereich in bereiche" :key="bereich.BereichID" :value="bereich.BereichID">{{ bereich.Bezeichnung }}</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label>Team</label>
+						<select v-model="newUser.TeamID" class="form-input" :disabled="!newUser.BereichID">
+							<option value="">Team wählen</option>
+							<option v-for="team in teamsForNewUser" :key="team.TeamID" :value="team.TeamID">{{ team.Bezeichnung }}</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label>Rolle</label>
+						<select v-model="newUser.RollenID" required class="form-input">
+							<option value="">Rolle wählen</option>
+							<option v-for="role in roles" :key="role.RollenID" :value="role.RollenID">{{ role.Bezeichnung }}</option>
+						</select>
+					</div>
+					<div class="modal-actions">
+						<button type="button" @click="closeModal" class="btn-secondary">Abbrechen</button>
+						<button type="submit" class="btn-primary">Benutzer hinzufügen</button>
+					</div>
+				</form>
+			</BaseModal>
+
+			<!-- Edit User Modal -->
+			<BaseModal
+				:show="showEditUserForm"
+				title="Benutzer bearbeiten"
+				:show-actions="false"
+				@close="closeModal"
+			>
+				<form @submit.prevent="updateUser">
+					<div class="form-group">
+						<label>Name</label>
+						<input v-model="editingUser.name" type="text" required class="form-input">
+					</div>
+					<div class="form-group">
+						<label>E-Mail</label>
+						<input v-model="editingUser.email" type="email" required class="form-input">
+					</div>
+					<div class="form-group">
+						<label>Bereich</label>
+						<select v-model="editingUser.BereichID" class="form-input">
+							<option value="">Bereich wählen</option>
+							<option v-for="bereich in bereiche" :key="bereich.BereichID" :value="bereich.BereichID">{{ bereich.Bezeichnung }}</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label>Team</label>
+						<select v-model="editingUser.TeamID" class="form-input" :disabled="!editingUser.BereichID">
+							<option value="">Team wählen</option>
+							<option v-for="team in teamsForBereich" :key="team.TeamID" :value="team.TeamID">
+								{{ team.Bezeichnung }}
+							</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label>Rolle</label>
+						<select v-model="editingUser.RollenID" required class="form-input">
+							<option value="">Rolle wählen</option>
+							<option v-for="role in roles" :key="role.RollenID" :value="role.RollenID">{{ role.Bezeichnung }}</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label>Status</label>
+						<select v-model="editingUser.status" required class="form-input">
+							<option value="active">Aktiv</option>
+							<option value="inactive">Inaktiv</option>
+						</select>
+					</div>
+					<div class="modal-actions">
+						<button type="button" @click="closeModal" class="btn-secondary">Abbrechen</button>
+						<button type="submit" class="btn-primary">Benutzer aktualisieren</button>
+					</div>
+				</form>
+			</BaseModal>
 		</div>
-		
+
 	</div>
 </div>
 </template>
 
 <script setup>
-import { onMounted, ref, computed, watch } from 'vue';
-import adminService from '@/services/adminService';
+import { onMounted, ref, computed, watch } from 'vue'
+import { useAdminStore } from '@/stores/adminStore'
+import BaseModal from '@/components/BaseModal.vue'
+import adminService from '@/services/adminService'
 
-const emit = defineEmits(['go-back']);
+const emit = defineEmits(['go-back'])
 
-const searchQuery = ref('');
-const selectedDepartment = ref('');
-const selectedRole = ref('');
-const selectedStatus = ref('');
-const showAddUserForm = ref(false);
+const adminStore = useAdminStore()
 
-const users = ref([]);
-const departments = ref(['IT', 'HR', 'Finanzen', 'Marketing', 'Vertrieb', 'Produktion']);
-const roles = ref(['Admin', 'Manager', 'Mitarbeiter', 'Gast']);
+const searchQuery = ref('')
+const selectedRole = ref('')
+const selectedStatus = ref('')
+const showAddUserForm = ref(false)
+const showEditUserForm = ref(false)
+
+const roles = ref([])
 
 const newUser = ref({
 	name: '',
 	email: '',
-	department: '',
-	role: ''
-});
+	BereichID: null,
+	TeamID: null,
+	RollenID: null
+})
 
-const loading = ref(false);
-const currentPage = ref(1);
-const totalPages = ref(1);
+const editingUser = ref({
+	id: null,
+	name: '',
+	email: '',
+	BereichID: null,
+	TeamID: null,
+	RollenID: null,
+	status: ''
+})
 
-// Load user data from API
+const bereiche = ref([])
+const teams = ref([])
+const teamsForBereich = ref([])
+const teamsForNewUser = ref([])
+
+const loading = ref(false)
+const currentPage = ref(1)
+const totalPages = ref(1)
+
+// Load Bereiche and Teams
+const loadBereiche = async () => {
+	try {
+		const response = await adminStore.bereicheOps.load()
+		bereiche.value = response || []
+	} catch (error) {
+		console.error('Fehler beim Laden der Bereiche:', error)
+	}
+}
+
+const loadTeams = async () => {
+	try {
+		const response = await adminStore.teamsOps.load()
+		teams.value = response || []
+	} catch (error) {
+		console.error('Fehler beim Laden der Teams:', error)
+	}
+}
+
+const loadRoles = async () => {
+	try {
+		const response = await adminService.getRollen()
+		roles.value = response || []
+	} catch (error) {
+		console.error('Fehler beim Laden der Rollen:', error)
+		// Fallback auf Standard-Rollen
+		roles.value = [
+			{ RollenID: 1, Bezeichnung: 'admin' },
+			{ RollenID: 2, Bezeichnung: 'pm' },
+			{ RollenID: 3, Bezeichnung: 'fach' },
+			{ RollenID: 4, Bezeichnung: 'user' }
+		]
+	}
+}
+
+const loadTeamsByBereich = async (bereichId) => {
+	console.log('=== DEBUG: loadTeamsByBereich called ===');
+	console.log('BereichId:', bereichId, 'Type:', typeof bereichId);
+
+	if (!bereichId) {
+		console.log('No bereichId, clearing teams');
+		teamsForBereich.value = []
+		return
+	}
+	try {
+		console.log('Calling API for teams in bereich:', bereichId);
+		const response = await adminService.getTeamsByBereich(bereichId)
+		console.log('Teams API response:', response);
+		teamsForBereich.value = response || []
+		console.log('teamsForBereich set to:', teamsForBereich.value);
+		return teamsForBereich.value
+	} catch (error) {
+		console.error('Fehler beim Laden der Teams für Bereich:', error)
+		teamsForBereich.value = []
+		return []
+	}
+}
+
+// Watch for bereich changes in editing user
+watch(() => editingUser.value.BereichID, async (newBereichId) => {
+	editingUser.value.TeamID = null // Reset team selection
+	await loadTeamsByBereich(newBereichId)
+})
+
+// Watch for bereich changes in new user
+watch(() => newUser.value.BereichID, async (newBereichId) => {
+	newUser.value.TeamID = null // Reset team selection
+	if (!newBereichId) {
+		teamsForNewUser.value = []
+		return
+	}
+	try {
+		const response = await adminService.getTeamsByBereich(newBereichId)
+		teamsForNewUser.value = response || []
+	} catch (error) {
+		console.error('Fehler beim Laden der Teams für neuen Benutzer:', error)
+		teamsForNewUser.value = []
+	}
+})
+
+// Load user data via AdminStore
 const loadUsers = async () => {
-	loading.value = true;
+	loading.value = true
 	try {
 		const params = {
 			page: currentPage.value,
 			per_page: 15
-		};
-		
-		if (searchQuery.value) {
-			params.search = searchQuery.value;
 		}
-		if (selectedDepartment.value) {
-			params.department = selectedDepartment.value;
+
+		if (searchQuery.value) {
+			params.search = searchQuery.value
 		}
 		if (selectedRole.value) {
-			params.role = selectedRole.value;
+			params.role = selectedRole.value
 		}
 		if (selectedStatus.value) {
-			params.status = selectedStatus.value;
+			params.status = selectedStatus.value
 		}
-		
-		const response = await adminService.getUsers(params);
-		
-		if (response.data) {
-			users.value = response.data;
-			currentPage.value = response.current_page;
-			totalPages.value = response.last_page;
+
+		const response = await adminStore.usersOps.load(params)
+
+		if (response.current_page) {
+			currentPage.value = response.current_page
 		}
-		
+		if (response.last_page) {
+			totalPages.value = response.last_page
+		}
+
 	} catch (error) {
-		console.error('Fehler beim Laden der Benutzer:', error);
-		// Fallback to mock data
-		users.value = [
-		{
-			id: 1,
-			name: 'Max Mustermann',
-			email: 'max.mustermann@company.com',
-			department: 'IT',
-			role: 'admin',
-			status: 'active',
-			lastActivity: new Date('2024-01-15T10:30:00')
-		},
-		{
-			id: 2,
-			name: 'Anna Schmidt',
-			email: 'anna.schmidt@company.com',
-			department: 'HR',
-			role: 'pm',
-			status: 'active',
-			lastActivity: new Date('2024-01-14T16:45:00')
-		}];
+		console.error('Fehler beim Laden der Benutzer:', error)
 	} finally {
-		loading.value = false;
+		loading.value = false
 	}
-};
+}
 
 const filteredUsers = computed(() => {
-	let filtered = users.value;
-	
+	let filtered = adminStore.users
+
 	if (searchQuery.value) {
-		const query = searchQuery.value.toLowerCase();
-		filtered = filtered.filter(user => 
+		const query = searchQuery.value.toLowerCase()
+		filtered = filtered.filter(user =>
 			user.name.toLowerCase().includes(query) ||
-			user.email.toLowerCase().includes(query) ||
-			user.department.toLowerCase().includes(query)
-		);
+			user.email.toLowerCase().includes(query)
+		)
 	}
-	
-	if (selectedDepartment.value) {
-		filtered = filtered.filter(user => user.department === selectedDepartment.value);
-	}
-	
+
+
 	if (selectedRole.value) {
-		filtered = filtered.filter(user => user.role === selectedRole.value);
+		filtered = filtered.filter(user => user.RollenID === selectedRole.value)
 	}
-	
-	return filtered;
-});
+
+	if (selectedStatus.value) {
+		filtered = filtered.filter(user => user.status === selectedStatus.value)
+	}
+
+	return filtered
+})
 
 const onSearchInput = () => {
 	// Debounce implementation could be added here
 };
 
 const getStatusText = (status) => {
+	if (!status) return 'Unbekannt';
 	return status === 'active' ? 'Aktiv' : 'Inaktiv';
 };
 
 const formatDate = (date) => {
-	return new Intl.DateTimeFormat('de-DE', {
-		day: '2-digit',
-		month: '2-digit',
-		year: 'numeric',
-		hour: '2-digit',
-		minute: '2-digit'
-	}).format(date);
+	if (!date) return '-';
+	try {
+		const dateObj = new Date(date);
+		if (isNaN(dateObj.getTime())) return '-';
+		return new Intl.DateTimeFormat('de-DE', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit'
+		}).format(dateObj);
+	} catch (error) {
+		return '-';
+	}
 };
 
-const editUser = (user) => {
-	console.log('Edit user:', user);
-	// TODO: Implement edit functionality
+const editUser = async (user) => {
+	console.log('=== DEBUG: editUser called ===');
+	console.log('User data:', user);
+	console.log('User BereichID:', user.BereichID, 'Type:', typeof user.BereichID);
+	console.log('User TeamID:', user.TeamID, 'Type:', typeof user.TeamID);
+
+	editingUser.value = {
+		id: user.id,
+		name: user.name,
+		email: user.email,
+		BereichID: user.BereichID,
+		TeamID: null, // Reset temporarily
+		RollenID: user.RollenID,
+		status: user.status
+	};
+
+	console.log('editingUser after set (TeamID reset):', editingUser.value);
+
+	// Load teams for the selected bereich first
+	if (user.BereichID) {
+		console.log('Loading teams for BereichID:', user.BereichID);
+		await loadTeamsByBereich(user.BereichID);
+
+		// Now set the TeamID after teams are loaded
+		console.log('Setting TeamID after teams loaded:', user.TeamID);
+		editingUser.value.TeamID = user.TeamID;
+		console.log('editingUser.TeamID set to:', editingUser.value.TeamID);
+		console.log('Available teams:', teamsForBereich.value);
+	} else {
+		console.log('No BereichID, clearing teams');
+		teamsForBereich.value = [];
+	}
+
+	showEditUserForm.value = true;
+};
+
+const updateUser = async () => {
+	try {
+		const userData = {
+			name: editingUser.value.name,
+			email: editingUser.value.email,
+			BereichID: editingUser.value.BereichID,
+			TeamID: editingUser.value.TeamID,
+			RollenID: editingUser.value.RollenID,
+			status: editingUser.value.status
+		};
+
+		await adminStore.usersOps.update(editingUser.value.id, userData);
+		closeModal();
+		await loadUsers(); // Reload users to show updated data
+	} catch (error) {
+		console.error('Fehler beim Aktualisieren des Benutzers:', error);
+		alert('Fehler beim Aktualisieren des Benutzers');
+	}
 };
 
 const deleteUser = async (user) => {
 	if (confirm(`Benutzer ${user.name} wirklich löschen?`)) {
 		try {
-			await adminService.deleteUser(user.id);
-			await loadUsers(); // Reload the list
+			await adminStore.usersOps.remove(user.id)
 		} catch (error) {
-			console.error('Fehler beim Löschen des Benutzers:', error);
-			alert('Fehler beim Löschen des Benutzers');
+			console.error('Fehler beim Löschen des Benutzers:', error)
+			alert('Fehler beim Löschen des Benutzers')
 		}
 	}
-};
+}
 
 const addUser = async () => {
 	try {
 		const userData = {
 			name: newUser.value.name,
 			email: newUser.value.email,
-			department: newUser.value.department,
-			role: newUser.value.role,
+			BereichID: newUser.value.BereichID,
+			TeamID: newUser.value.TeamID,
+			RollenID: newUser.value.RollenID,
 			status: 'active'
-		};
-		
-		await adminService.createUser(userData);
-		await loadUsers(); // Reload the list
-		closeModal();
+		}
+
+		await adminStore.usersOps.create(userData)
+		closeModal()
 	} catch (error) {
-		console.error('Fehler beim Erstellen des Benutzers:', error);
-		alert('Fehler beim Erstellen des Benutzers');
+		console.error('Fehler beim Erstellen des Benutzers:', error)
+		alert('Fehler beim Erstellen des Benutzers')
 	}
-};
+}
 
 const closeModal = () => {
 	showAddUserForm.value = false;
+	showEditUserForm.value = false;
 	newUser.value = {
 		name: '',
 		email: '',
-		department: '',
-		role: ''
+		BereichID: null,
+		TeamID: null,
+		RollenID: null
 	};
+	editingUser.value = {
+		id: null,
+		name: '',
+		email: '',
+		BereichID: null,
+		TeamID: null,
+		RollenID: null,
+		status: ''
+	};
+	teamsForBereich.value = [];
+	teamsForNewUser.value = [];
 };
 
 // Watch for filter changes - debounce search only
@@ -335,14 +535,19 @@ watch(searchQuery, () => {
 });
 
 // Watch for filter changes - immediate for dropdowns
-watch([selectedDepartment, selectedRole, selectedStatus], () => {
+watch([selectedRole, selectedStatus], () => {
 	currentPage.value = 1; // Reset to first page
 	loadUsers();
 });
 
-onMounted(() => {
-	loadUsers();
-});
+onMounted(async () => {
+	await Promise.all([
+		adminStore.usersOps.load(),
+		loadBereiche(),
+		loadTeams(),
+		loadRoles()
+	])
+})
 </script>
 
 <style scoped>
@@ -360,21 +565,8 @@ onMounted(() => {
 	margin-bottom: 1rem;
 }
 
-.search-input {
-	width: 100%;
-	padding: 0.75rem 2.5rem 0.75rem 1rem;
-	border: 2px solid var(--color-border);
-	border-radius: 0.5rem;
-	background: var(--color-background);
-	color: var(--color-text);
-	font-size: 1rem;
-	transition: all 0.2s ease;
-}
+/* Search input styling inherited from main.css */
 
-.search-input:focus {
-	outline: none;
-	border-color: var(--color-button);
-}
 
 .search-icon {
 	position: absolute;
@@ -399,43 +591,13 @@ onMounted(() => {
 	color: var(--color-text);
 }
 
-.add-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0.5rem 1rem !important;
-	background: var(--color-button) !important;
-	color: var(--color-text) !important;
-	border: none !important;
-	border-radius: 0.25rem;
-	cursor: pointer;
-	transition: all 0.2s ease;
-}
+/* Add button styling moved to main.css */
 
-.add-button:hover {
-	background: var(--color-button-hover) !important;
-}
+/* Table container styling inherited from main.css */
 
-.users-table-container {
-	overflow-x: auto;
-	border: 1px solid var(--color-border);
-	border-radius: 0.5rem;
-}
+/* Table styling moved to main.css */
 
-.users-table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.users-table th {
-	background: var(--color-background-mute);
-	color: var(--color-text);
-	padding: 1rem;
-	text-align: left;
-	font-weight: 600;
-	border-bottom: 1px solid var(--color-border);
-}
-
+/* User-specific table customizations */
 .user-row {
 	border-bottom: 1px solid var(--color-border);
 	transition: background-color 0.2s ease;
@@ -443,11 +605,6 @@ onMounted(() => {
 
 .user-row:hover {
 	background: var(--color-background-soft);
-}
-
-.users-table td {
-	padding: 1rem;
-	vertical-align: middle;
 }
 
 .user-info {
@@ -488,170 +645,19 @@ onMounted(() => {
 	font-weight: 500;
 }
 
-.status-badge {
-	padding: 0.25rem 0.5rem;
-	border-radius: 0.25rem;
-	font-size: 0.8rem;
-	font-weight: 500;
-}
+/* Status badge styling moved to main.css */
 
-.status-badge.active {
-	background: rgba(34, 197, 94, 0.1);
-	color: rgb(34, 197, 94);
-}
+/* Action button styling moved to main.css */
 
-.status-badge.inactive {
-	background: rgba(239, 68, 68, 0.1);
-	color: rgb(239, 68, 68);
-}
+/* Modal styles moved to main.css */
 
-.action-buttons {
-	display: flex;
-	gap: 0.5rem;
-}
+/* Form and button styling moved to main.css */
 
-.action-btn {
-	padding: 0.5rem !important;
-	border: none !important;
-	border-radius: 0.25rem;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.action-btn.edit {
-	background: var(--color-background-mute) !important;
-	color: var(--color-text) !important;
-}
-
-.action-btn.edit:hover {
-	background: var(--color-button) !important;
-	color: var(--color-text) !important;
-}
-
-.action-btn.delete {
-	background: rgba(239, 68, 68, 0.1) !important;
-	color: rgb(239, 68, 68) !important;
-}
-
-.action-btn.delete:hover {
-	background: rgb(239, 68, 68) !important;
-	color: white !important;
-}
-
-/* Modal Styles */
-.modal-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.5);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 1000;
-}
-
-.modal-content {
-	background: var(--color-background);
-	border-radius: 0.5rem;
-	width: 90%;
-	max-width: 500px;
-	max-height: 90vh;
-	overflow-y: auto;
-}
-
-.modal-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 1.5rem;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.modal-header h3 {
-	margin: 0;
-	color: var(--color-text);
-}
-
-.close-btn {
-	background: none !important;
-	border: none !important;
-	font-size: 1.5rem;
-	cursor: pointer;
-	color: var(--color-text-muted) !important;
-}
-
-.modal-body {
-	padding: 1.5rem;
-}
-
-.form-group {
-	margin-bottom: 1rem;
-}
-
-.form-group label {
-	display: block;
-	margin-bottom: 0.5rem;
-	font-weight: 500;
-	color: var(--color-text);
-}
-
-.form-input {
-	width: 100%;
-	padding: 0.75rem;
-	border: 1px solid var(--color-border);
-	border-radius: 0.25rem;
-	background: var(--color-background);
-	color: var(--color-text);
-}
-
-.form-input:focus {
-	outline: none;
-	border-color: var(--color-button);
-}
-
-.modal-actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 1rem;
-	margin-top: 2rem;
-}
-
-.btn-secondary {
-	padding: 0.5rem 1rem !important;
-	background: var(--color-background-mute) !important;
-	color: var(--color-text) !important;
-	border: 1px solid var(--color-border) !important;
-	border-radius: 0.25rem;
-	cursor: pointer;
-}
-
-.btn-primary {
-	padding: 0.5rem 1rem !important;
-	background: var(--color-button) !important;
-	color: var(--color-text) !important;
-	border: none !important;
-	border-radius: 0.25rem;
-	cursor: pointer;
-}
-
+/* Navigation buttons styling inherited from main.css */
 .navigation-buttons {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 1rem;
-	margin-top: 2rem;
+	margin-top: 2rem; /* View-specific spacing */
 }
 
-.back-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
 
 .shadow-line {
 	border: 0;
@@ -661,12 +667,12 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-	.users-table {
+	.data-table {
 		font-size: 0.9rem;
 	}
 	
-	.users-table th,
-	.users-table td {
+	.data-table th,
+	.data-table td {
 		padding: 0.5rem;
 	}
 	
@@ -676,26 +682,12 @@ onMounted(() => {
 	}
 }
 
-/* Navigation buttons in JobView style */
+/* Navigation buttons styling inherited from main.css */
 .navigation-buttons {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 1rem;
-	margin-top: 2rem;
+	margin-top: 2rem; /* View-specific spacing */
 }
 
-.back-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
 
-.next-button {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
 
 .arrow-left {
 	font-size: 1rem;
