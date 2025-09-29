@@ -237,13 +237,13 @@ const formSchema = computed(() => ({
     placeholder: 'Funktion',
     items: funktionen.value,
     disabled: showCustomFunction.value,
-    columns: { default: 12, sm: 12, tablet: 11, desktop: 11 },
+    columns: { default: 12, sm: 12, tablet: 8, desktop: 8 },
   },
   funktionAddButton: {
     type: 'button',
-    buttonLabel: '✎',
+    buttonLabel: '✎ bearbeiten',
     onClick: toggleCustomFunction,
-    columns: { default: 12, sm: 12, tablet: 1, desktop: 1 },
+    columns: { default: 12, sm: 12, tablet: 4, desktop: 4 },
     align: 'right',
   },
   customFunktion: {
@@ -546,14 +546,12 @@ watch(
   /* Change button text to 'Funktion bearbeiten' on mobile */
   :deep(#funktionAddButton) {
     font-size: 0 !important; /* Hide original icon text */
-    transform: scaleX(1) !important; /* Override the mirror effect */
   }
 
   :deep(#funktionAddButton)::before {
     content: 'Funktion bearbeiten' !important;
     font-size: 1rem !important;
     display: inline !important;
-    transform: scaleX(1) !important; /* Ensure text is not mirrored */
   }
 }
 
@@ -816,13 +814,11 @@ watch(
 
 /* Make the edit icon larger and mirror it horizontally in the function button */
 :deep(#funktionAddButton) {
-  font-size: 1.5rem !important;
-  transform: scaleX(-1) !important;
+  font-size: 1rem !important;
 }
 
 :deep(.vf-btn-right) {
-  font-size: 1.5rem !important;
-  transform: scaleX(-1) !important;
+  font-size: 1rem !important;
 }
 
 /* Mobile override for button transform - must come after the above rules */

@@ -44,11 +44,11 @@
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
               </div>
-              <h3>Benutzer</h3>
+              <h3>Benutzer:innen</h3>
             </div>
-            <p>Mitarbeiter verwalten, Rollen zuweisen und Berechtigungen konfigurieren</p>
+            <p>Mitarbeitende verwalten, Rollen zuweisen und Berechtigungen konfigurieren</p>
             <div class="module-stats">
-              <span class="stat-item">{{ userStats.total }} Benutzer</span>
+              <span class="stat-item">{{ userStats.total }} Benutzer:innen</span>
             </div>
           </div>
 

@@ -15,7 +15,7 @@
       <div v-if="!showJobView">
         <div class="cell-wide dashboard-header">
           <h1 :class="{ 'fade-in': showHeadLine }">Navigation</h1>
-          <p class="subtitle">Zentrale Verwaltung für IT-Services und Mitarbeiter-Management</p>
+          <p class="subtitle">Zentrale Verwaltung für IT-Services und Mitarbeitenden-Management</p>
         </div>
         <div class="navigation-buttons-fixed">
           <button @click="handleLogout" class="logout-button">Abmelden</button>
@@ -100,8 +100,8 @@
               <li class="feature-item-info">
                 <i class="fa fa-user feature-icon-info"></i>
                 <div class="feature-content">
-                  <span class="feature-title">Mitarbeiter-Management</span>
-                  <span class="feature-description">Erfassung von Job-Updates für Mitarbeiter</span>
+                  <span class="feature-title">Mitarbeitenden-Management</span>
+                  <span class="feature-description">Erfassung von Job-Updates für Mitarbeitende</span>
                 </div>
               </li>
               <li class="feature-item-info">
@@ -117,7 +117,7 @@
                 <i class="fa fa-list feature-icon-info"></i>
                 <div class="feature-content">
                   <span class="feature-title">Auftragsübersicht</span>
-                  <span class="feature-description">Einsicht in Ihre eingereichten Aufträge</span>
+                  <span class="feature-description">Einsicht in deiner eingereichten Aufträge</span>
                 </div>
               </li>
             </ul>
