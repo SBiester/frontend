@@ -11,12 +11,7 @@
             <slot></slot>
           </div>
           <div v-if="showActions" class="modal-actions">
-            <button
-              v-if="showCancelButton"
-              type="button"
-              @click="closeModal"
-              class="btn-secondary"
-            >
+            <button v-if="showCancelButton" type="button" @click="closeModal" class="btn-secondary">
               {{ cancelText }}
             </button>
             <button
@@ -43,40 +38,40 @@ export default defineComponent({
   props: {
     show: {
       type: Boolean,
-      default: false
+      default: false,
     },
     title: {
       type: String,
-      required: true
+      required: true,
     },
     showActions: {
       type: Boolean,
-      default: true
+      default: true,
     },
     showCancelButton: {
       type: Boolean,
-      default: true
+      default: true,
     },
     showSubmitButton: {
       type: Boolean,
-      default: true
+      default: true,
     },
     cancelText: {
       type: String,
-      default: 'Abbrechen'
+      default: 'Abbrechen',
     },
     submitText: {
       type: String,
-      default: 'Speichern'
+      default: 'Speichern',
     },
     submitDisabled: {
       type: Boolean,
-      default: false
+      default: false,
     },
     closeOnOverlayClick: {
       type: Boolean,
-      default: true
-    }
+      default: true,
+    },
   },
   emits: ['close', 'submit'],
   methods: {
@@ -90,8 +85,8 @@ export default defineComponent({
       if (this.closeOnOverlayClick) {
         this.closeModal()
       }
-    }
-  }
+    },
+  },
 })
 </script>
 

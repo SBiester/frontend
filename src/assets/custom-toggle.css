@@ -34,7 +34,10 @@
   border-color: var(--vf-border-color-checkbox) !important;
 }
 
-:root, :before, :after, * {
+:root,
+:before,
+:after,
+* {
   --vf-primary: #78c6bf;
   --vf-primary-darker: #007a8c;
   --vf-danger: #ef4444;
@@ -256,7 +259,12 @@
   --vf-bg-checkbox-danger: var(--vf-bg-checkbox);
   --vf-bg-checkbox-success: var(--vf-bg-checkbox);
   --vf-bg-disabled: var(--vf-gray-200);
-  --vf-bg-selected: rgba(17,24,39,0.05); /* Used eg. when select option is hovered or a checkbox is selected in `blocks` view */
+  --vf-bg-selected: rgba(
+    17,
+    24,
+    39,
+    0.05
+  ); /* Used eg. when select option is hovered or a checkbox is selected in `blocks` view */
   --vf-bg-passive: var(--vf-gray-300); /* Used as a background color for eg. slider, toggle */
   --vf-bg-icon: var(--vf-gray-500);
   --vf-bg-danger: var(--vf-danger-lighter);
@@ -277,11 +285,17 @@
   --vf-color-input-success: var(--color-text);
   --vf-color-disabled: var(--vf-gray-400);
   --vf-color-placeholder: var(--vf-gray-400);
-  --vf-color-passive: var(--vf-gray-700); /* Used when text is displayed on passive background eg. `off` toggle */
-  --vf-color-muted: var(--vf-gray-500); /* Used for helper texts eg. element description, floating label */
+  --vf-color-passive: var(
+    --vf-gray-700
+  ); /* Used when text is displayed on passive background eg. `off` toggle */
+  --vf-color-muted: var(
+    --vf-gray-500
+  ); /* Used for helper texts eg. element description, floating label */
   --vf-color-floating: var(--vf-color-muted);
   --vf-color-floating-focus: var(--vf-color-floating); /* Used when the input is focused */
-  --vf-color-floating-success: var(--vf-color-floating); /* Used when the input is filled with success */
+  --vf-color-floating-success: var(
+    --vf-color-floating
+  ); /* Used when the input is filled with success */
   --vf-color-floating-danger: var(--vf-color-floating); /* Used when the input has error */
   --vf-color-on-primary: #ffffff; /* Used when text is displayed on primary color */
   --vf-color-danger: var(--vf-danger);
@@ -304,7 +318,9 @@
   --vf-border-color-checkbox-danger: var(--vf-border-color-checkbox);
   --vf-border-color-checkbox-success: var(--vf-border-color-checkbox);
   --vf-border-color-checked: var(--vf-primary);
-  --vf-border-color-passive: var(--vf-gray-300); /* Used as a border for passive states eg. `off` toggle */
+  --vf-border-color-passive: var(
+    --vf-gray-300
+  ); /* Used as a border for passive states eg. `off` toggle */
   --vf-border-color-slider-tooltip: var(--vf-primary);
   --vf-border-color-tag: var(--vf-primary);
   --vf-border-color-btn: var(--vf-primary);
@@ -334,14 +350,14 @@
   --vf-border-width-tag: 1px;
   --vf-border-width-blockquote: 3px;
 
-  --vf-shadow-input: 0px 0px 0px 0px rgba(0,0,0,0);
-  --vf-shadow-input-hover: 0px 0px 0px 0px rgba(0,0,0,0);
-  --vf-shadow-input-focus: 0px 0px 0px 0px rgba(0,0,0,0);
-  --vf-shadow-handles: 0px 0px 0px 0px rgba(0,0,0,0);
-  --vf-shadow-handles-hover: 0px 0px 0px 0px rgba(0,0,0,0);
-  --vf-shadow-handles-focus: 0px 0px 0px 0px rgba(0,0,0,0);
-  --vf-shadow-btn: 0px 0px 0px 0px rgba(0,0,0,0);
-  --vf-shadow-dropdown: 0px 0px 0px 0px rgba(0,0,0,0);
+  --vf-shadow-input: 0px 0px 0px 0px rgba(0, 0, 0, 0);
+  --vf-shadow-input-hover: 0px 0px 0px 0px rgba(0, 0, 0, 0);
+  --vf-shadow-input-focus: 0px 0px 0px 0px rgba(0, 0, 0, 0);
+  --vf-shadow-handles: 0px 0px 0px 0px rgba(0, 0, 0, 0);
+  --vf-shadow-handles-hover: 0px 0px 0px 0px rgba(0, 0, 0, 0);
+  --vf-shadow-handles-focus: 0px 0px 0px 0px rgba(0, 0, 0, 0);
+  --vf-shadow-btn: 0px 0px 0px 0px rgba(0, 0, 0, 0);
+  --vf-shadow-dropdown: 0px 0px 0px 0px rgba(0, 0, 0, 0);
 
   --vf-radius-input: 0.25rem;
   --vf-radius-input-sm: var(--vf-radius-input);
@@ -419,20 +435,20 @@
 }
 
 /* Custom Plus Button Styling */
-[data-name="funktionAddButton"] {
+[data-name='funktionAddButton'] {
   text-align: right !important;
 }
 
-[data-name="funktionAddButton"] .vf-element {
+[data-name='funktionAddButton'] .vf-element {
   text-align: right !important;
 }
 
-[data-name="funktionAddButton"] .vf-element-layout {
+[data-name='funktionAddButton'] .vf-element-layout {
   text-align: right !important;
 }
 
-[data-name="funktionAddButton"] button,
-[data-name="funktionAddButton"] .vf-btn {
+[data-name='funktionAddButton'] button,
+[data-name='funktionAddButton'] .vf-btn {
   margin-left: auto !important;
   display: flex !important;
   align-items: center !important;
@@ -446,4 +462,3 @@
   transition: transform 0.3s ease !important;
   padding: 0 !important;
 }
-

@@ -1,53 +1,53 @@
-import { apiHelpers } from './apiClient';
+import { apiHelpers } from './apiClient'
 
 // API_BASE_URL is empty since apiClient already has /api as baseURL
-const API_BASE_URL = '';
+const API_BASE_URL = ''
 
 class AdminService {
   // Dashboard
   async getDashboardStats() {
     try {
-      return await apiHelpers.get(`${API_BASE_URL}/admin/dashboard/stats`);
+      return await apiHelpers.get(`${API_BASE_URL}/admin/dashboard/stats`)
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      throw error;
+      console.error('Error fetching dashboard stats:', error)
+      throw error
     }
   }
 
   // User Management
   async getUsers(params = {}) {
     try {
-      return await apiHelpers.get(`${API_BASE_URL}/admin/users`, { params });
+      return await apiHelpers.get(`${API_BASE_URL}/admin/users`, { params })
     } catch (error) {
-      console.error('Error fetching users:', error);
-      throw error;
+      console.error('Error fetching users:', error)
+      throw error
     }
   }
 
   async createUser(userData) {
     try {
-      return await apiHelpers.post(`${API_BASE_URL}/admin/users`, userData);
+      return await apiHelpers.post(`${API_BASE_URL}/admin/users`, userData)
     } catch (error) {
-      console.error('Error creating user:', error);
-      throw error;
+      console.error('Error creating user:', error)
+      throw error
     }
   }
 
   async updateUser(id, userData) {
     try {
-      return await apiHelpers.put(`${API_BASE_URL}/admin/users/${id}`, userData);
+      return await apiHelpers.put(`${API_BASE_URL}/admin/users/${id}`, userData)
     } catch (error) {
-      console.error('Error updating user:', error);
-      throw error;
+      console.error('Error updating user:', error)
+      throw error
     }
   }
 
   async deleteUser(id) {
     try {
-      return await apiHelpers.delete(`${API_BASE_URL}/admin/users/${id}`);
+      return await apiHelpers.delete(`${API_BASE_URL}/admin/users/${id}`)
     } catch (error) {
-      console.error('Error deleting user:', error);
-      throw error;
+      console.error('Error deleting user:', error)
+      throw error
     }
   }
 
@@ -105,7 +105,10 @@ class AdminService {
 
   async createHardwareCategory(categoryData) {
     try {
-      const response = await apiHelpers.post(`${API_BASE_URL}/admin/hardware/categories`, categoryData)
+      const response = await apiHelpers.post(
+        `${API_BASE_URL}/admin/hardware/categories`,
+        categoryData,
+      )
       return response
     } catch (error) {
       console.error('Error creating hardware category:', error)
@@ -115,7 +118,10 @@ class AdminService {
 
   async updateHardwareCategory(id, categoryData) {
     try {
-      const response = await apiHelpers.put(`${API_BASE_URL}/admin/hardware/categories/${id}`, categoryData)
+      const response = await apiHelpers.put(
+        `${API_BASE_URL}/admin/hardware/categories/${id}`,
+        categoryData,
+      )
       return response
     } catch (error) {
       console.error('Error updating hardware category:', error)
@@ -187,7 +193,10 @@ class AdminService {
 
   async createSoftwareManufacturer(manufacturerData) {
     try {
-      const response = await apiHelpers.post(`${API_BASE_URL}/admin/software/manufacturers`, manufacturerData)
+      const response = await apiHelpers.post(
+        `${API_BASE_URL}/admin/software/manufacturers`,
+        manufacturerData,
+      )
       return response
     } catch (error) {
       console.error('Error creating software manufacturer:', error)
@@ -197,7 +206,10 @@ class AdminService {
 
   async updateSoftwareManufacturer(id, manufacturerData) {
     try {
-      const response = await apiHelpers.put(`${API_BASE_URL}/admin/software/manufacturers/${id}`, manufacturerData)
+      const response = await apiHelpers.put(
+        `${API_BASE_URL}/admin/software/manufacturers/${id}`,
+        manufacturerData,
+      )
       return response
     } catch (error) {
       console.error('Error updating software manufacturer:', error)
@@ -218,10 +230,10 @@ class AdminService {
   // SAP Management
   async getSapRoles(params = {}) {
     try {
-      const response = await apiHelpers.get(`${API_BASE_URL}/admin/sap/roles`, { 
-        params: params 
+      const response = await apiHelpers.get(`${API_BASE_URL}/admin/sap/roles`, {
+        params: params,
       })
-      
+
       // Return pagination data directly from API
       return response
     } catch (error) {

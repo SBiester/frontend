@@ -101,40 +101,42 @@ body {
   background-color: var(--color-button) !important;
 }
 .navigation-buttons-fixed {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    display: flex;
-    gap: 0.5rem;
-    z-index: 1000;
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 1000;
 }
 
 button {
-    padding: 0.5rem 1rem;
-    font-family: 'GT Pressura';
-    text-transform: uppercase;
-    text-shadow: 0.1rem;
-    font-size: 1rem;
-    border: none;
-    color: var(--color-text) !important;
-    background-color: var(--color-button) !important;
-    /* border-radius: 0.5rem; */
-    cursor: pointer;
+  padding: 0.5rem 1rem;
+  font-family: 'GT Pressura';
+  text-transform: uppercase;
+  text-shadow: 0.1rem;
+  font-size: 1rem;
+  border: none;
+  color: var(--color-text) !important;
+  background-color: var(--color-button) !important;
+  /* border-radius: 0.5rem; */
+  cursor: pointer;
 }
 button:hover {
-    background-color: var(--color-button-hover) !important;
-    color: var(--color-text-inverted) !important;
+  background-color: var(--color-button-hover) !important;
+  color: var(--color-text-inverted) !important;
 }
 
 h1 {
   font-size: 2.5rem;
   font-weight: bold;
   word-wrap: none;
-  font-family: "Univia Pro", sans-serif;
+  font-family: 'Univia Pro', sans-serif;
   color: var(--color-heading);
   opacity: 0;
   transform: translateX(-50px);
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out;
 }
 
 .shadow-line {
@@ -146,14 +148,14 @@ h1 {
 }
 
 main {
-    display: grid;
-    grid-template-columns: repeat(1,1fr);
-    grid-template-rows: auto auto auto;
-    gap: 2 2rem;
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  grid-template-rows: auto auto auto;
+  gap: 2 2rem;
 }
 
 p {
-  font-family: "GT Pressura";  
+  font-family: 'GT Pressura';
   font-size: 1.2rem;
 }
 
@@ -182,7 +184,9 @@ input:focus {
 }
 
 /* Manuelles Vueform Grid System */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -223,7 +227,7 @@ input:focus {
   max-width: 5%;
 }
 
-.vf-col-tablet-10 { 
+.vf-col-tablet-10 {
   flex: 0 0 84%;
   max-width: 84%;
 }
@@ -521,7 +525,9 @@ input:focus {
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   padding: 1.5rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .module-card:hover,
@@ -712,7 +718,7 @@ input:focus {
   .form-grid.two-column {
     grid-template-columns: 1fr 1fr;
   }
-  
+
   .form-grid.three-column {
     grid-template-columns: 1fr 1fr 1fr;
   }
@@ -746,7 +752,7 @@ input:focus {
 
 .toggle-slider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 1.1rem;
   width: 1.1rem;
   left: 0.2rem;
@@ -876,7 +882,9 @@ input:checked + .toggle-slider:before {
   color: var(--color-text);
   font-size: 1rem;
   font-family: inherit;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .form-input:focus {

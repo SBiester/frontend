@@ -28,11 +28,11 @@ export const useJuStore = defineStore('ju', () => {
       telefonnummer: false,
       tuerschild: false,
       visitenkarten: false,
-      telefontyp: null
+      telefontyp: null,
     },
     selectedSap: false,
     sapProfiles: [],
-    kommentar: null
+    kommentar: null,
   })
 
   function resetJu() {
@@ -61,11 +61,11 @@ export const useJuStore = defineStore('ju', () => {
         telefonnummer: false,
         tuerschild: false,
         visitenkarten: false,
-        telefontyp: null
+        telefontyp: null,
       },
       selectedSap: false,
       sapProfiles: [],
-      kommentar: null
+      kommentar: null,
     })
   }
 

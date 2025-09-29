@@ -1,5 +1,5 @@
 import './assets/main.css'
-import '@vueform/vueform/dist/vueform.css';
+import '@vueform/vueform/dist/vueform.css'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'

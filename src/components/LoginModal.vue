@@ -4,7 +4,14 @@
       <div class="login-header">
         <h2>Anmeldung</h2>
         <button class="close-button" @click="$emit('close')" :disabled="isLoading">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
@@ -15,7 +22,14 @@
         <form @submit.prevent="handleLogin" class="login-form">
           <!-- Error Display -->
           <div v-if="error" class="error-message">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="15" y1="9" x2="9" y2="15"></line>
               <line x1="9" y1="9" x2="15" y2="15"></line>
@@ -25,7 +39,14 @@
 
           <!-- Success Message -->
           <div v-if="successMessage" class="success-message">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <polyline points="20,6 9,17 4,12"></polyline>
             </svg>
             {{ successMessage }}
@@ -39,11 +60,11 @@
               type="email"
               v-model="form.email"
               :disabled="isLoading"
-              :class="{ 'error': validationErrors.email }"
+              :class="{ error: validationErrors.email }"
               placeholder="ihre.email@example.com"
               required
               autocomplete="email"
-            >
+            />
             <span v-if="validationErrors.email" class="field-error">
               {{ validationErrors.email[0] }}
             </span>
@@ -58,25 +79,43 @@
                 :type="showPassword ? 'text' : 'password'"
                 v-model="form.password"
                 :disabled="isLoading"
-                :class="{ 'error': validationErrors.password }"
+                :class="{ error: validationErrors.password }"
                 placeholder="Ihr Passwort"
                 required
                 autocomplete="current-password"
                 minlength="8"
-              >
+              />
               <button
                 type="button"
                 class="password-toggle"
                 @click="showPassword = !showPassword"
                 :disabled="isLoading"
               >
-                <svg v-if="showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                  <line x1="1" y1="1" x2="23" y2="23"/>
+                <svg
+                  v-if="showPassword"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+                  />
+                  <line x1="1" y1="1" x2="23" y2="23" />
                 </svg>
-                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
+                <svg
+                  v-else
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
                 </svg>
               </button>
             </div>
@@ -88,26 +127,38 @@
           <!-- Remember Me -->
           <div class="form-group checkbox-group">
             <label class="checkbox-label">
-              <input
-                type="checkbox"
-                v-model="form.remember"
-                :disabled="isLoading"
-              >
+              <input type="checkbox" v-model="form.remember" :disabled="isLoading" />
               <span class="checkmark"></span>
               Angemeldet bleiben
             </label>
           </div>
 
           <!-- Submit Button -->
-          <button
-            type="submit"
-            class="login-button"
-            :disabled="isLoading || !isFormValid"
-          >
+          <button type="submit" class="login-button" :disabled="isLoading || !isFormValid">
             <svg v-if="isLoading" class="loading-icon" width="20" height="20" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="31.416" stroke-dashoffset="31.416">
-                <animate attributeName="stroke-dasharray" dur="2s" values="0 31.416;15.708 15.708;0 31.416" repeatCount="indefinite"/>
-                <animate attributeName="stroke-dashoffset" dur="2s" values="0;-15.708;-31.416" repeatCount="indefinite"/>
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+                stroke-linecap="round"
+                stroke-dasharray="31.416"
+                stroke-dashoffset="31.416"
+              >
+                <animate
+                  attributeName="stroke-dasharray"
+                  dur="2s"
+                  values="0 31.416;15.708 15.708;0 31.416"
+                  repeatCount="indefinite"
+                />
+                <animate
+                  attributeName="stroke-dashoffset"
+                  dur="2s"
+                  values="0;-15.708;-31.416"
+                  repeatCount="indefinite"
+                />
               </circle>
             </svg>
             <span v-if="!isLoading">Anmelden</span>
@@ -131,13 +182,22 @@
         <div class="test-credentials" v-if="!isLoading">
           <h4>Test-Zugangsdaten:</h4>
           <div class="credentials-grid">
-            <div class="credential-item" @click="fillCredentials('admin@jobupdate.com', 'password123')">
+            <div
+              class="credential-item"
+              @click="fillCredentials('admin@jobupdate.com', 'password123')"
+            >
               <strong>Admin:</strong> admin@jobupdate.com / password123
             </div>
-            <div class="credential-item" @click="fillCredentials('pm@jobupdate.com', 'password123')">
+            <div
+              class="credential-item"
+              @click="fillCredentials('pm@jobupdate.com', 'password123')"
+            >
               <strong>PM:</strong> pm@jobupdate.com / password123
             </div>
-            <div class="credential-item" @click="fillCredentials('user@jobupdate.com', 'password123')">
+            <div
+              class="credential-item"
+              @click="fillCredentials('user@jobupdate.com', 'password123')"
+            >
               <strong>User:</strong> user@jobupdate.com / password123
             </div>
           </div>
@@ -146,7 +206,10 @@
         <!-- Forgot Password Section -->
         <div v-if="showForgotPassword" class="forgot-password-section">
           <h3>Passwort zurücksetzen</h3>
-          <p>Geben Sie Ihre E-Mail-Adresse ein, um einen Link zum Zurücksetzen des Passworts zu erhalten.</p>
+          <p>
+            Geben Sie Ihre E-Mail-Adresse ein, um einen Link zum Zurücksetzen des Passworts zu
+            erhalten.
+          </p>
           <form @submit.prevent="handleForgotPassword" class="forgot-form">
             <div class="form-group">
               <input
@@ -155,11 +218,9 @@
                 placeholder="ihre.email@example.com"
                 required
                 :disabled="isLoading"
-              >
+              />
             </div>
-            <button type="submit" :disabled="isLoading" class="forgot-button">
-              Link senden
-            </button>
+            <button type="submit" :disabled="isLoading" class="forgot-button">Link senden</button>
           </form>
         </div>
       </div>
@@ -168,131 +229,134 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import { useUserStore } from '@/stores/userStore';
+import { ref, computed, watch } from 'vue'
+import { useUserStore } from '@/stores/userStore'
 
 // Props
 const props = defineProps({
   show: {
     type: Boolean,
-    default: false
-  }
-});
+    default: false,
+  },
+})
 
 // Emits
-const emit = defineEmits(['close', 'success']);
+const emit = defineEmits(['close', 'success'])
 
 // Store
-const userStore = useUserStore();
+const userStore = useUserStore()
 
 // Reactive state
 const form = ref({
   email: '',
   password: '',
-  remember: false
-});
+  remember: false,
+})
 
-const showPassword = ref(false);
-const showForgotPassword = ref(false);
-const forgotEmail = ref('');
-const error = ref('');
-const successMessage = ref('');
-const validationErrors = ref({});
+const showPassword = ref(false)
+const showForgotPassword = ref(false)
+const forgotEmail = ref('')
+const error = ref('')
+const successMessage = ref('')
+const validationErrors = ref({})
 
 // Computed
-const isLoading = computed(() => userStore.isLoading);
+const isLoading = computed(() => userStore.isLoading)
 
 const isFormValid = computed(() => {
-  return form.value.email.length > 0 &&
-         form.value.password.length >= 8 &&
-         form.value.email.includes('@');
-});
+  return (
+    form.value.email.length > 0 && form.value.password.length >= 8 && form.value.email.includes('@')
+  )
+})
 
 // Watch for show prop changes
-watch(() => props.show, (newValue) => {
-  if (newValue) {
-    // Reset form when modal opens
-    resetForm();
-  }
-});
+watch(
+  () => props.show,
+  (newValue) => {
+    if (newValue) {
+      // Reset form when modal opens
+      resetForm()
+    }
+  },
+)
 
 // Methods
 const resetForm = () => {
   form.value = {
     email: '',
     password: '',
-    remember: false
-  };
-  showPassword.value = false;
-  showForgotPassword.value = false;
-  forgotEmail.value = '';
-  error.value = '';
-  successMessage.value = '';
-  validationErrors.value = {};
-};
+    remember: false,
+  }
+  showPassword.value = false
+  showForgotPassword.value = false
+  forgotEmail.value = ''
+  error.value = ''
+  successMessage.value = ''
+  validationErrors.value = {}
+}
 
 const handleOverlayClick = () => {
   if (!isLoading.value) {
-    emit('close');
+    emit('close')
   }
-};
+}
 
 const handleLogin = async () => {
   if (!isFormValid.value || isLoading.value) {
-    return;
+    return
   }
 
-  error.value = '';
-  validationErrors.value = {};
+  error.value = ''
+  validationErrors.value = {}
 
   try {
     const result = await userStore.login({
       email: form.value.email,
       password: form.value.password,
-      remember: form.value.remember
-    });
+      remember: form.value.remember,
+    })
 
     if (result.success) {
-      successMessage.value = 'Erfolgreich angemeldet!';
+      successMessage.value = 'Erfolgreich angemeldet!'
 
       // Wait a bit to show success message
       setTimeout(() => {
-        emit('success', result.user);
-        emit('close');
-      }, 1000);
+        emit('success', result.user)
+        emit('close')
+      }, 1000)
     } else {
-      error.value = result.error || 'Anmeldung fehlgeschlagen';
-      validationErrors.value = result.validationErrors || {};
+      error.value = result.error || 'Anmeldung fehlgeschlagen'
+      validationErrors.value = result.validationErrors || {}
     }
   } catch (err) {
-    error.value = 'Ein unerwarteter Fehler ist aufgetreten';
-    console.error('Login error:', err);
+    error.value = 'Ein unerwarteter Fehler ist aufgetreten'
+    console.error('Login error:', err)
   }
-};
+}
 
 const handleForgotPassword = async () => {
   if (!forgotEmail.value || isLoading.value) {
-    return;
+    return
   }
 
   try {
     // Implementation for forgot password would go here
     // For now, just show a success message
-    successMessage.value = 'Ein Link zum Zurücksetzen wurde an Ihre E-Mail-Adresse gesendet.';
-    showForgotPassword.value = false;
-    forgotEmail.value = '';
+    successMessage.value = 'Ein Link zum Zurücksetzen wurde an Ihre E-Mail-Adresse gesendet.'
+    showForgotPassword.value = false
+    forgotEmail.value = ''
   } catch (err) {
-    error.value = 'Fehler beim Senden des Reset-Links';
-    console.error('Forgot password error:', err);
+    error.value = 'Fehler beim Senden des Reset-Links'
+    console.error('Forgot password error:', err)
   }
-};
+}
 
 const fillCredentials = (email, password) => {
-  form.value.email = email;
-  form.value.password = password;
-  error.value = '';
-  validationErrors.value = {};
-};
+  form.value.email = email
+  form.value.password = password
+  error.value = ''
+  validationErrors.value = {}
+}
 </script>
 
 <style scoped>
@@ -409,7 +473,9 @@ const fillCredentials = (email, password) => {
   color: var(--color-text);
   font-size: 1rem;
   font-family: inherit;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .form-group input:focus {
@@ -466,7 +532,7 @@ const fillCredentials = (email, password) => {
   font-size: 0.875rem;
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-label input[type='checkbox'] {
   opacity: 0;
   position: absolute;
 }
@@ -481,12 +547,12 @@ const fillCredentials = (email, password) => {
   background-color: var(--color-background);
 }
 
-.checkbox-label input[type="checkbox"]:checked + .checkmark {
+.checkbox-label input[type='checkbox']:checked + .checkmark {
   background-color: var(--color-button);
   border-color: var(--color-button);
 }
 
-.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+.checkbox-label input[type='checkbox']:checked + .checkmark::after {
   content: '';
   position: absolute;
   left: 4px;
@@ -534,8 +600,12 @@ const fillCredentials = (email, password) => {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-message {

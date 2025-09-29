@@ -31,7 +31,7 @@ export function useOverlay() {
     openModal,
     closeModal,
     closeAllModals,
-    isModalOpen
+    isModalOpen,
   }
 }
 
@@ -74,7 +74,7 @@ export function useModalState() {
     createModalState,
     openCreateModal,
     openEditModal,
-    closeModalState
+    closeModalState,
   }
 }
 
@@ -109,6 +109,6 @@ export function useAdminService(serviceName) {
     loading,
     error,
     executeOperation,
-    confirmDelete
+    confirmDelete,
   }
 }

@@ -2,7 +2,14 @@
   <div class="unauthorized-container">
     <div class="unauthorized-content">
       <div class="unauthorized-icon">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg
+          width="64"
+          height="64"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="15" y1="9" x2="9" y2="15"></line>
           <line x1="9" y1="9" x2="15" y2="15"></line>
@@ -12,9 +19,7 @@
       <h2>Zugriff verweigert</h2>
 
       <div class="role-info">
-        <p class="current-role">
-          <strong>Ihre aktuelle Rolle:</strong> {{ roleDisplayName }}
-        </p>
+        <p class="current-role"><strong>Ihre aktuelle Rolle:</strong> {{ roleDisplayName }}</p>
 
         <div class="permissions-info">
           <h3>Verfügbare Bereiche für Ihre Rolle:</h3>
@@ -29,9 +34,7 @@
       </div>
 
       <div class="action-buttons">
-        <button @click="goToHome" class="btn-primary">
-          Zurück zum Dashboard
-        </button>
+        <button @click="goToHome" class="btn-primary">Zurück zum Dashboard</button>
         <button v-if="!userStore.isAdmin" @click="contactAdmin" class="btn-secondary">
           Admin kontaktieren
         </button>
@@ -41,57 +44,57 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { useRouter } from 'vue-router';
-import { useUserStore } from '@/stores/userStore';
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/userStore'
 
-const router = useRouter();
-const userStore = useUserStore();
+const router = useRouter()
+const userStore = useUserStore()
 
 const roleDisplayName = computed(() => {
   const roleNames = {
-    'admin': 'Administrator',
-    'pm': 'Project Manager',
-    'fach': 'Fachbereich'
-  };
-  return roleNames[userStore.role] || userStore.role;
-});
+    admin: 'Administrator',
+    pm: 'Project Manager',
+    fach: 'Fachbereich',
+  }
+  return roleNames[userStore.role] || userStore.role
+})
 
 const availableAreas = computed(() => {
-  const areas = [];
+  const areas = []
 
   if (userStore.canAccessJobUpdates) {
     areas.push({
       name: 'Job-Updates',
-      description: 'Erstellen und verwalten von Personaländerungen'
-    });
+      description: 'Erstellen und verwalten von Personaländerungen',
+    })
   }
 
   if (userStore.canAccessOrders) {
     areas.push({
       name: 'Auftragsübersicht',
-      description: 'Einsicht in Ihre Job-Update-Aufträge'
-    });
+      description: 'Einsicht in Ihre Job-Update-Aufträge',
+    })
   }
 
   if (userStore.canAccessAdmin) {
     areas.push({
       name: 'Administration',
-      description: 'Vollzugriff auf alle Verwaltungsfunktionen'
-    });
+      description: 'Vollzugriff auf alle Verwaltungsfunktionen',
+    })
   }
 
-  return areas;
-});
+  return areas
+})
 
 const goToHome = () => {
-  router.push('/home');
-};
+  router.push('/home')
+}
 
 const contactAdmin = () => {
   // Hier könnte ein Kontaktformular oder E-Mail-Link implementiert werden
-  alert('Bitte wenden Sie sich an Ihren Administrator für erweiterte Berechtigungen.');
-};
+  alert('Bitte wenden Sie sich an Ihren Administrator für erweiterte Berechtigungen.')
+}
 </script>
 
 <style scoped>

@@ -1,23 +1,18 @@
 import { watch, onMounted } from 'vue'
 
 export function useStoreCookieSync(storeObject, cookieName, options = {}) {
-  const {
-    expires = 3,
-    syncOnMount = true,
-    excludeFields = [],
-    debounceMs = 100
-  } = options
+  const { expires = 3, syncOnMount = true, excludeFields = [], debounceMs = 100 } = options
 
   let debounceTimer = null
 
   const setCookie = (name, value, days) => {
     const expires = new Date()
-    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000))
+    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000)
     document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))};expires=${expires.toUTCString()};path=/;SameSite=Lax`
   }
 
   const getCookie = (name) => {
-    const nameEQ = name + "="
+    const nameEQ = name + '='
     const ca = document.cookie.split(';')
     for (let i = 0; i < ca.length; i++) {
       let c = ca[i]
@@ -40,9 +35,9 @@ export function useStoreCookieSync(storeObject, cookieName, options = {}) {
 
   const filterObject = (obj) => {
     if (excludeFields.length === 0) return obj
-    
+
     const filtered = { ...obj }
-    excludeFields.forEach(field => {
+    excludeFields.forEach((field) => {
       delete filtered[field]
     })
     return filtered
@@ -52,7 +47,7 @@ export function useStoreCookieSync(storeObject, cookieName, options = {}) {
     if (debounceTimer) {
       clearTimeout(debounceTimer)
     }
-    
+
     debounceTimer = setTimeout(() => {
       const dataToSave = filterObject(storeObject.value || storeObject)
       setCookie(cookieName, dataToSave, expires)
@@ -63,7 +58,7 @@ export function useStoreCookieSync(storeObject, cookieName, options = {}) {
   const loadFromCache = () => {
     const cachedData = getCookie(cookieName)
     if (cachedData && typeof cachedData === 'object') {
-      Object.keys(cachedData).forEach(key => {
+      Object.keys(cachedData).forEach((key) => {
         if (storeObject.value) {
           storeObject.value[key] = cachedData[key]
         } else {
@@ -81,7 +76,7 @@ export function useStoreCookieSync(storeObject, cookieName, options = {}) {
     () => {
       saveToCache()
     },
-    { deep: true }
+    { deep: true },
   )
 
   if (syncOnMount) {
@@ -112,6 +107,6 @@ export function useStoreCookieSync(storeObject, cookieName, options = {}) {
     loadFromCache,
     clearCache,
     resetFromCache,
-    stopWatcher
+    stopWatcher,
   }
 }

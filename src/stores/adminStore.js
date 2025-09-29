@@ -16,39 +16,39 @@ export const useAdminStore = defineStore('admin', () => {
       name: 'Dell Laptop XPS 13',
       category_id: 1,
       category: 'Laptops',
-      MaxAnzahl: 10
+      MaxAnzahl: 10,
     },
     {
       id: 2,
       name: 'iPhone 15 Pro',
       category_id: 2,
       category: 'Smartphones',
-      MaxAnzahl: 5
+      MaxAnzahl: 5,
     },
     {
       id: 3,
       name: 'Samsung Monitor 27"',
       category_id: 3,
       category: 'Monitore',
-      MaxAnzahl: null
-    }
+      MaxAnzahl: null,
+    },
   ])
   const hardwareCategories = ref([
     {
       id: 1,
       name: 'Laptops',
-      hardware_count: 1
+      hardware_count: 1,
     },
     {
       id: 2,
       name: 'Smartphones',
-      hardware_count: 1
+      hardware_count: 1,
     },
     {
       id: 3,
       name: 'Monitore',
-      hardware_count: 1
-    }
+      hardware_count: 1,
+    },
   ])
   const software = ref([
     {
@@ -56,39 +56,39 @@ export const useAdminStore = defineStore('admin', () => {
       name: 'Microsoft Office 365',
       manufacturer_id: 1,
       manufacturer: 'Microsoft',
-      license_type: 'Subscription'
+      license_type: 'Subscription',
     },
     {
       id: 2,
       name: 'Adobe Creative Suite',
       manufacturer_id: 2,
       manufacturer: 'Adobe',
-      license_type: 'Subscription'
+      license_type: 'Subscription',
     },
     {
       id: 3,
       name: 'Slack',
       manufacturer_id: 3,
       manufacturer: 'Slack Technologies',
-      license_type: 'Per User'
-    }
+      license_type: 'Per User',
+    },
   ])
   const manufacturers = ref([
     {
       id: 1,
       name: 'Microsoft',
-      software_count: 1
+      software_count: 1,
     },
     {
       id: 2,
       name: 'Adobe',
-      software_count: 1
+      software_count: 1,
     },
     {
       id: 3,
       name: 'Slack Technologies',
-      software_count: 1
-    }
+      software_count: 1,
+    },
   ])
   const orders = ref([])
 
@@ -104,7 +104,7 @@ export const useAdminStore = defineStore('admin', () => {
     categories: false,
     software: false,
     manufacturers: false,
-    orders: false
+    orders: false,
   })
 
   // Error states
@@ -119,7 +119,7 @@ export const useAdminStore = defineStore('admin', () => {
     categories: null,
     software: null,
     manufacturers: null,
-    orders: null
+    orders: null,
   })
 
   // Generic CRUD operations
@@ -160,7 +160,7 @@ export const useAdminStore = defineStore('admin', () => {
     const update = async (id, data) => {
       try {
         const updatedItem = await serviceConfig.update(id, data)
-        const index = dataRef.value.findIndex(item => item.id === id || item.ID === id)
+        const index = dataRef.value.findIndex((item) => item.id === id || item.ID === id)
         if (index !== -1) {
           dataRef.value[index] = updatedItem
         }
@@ -179,7 +179,7 @@ export const useAdminStore = defineStore('admin', () => {
 
       try {
         await serviceConfig.delete(id)
-        dataRef.value = dataRef.value.filter(item => item.id !== id && item.ID !== id)
+        dataRef.value = dataRef.value.filter((item) => item.id !== id && item.ID !== id)
         return true
       } catch (error) {
         console.error(`Fehler beim Löschen von ${entityName}:`, error)
@@ -219,14 +219,14 @@ export const useAdminStore = defineStore('admin', () => {
     update: async (id, data) => {
       try {
         const updatedItem = await adminService.updateBereich(id, data)
-        const index = bereiche.value.findIndex(item => item.BereichID === id)
+        const index = bereiche.value.findIndex((item) => item.BereichID === id)
         if (index !== -1) {
           bereiche.value[index] = updatedItem
         }
         return updatedItem
       } catch (error) {
         // Fallback: update local store
-        const index = bereiche.value.findIndex(item => item.BereichID === id)
+        const index = bereiche.value.findIndex((item) => item.BereichID === id)
         if (index !== -1) {
           bereiche.value[index] = { ...bereiche.value[index], ...data }
         }
@@ -240,15 +240,15 @@ export const useAdminStore = defineStore('admin', () => {
       }
       try {
         await adminService.deleteBereich(id)
-        bereiche.value = bereiche.value.filter(item => item.BereichID !== id)
+        bereiche.value = bereiche.value.filter((item) => item.BereichID !== id)
         return true
       } catch (error) {
         // Fallback: remove from local store
-        bereiche.value = bereiche.value.filter(item => item.BereichID !== id)
+        bereiche.value = bereiche.value.filter((item) => item.BereichID !== id)
         console.error('Fehler beim Löschen - Mock-Modus:', error)
         return true
       }
-    }
+    },
   }
 
   // Teams CRUD
@@ -264,7 +264,7 @@ export const useAdminStore = defineStore('admin', () => {
           teams.value = [
             { TeamID: 1, Team: 'Development Team', BereichID: 1 },
             { TeamID: 2, Team: 'Marketing Team', BereichID: 2 },
-            { TeamID: 3, Team: 'HR Team', BereichID: 3 }
+            { TeamID: 3, Team: 'HR Team', BereichID: 3 },
           ]
         }
         return teams.value
@@ -285,13 +285,13 @@ export const useAdminStore = defineStore('admin', () => {
     update: async (id, data) => {
       try {
         const updatedItem = await adminService.updateTeam(id, data)
-        const index = teams.value.findIndex(item => item.TeamID === id)
+        const index = teams.value.findIndex((item) => item.TeamID === id)
         if (index !== -1) {
           teams.value[index] = updatedItem
         }
         return updatedItem
       } catch (error) {
-        const index = teams.value.findIndex(item => item.TeamID === id)
+        const index = teams.value.findIndex((item) => item.TeamID === id)
         if (index !== -1) {
           teams.value[index] = { ...teams.value[index], ...data }
         }
@@ -305,14 +305,14 @@ export const useAdminStore = defineStore('admin', () => {
       }
       try {
         await adminService.deleteTeam(id)
-        teams.value = teams.value.filter(item => item.TeamID !== id)
+        teams.value = teams.value.filter((item) => item.TeamID !== id)
         return true
       } catch (error) {
-        teams.value = teams.value.filter(item => item.TeamID !== id)
+        teams.value = teams.value.filter((item) => item.TeamID !== id)
         console.error('Fehler beim Löschen - Mock-Modus:', error)
         return true
       }
-    }
+    },
   }
 
   // Funktionen CRUD
@@ -328,7 +328,7 @@ export const useAdminStore = defineStore('admin', () => {
           funktionen.value = [
             { FunktionID: 1, Funktion: 'Software Developer' },
             { FunktionID: 2, Funktion: 'Marketing Manager' },
-            { FunktionID: 3, Funktion: 'System Administrator' }
+            { FunktionID: 3, Funktion: 'System Administrator' },
           ]
         }
         return funktionen.value
@@ -349,13 +349,13 @@ export const useAdminStore = defineStore('admin', () => {
     update: async (id, data) => {
       try {
         const updatedItem = await adminService.updateFunktion(id, data)
-        const index = funktionen.value.findIndex(item => item.FunktionID === id)
+        const index = funktionen.value.findIndex((item) => item.FunktionID === id)
         if (index !== -1) {
           funktionen.value[index] = updatedItem
         }
         return updatedItem
       } catch (error) {
-        const index = funktionen.value.findIndex(item => item.FunktionID === id)
+        const index = funktionen.value.findIndex((item) => item.FunktionID === id)
         if (index !== -1) {
           funktionen.value[index] = { ...funktionen.value[index], ...data }
         }
@@ -369,14 +369,14 @@ export const useAdminStore = defineStore('admin', () => {
       }
       try {
         await adminService.deleteFunktion(id)
-        funktionen.value = funktionen.value.filter(item => item.FunktionID !== id)
+        funktionen.value = funktionen.value.filter((item) => item.FunktionID !== id)
         return true
       } catch (error) {
-        funktionen.value = funktionen.value.filter(item => item.FunktionID !== id)
+        funktionen.value = funktionen.value.filter((item) => item.FunktionID !== id)
         console.error('Fehler beim Löschen - Mock-Modus:', error)
         return true
       }
-    }
+    },
   }
 
   // Users CRUD
@@ -402,7 +402,7 @@ export const useAdminStore = defineStore('admin', () => {
               department: 'IT',
               role: 'Admin',
               status: 'active',
-              lastActivity: new Date('2024-01-15T10:30:00')
+              lastActivity: new Date('2024-01-15T10:30:00'),
             },
             {
               id: 2,
@@ -411,7 +411,7 @@ export const useAdminStore = defineStore('admin', () => {
               department: 'HR',
               role: 'Manager',
               status: 'active',
-              lastActivity: new Date('2024-01-14T16:45:00')
+              lastActivity: new Date('2024-01-14T16:45:00'),
             },
             {
               id: 3,
@@ -420,8 +420,8 @@ export const useAdminStore = defineStore('admin', () => {
               department: 'Marketing',
               role: 'Mitarbeiter',
               status: 'inactive',
-              lastActivity: new Date('2024-01-10T09:15:00')
-            }
+              lastActivity: new Date('2024-01-10T09:15:00'),
+            },
           ]
         }
         return { data: users.value, current_page: 1, last_page: 1 }
@@ -436,7 +436,7 @@ export const useAdminStore = defineStore('admin', () => {
         const mockItem = {
           id: Date.now(),
           ...data,
-          lastActivity: new Date()
+          lastActivity: new Date(),
         }
         users.value.push(mockItem)
         console.error('Fehler beim Erstellen - Mock-Modus:', error)
@@ -446,13 +446,13 @@ export const useAdminStore = defineStore('admin', () => {
     update: async (id, data) => {
       try {
         const updatedItem = await adminService.updateUser(id, data)
-        const index = users.value.findIndex(item => item.id === id)
+        const index = users.value.findIndex((item) => item.id === id)
         if (index !== -1) {
           users.value[index] = updatedItem
         }
         return updatedItem
       } catch (error) {
-        const index = users.value.findIndex(item => item.id === id)
+        const index = users.value.findIndex((item) => item.id === id)
         if (index !== -1) {
           users.value[index] = { ...users.value[index], ...data }
         }
@@ -463,14 +463,14 @@ export const useAdminStore = defineStore('admin', () => {
     remove: async (id) => {
       try {
         await adminService.deleteUser(id)
-        users.value = users.value.filter(item => item.id !== id)
+        users.value = users.value.filter((item) => item.id !== id)
         return true
       } catch (error) {
-        users.value = users.value.filter(item => item.id !== id)
+        users.value = users.value.filter((item) => item.id !== id)
         console.error('Fehler beim Löschen - Mock-Modus:', error)
         return true
       }
-    }
+    },
   }
 
   // Hardware CRUD
@@ -494,22 +494,22 @@ export const useAdminStore = defineStore('admin', () => {
               name: 'Dell Laptop XPS 13',
               category_id: 1,
               category: 'Laptops',
-              MaxAnzahl: 10
+              MaxAnzahl: 10,
             },
             {
               id: 2,
               name: 'iPhone 15 Pro',
               category_id: 2,
               category: 'Smartphones',
-              MaxAnzahl: 5
+              MaxAnzahl: 5,
             },
             {
               id: 3,
               name: 'Samsung Monitor 27"',
               category_id: 3,
               category: 'Monitore',
-              MaxAnzahl: null
-            }
+              MaxAnzahl: null,
+            },
           ]
         }
         return hardware.value
@@ -523,7 +523,7 @@ export const useAdminStore = defineStore('admin', () => {
       } catch (error) {
         const mockItem = {
           id: Date.now(),
-          ...data
+          ...data,
         }
         hardware.value.push(mockItem)
         console.error('Fehler beim Erstellen - Mock-Modus:', error)
@@ -533,13 +533,13 @@ export const useAdminStore = defineStore('admin', () => {
     update: async (id, data) => {
       try {
         const updatedItem = await adminService.updateHardwareItem(id, data)
-        const index = hardware.value.findIndex(item => item.id === id)
+        const index = hardware.value.findIndex((item) => item.id === id)
         if (index !== -1) {
           hardware.value[index] = updatedItem
         }
         return updatedItem
       } catch (error) {
-        const index = hardware.value.findIndex(item => item.id === id)
+        const index = hardware.value.findIndex((item) => item.id === id)
         if (index !== -1) {
           hardware.value[index] = { ...hardware.value[index], ...data }
         }
@@ -553,14 +553,14 @@ export const useAdminStore = defineStore('admin', () => {
       }
       try {
         await adminService.deleteHardwareItem(id)
-        hardware.value = hardware.value.filter(item => item.id !== id)
+        hardware.value = hardware.value.filter((item) => item.id !== id)
         return true
       } catch (error) {
-        hardware.value = hardware.value.filter(item => item.id !== id)
+        hardware.value = hardware.value.filter((item) => item.id !== id)
         console.error('Fehler beim Löschen - Mock-Modus:', error)
         return true
       }
-    }
+    },
   }
 
   // Hardware Categories CRUD
@@ -577,18 +577,18 @@ export const useAdminStore = defineStore('admin', () => {
             {
               id: 1,
               name: 'Laptops',
-              hardware_count: 1
+              hardware_count: 1,
             },
             {
               id: 2,
               name: 'Smartphones',
-              hardware_count: 1
+              hardware_count: 1,
             },
             {
               id: 3,
               name: 'Monitore',
-              hardware_count: 1
-            }
+              hardware_count: 1,
+            },
           ]
         }
         return hardwareCategories.value
@@ -608,7 +608,7 @@ export const useAdminStore = defineStore('admin', () => {
         const categoryItem = {
           id: newItem.id,
           name: newItem.name,
-          hardware_count: newItem.hardware_count || 0
+          hardware_count: newItem.hardware_count || 0,
         }
 
         hardwareCategories.value.push(categoryItem)
@@ -619,7 +619,7 @@ export const useAdminStore = defineStore('admin', () => {
         const mockItem = {
           id: Date.now(),
           name: data.name,
-          hardware_count: 0
+          hardware_count: 0,
         }
         hardwareCategories.value.push(mockItem)
         console.log('Mock category added to store:', mockItem)
@@ -640,21 +640,21 @@ export const useAdminStore = defineStore('admin', () => {
         const categoryItem = {
           id: updatedItem.id,
           name: updatedItem.name,
-          hardware_count: updatedItem.hardware_count || 0
+          hardware_count: updatedItem.hardware_count || 0,
         }
 
-        const index = hardwareCategories.value.findIndex(item => item.id === id)
+        const index = hardwareCategories.value.findIndex((item) => item.id === id)
         if (index !== -1) {
           hardwareCategories.value[index] = categoryItem
         }
         return categoryItem
       } catch (error) {
-        const index = hardwareCategories.value.findIndex(item => item.id === id)
+        const index = hardwareCategories.value.findIndex((item) => item.id === id)
         if (index !== -1) {
           const updatedItem = {
             ...hardwareCategories.value[index],
             name: data.name,
-            ...data
+            ...data,
           }
           hardwareCategories.value[index] = updatedItem
         }
@@ -668,14 +668,14 @@ export const useAdminStore = defineStore('admin', () => {
       }
       try {
         await adminService.deleteHardwareCategory(id)
-        hardwareCategories.value = hardwareCategories.value.filter(item => item.id !== id)
+        hardwareCategories.value = hardwareCategories.value.filter((item) => item.id !== id)
         return true
       } catch (error) {
-        hardwareCategories.value = hardwareCategories.value.filter(item => item.id !== id)
+        hardwareCategories.value = hardwareCategories.value.filter((item) => item.id !== id)
         console.error('Fehler beim Löschen - Mock-Modus:', error)
         return true
       }
-    }
+    },
   }
 
   // Software CRUD
@@ -699,22 +699,22 @@ export const useAdminStore = defineStore('admin', () => {
               name: 'Microsoft Office 365',
               manufacturer_id: 1,
               manufacturer: 'Microsoft',
-              license_type: 'Subscription'
+              license_type: 'Subscription',
             },
             {
               id: 2,
               name: 'Adobe Creative Suite',
               manufacturer_id: 2,
               manufacturer: 'Adobe',
-              license_type: 'Subscription'
+              license_type: 'Subscription',
             },
             {
               id: 3,
               name: 'Slack',
               manufacturer_id: 3,
               manufacturer: 'Slack Technologies',
-              license_type: 'Per User'
-            }
+              license_type: 'Per User',
+            },
           ]
         }
         return software.value
@@ -728,7 +728,7 @@ export const useAdminStore = defineStore('admin', () => {
       } catch (error) {
         const mockItem = {
           id: Date.now(),
-          ...data
+          ...data,
         }
         software.value.push(mockItem)
         console.error('Fehler beim Erstellen - Mock-Modus:', error)
@@ -738,13 +738,13 @@ export const useAdminStore = defineStore('admin', () => {
     update: async (id, data) => {
       try {
         const updatedItem = await adminService.updateSoftwareItem(id, data)
-        const index = software.value.findIndex(item => item.id === id)
+        const index = software.value.findIndex((item) => item.id === id)
         if (index !== -1) {
           software.value[index] = updatedItem
         }
         return updatedItem
       } catch (error) {
-        const index = software.value.findIndex(item => item.id === id)
+        const index = software.value.findIndex((item) => item.id === id)
         if (index !== -1) {
           software.value[index] = { ...software.value[index], ...data }
         }
@@ -758,14 +758,14 @@ export const useAdminStore = defineStore('admin', () => {
       }
       try {
         await adminService.deleteSoftwareItem(id)
-        software.value = software.value.filter(item => item.id !== id)
+        software.value = software.value.filter((item) => item.id !== id)
         return true
       } catch (error) {
-        software.value = software.value.filter(item => item.id !== id)
+        software.value = software.value.filter((item) => item.id !== id)
         console.error('Fehler beim Löschen - Mock-Modus:', error)
         return true
       }
-    }
+    },
   }
 
   // Manufacturers CRUD
@@ -782,18 +782,18 @@ export const useAdminStore = defineStore('admin', () => {
             {
               id: 1,
               name: 'Microsoft',
-              software_count: 1
+              software_count: 1,
             },
             {
               id: 2,
               name: 'Adobe',
-              software_count: 1
+              software_count: 1,
             },
             {
               id: 3,
               name: 'Slack Technologies',
-              software_count: 1
-            }
+              software_count: 1,
+            },
           ]
         }
         return manufacturers.value
@@ -808,7 +808,7 @@ export const useAdminStore = defineStore('admin', () => {
         const mockItem = {
           id: Date.now(),
           ...data,
-          software_count: 0
+          software_count: 0,
         }
         manufacturers.value.push(mockItem)
         console.error('Fehler beim Erstellen - Mock-Modus:', error)
@@ -818,13 +818,13 @@ export const useAdminStore = defineStore('admin', () => {
     update: async (id, data) => {
       try {
         const updatedItem = await adminService.updateSoftwareManufacturer(id, data)
-        const index = manufacturers.value.findIndex(item => item.id === id)
+        const index = manufacturers.value.findIndex((item) => item.id === id)
         if (index !== -1) {
           manufacturers.value[index] = updatedItem
         }
         return updatedItem
       } catch (error) {
-        const index = manufacturers.value.findIndex(item => item.id === id)
+        const index = manufacturers.value.findIndex((item) => item.id === id)
         if (index !== -1) {
           manufacturers.value[index] = { ...manufacturers.value[index], ...data }
         }
@@ -838,14 +838,14 @@ export const useAdminStore = defineStore('admin', () => {
       }
       try {
         await adminService.deleteSoftwareManufacturer(id)
-        manufacturers.value = manufacturers.value.filter(item => item.id !== id)
+        manufacturers.value = manufacturers.value.filter((item) => item.id !== id)
         return true
       } catch (error) {
-        manufacturers.value = manufacturers.value.filter(item => item.id !== id)
+        manufacturers.value = manufacturers.value.filter((item) => item.id !== id)
         console.error('Fehler beim Löschen - Mock-Modus:', error)
         return true
       }
-    }
+    },
   }
 
   // Initialize all data
@@ -858,7 +858,7 @@ export const useAdminStore = defineStore('admin', () => {
       hardwareOps.load(),
       categoriesOps.load(),
       softwareOps.load(),
-      manufacturersOps.load()
+      manufacturersOps.load(),
     ]
 
     try {
@@ -897,6 +897,6 @@ export const useAdminStore = defineStore('admin', () => {
     initializeAll,
 
     // Service access
-    adminService
+    adminService,
   }
 })
