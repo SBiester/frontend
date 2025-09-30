@@ -1,6 +1,5 @@
 <template>
   <div>
-    <hr class="shadow-line" />
     <div class="ref">
       <!--<div class="dashboard-header">
 			<div>

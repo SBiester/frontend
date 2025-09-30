@@ -153,6 +153,7 @@
 <script setup>
 import { onMounted, ref, computed } from 'vue'
 import { useJuStore } from '@/stores/ju'
+import { apiHelpers } from '@/services/apiClient'
 
 const juStore = useJuStore()
 const emit = defineEmits(['go-back', 'show-options'])
@@ -191,11 +192,7 @@ const currentProfileGroups = computed(() => {
 const fetchSapProfiles = async () => {
   loading.value = true
   try {
-    const response = await fetch('/api/sap/profiles')
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
+    const data = await apiHelpers.get('/sap/profiles')
     profileGroups.value = data.groups || []
   } catch (error) {
     console.error('Fehler beim Laden der SAP Berechtigungen:', error)
@@ -289,11 +286,7 @@ const searchSapProfiles = async (query) => {
   }
 
   try {
-    const response = await fetch(`/api/sap/search?query=${encodeURIComponent(query)}`)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
+    const data = await apiHelpers.get(`/sap/search?query=${encodeURIComponent(query)}`)
     searchResults.value = data
 
     // Auto-expand all categories when search results are found
@@ -333,11 +326,7 @@ const loadSapProfilesFromReferenceProfile = async () => {
   if (juStore.ju.refprofil && juStore.ju.refprofil.length > 0) {
     try {
       const profileName = juStore.ju.refprofil[0].name
-      const response = await fetch('/api/admin/profiles')
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data = await response.json()
+      const data = await apiHelpers.get('/admin/profiles')
 
       // Find the profile by name
       const profile = data.data.find((p) => p.name === profileName)

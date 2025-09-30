@@ -7,6 +7,7 @@ import 'vue-datepicker-next/locale/de'
 
 import { useJuStore } from '@/stores/ju'
 import { useUserStore } from '@/stores/userStore'
+import { apiHelpers } from '@/services/apiClient'
 
 import { useStoreCookieSync } from '@/components/useStoreCookieSync'
 
@@ -26,9 +27,12 @@ const userStore = useUserStore()
 const emit = defineEmits(['show-ref'])
 
 const bereiche = ref([])
+const bereicheData = ref([]) // Full objects for filtering
 const sachbereiche = ref([])
 const teams = ref([])
+const teamsData = ref([]) // Full objects for filtering
 const funktionen = ref([])
+const funktionenData = ref([]) // Full objects for filtering
 // const positionen = ref([]); // Removed - Position is now a text field
 const vorgesetzte = ref([])
 
@@ -47,11 +51,8 @@ onMounted(() => {
 
 async function fetchData(endpoint, targetRef) {
   try {
-    const response = await fetch(`/api/${endpoint}`)
-    if (!response.ok) {
-      throw new Error(`Netzwerk-Antwort für ${endpoint} war nicht in Ordnung`)
-    }
-    targetRef.value = await response.json()
+    const data = await apiHelpers.get(`/${endpoint}`)
+    targetRef.value = data
   } catch (error) {
     console.error(`Fehler beim Laden von ${endpoint}:`, error)
   }
@@ -59,41 +60,39 @@ async function fetchData(endpoint, targetRef) {
 
 async function fetchBereiche() {
   try {
-    const response = await fetch('/api/admin/bereiche')
-    if (!response.ok) {
-      throw new Error('Fehler beim Laden der Bereiche')
-    }
-    const data = await response.json()
-    bereiche.value = data.map((item) => ({
-      value: item.Bereich,
-      label: item.Bereich,
-      name: item.Bereich,
-      BereichID: item.BereichID,
-    }))
+    const data = await apiHelpers.get('/admin/bereiche')
+    bereicheData.value = data // Store full objects for filtering
+    bereiche.value = data.map((item) => item.Bezeichnung)
     console.log('Bereiche geladen:', bereiche.value)
   } catch (error) {
     console.error('Fehler beim Laden der Bereiche:', error)
     bereiche.value = []
+    bereicheData.value = []
   }
 }
 
 async function fetchTeams() {
   try {
-    const response = await fetch('/api/admin/teams')
-    if (!response.ok) {
-      throw new Error('Fehler beim Laden der Teams')
-    }
-    const data = await response.json()
-    teams.value = data.map((item) => ({
-      value: item.Team,
-      label: item.Team,
-      name: item.Team,
-      BereichID: item.BereichID,
-    }))
+    const data = await apiHelpers.get('/admin/teams')
+    teamsData.value = data // Store full objects for filtering
+    teams.value = data.map((item) => item.Bezeichnung)
     console.log('Teams geladen:', teams.value)
   } catch (error) {
     console.error('Fehler beim Laden der Teams:', error)
     teams.value = []
+    teamsData.value = []
+  }
+}
+
+async function fetchFunktionen() {
+  try {
+    const data = await apiHelpers.get('/admin/funktionen')
+    funktionenData.value = data // Store full objects for filtering
+    // Don't set funktionen.value here - will be set by computed property
+    console.log('Funktionen geladen:', data)
+  } catch (error) {
+    console.error('Fehler beim Laden der Funktionen:', error)
+    funktionenData.value = []
   }
 }
 
@@ -102,25 +101,71 @@ const filteredTeams = computed(() => {
   if (!ju.value.bereich) {
     return []
   }
-  // Find the selected bereich by matching the name
-  const selectedBereich = bereiche.value.find((b) => b.name === ju.value.bereich)
+  // Find the selected bereich by matching the Bezeichnung
+  const selectedBereich = bereicheData.value.find((b) => b.Bezeichnung === ju.value.bereich)
   if (!selectedBereich) {
     return []
   }
 
-  // Filter teams by BereichID
-  return teams.value.filter((team) => team.BereichID === selectedBereich.BereichID)
+  // Filter teams by BereichID and return only Bezeichnung strings
+  return teamsData.value
+    .filter((team) => team.BereichID === selectedBereich.BereichID)
+    .map((team) => team.Bezeichnung)
 })
 
-// Watch for bereich changes to clear team if not valid
+// Computed property for filtered functions based on selected team
+const filteredFunktionen = computed(() => {
+  if (!ju.value.team) {
+    return []
+  }
+
+  // Find the selected team by matching the Bezeichnung
+  const selectedTeam = teamsData.value.find((t) => t.Bezeichnung === ju.value.team)
+  if (!selectedTeam) {
+    return []
+  }
+
+  // Filter functions by TeamID and return only Bezeichnung strings
+  return funktionenData.value
+    .filter((funktion) => funktion.TeamID === selectedTeam.TeamID)
+    .map((funktion) => funktion.Bezeichnung)
+})
+
+// Update funktionen ref when filteredFunktionen changes
+watch(filteredFunktionen, (newFunktionen) => {
+  funktionen.value = newFunktionen
+}, { immediate: true })
+
+// Watch for bereich changes to clear team and funktion if not valid
 watch(
   () => ju.value.bereich,
   (newBereich, oldBereich) => {
-    if (newBereich !== oldBereich && ju.value.team) {
-      // Check if current team is still valid for new bereich
-      const isTeamStillValid = filteredTeams.value.some((team) => team.name === ju.value.team)
-      if (!isTeamStillValid) {
-        ju.value.team = null // Clear team if not valid for new bereich
+    if (newBereich !== oldBereich) {
+      if (ju.value.team) {
+        // Check if current team is still valid for new bereich
+        const isTeamStillValid = filteredTeams.value.includes(ju.value.team)
+        if (!isTeamStillValid) {
+          ju.value.team = null // Clear team if not valid for new bereich
+          ju.value.funktion = null // Clear funktion when team changes
+        }
+      }
+      // Clear funktion when bereich changes
+      if (ju.value.funktion && !showCustomFunction.value) {
+        ju.value.funktion = null
+      }
+    }
+  },
+)
+
+// Watch for team changes to clear funktion if not valid
+watch(
+  () => ju.value.team,
+  (newTeam, oldTeam) => {
+    if (newTeam !== oldTeam && ju.value.funktion && !showCustomFunction.value) {
+      // Check if current funktion is still valid for new team
+      const isFunktionStillValid = filteredFunktionen.value.includes(ju.value.funktion)
+      if (!isFunktionStillValid) {
+        ju.value.funktion = null // Clear funktion if not valid for new team
       }
     }
   },
@@ -275,7 +320,7 @@ onMounted(async () => {
     fetchBereiche(),
     fetchData('sachbereiche', sachbereiche),
     fetchTeams(),
-    fetchData('funktionen', funktionen),
+    fetchFunktionen(), // Use custom function for admin endpoint
     fetchData('vorgesetzte', vorgesetzte),
     // Position is now a text field, no API data needed
   ])

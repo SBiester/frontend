@@ -180,6 +180,7 @@ import { useJuStore } from '@/stores/ju'
 import { useUserStore } from '@/stores/userStore'
 
 import { useStoreCookieSync } from '@/components/useStoreCookieSync'
+import { apiHelpers } from '@/services/apiClient'
 
 import draggable from 'vuedraggable'
 
@@ -203,11 +204,7 @@ const searchTimeout = ref(null)
 const fetchHardwareForProfile = async (profileName: string) => {
   loading.value = true
   try {
-    const response = await fetch(`/api/hardware/profile?profile=${encodeURIComponent(profileName)}`)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
+    const data = await apiHelpers.get(`/hardware/profile?profile=${encodeURIComponent(profileName)}`)
     hardwareItems.value = data.hardware || []
   } catch (error) {
     console.error('Fehler beim Laden der Hardware:', error)
@@ -232,11 +229,7 @@ watch(
 
 const fetchCategories = async () => {
   try {
-    const response = await fetch('/api/admin/hardware')
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
+    const data = await apiHelpers.get('/admin/hardware')
     // Extract unique categories from hardware data
     const uniqueCategories = [...new Set(data.data.map((item) => item.category))]
     categories.value = uniqueCategories.filter((cat) => cat) // Filter out null/undefined
@@ -255,11 +248,7 @@ const getAssignedHardwareIds = () => {
 
 const fetchHardwareByCategory = async (category: string) => {
   try {
-    const response = await fetch('/api/admin/hardware')
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
+    const data = await apiHelpers.get('/admin/hardware')
     // Filter hardware items by category and exclude already assigned items
     const assignedIds = getAssignedHardwareIds()
     const filteredHardware = data.data.filter(
@@ -416,11 +405,7 @@ const searchHardware = async (query) => {
   }
 
   try {
-    const response = await fetch('/api/admin/hardware')
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
+    const data = await apiHelpers.get('/admin/hardware')
 
     // Filter hardware items by search query and exclude already assigned items
     const assignedIds = getAssignedHardwareIds()

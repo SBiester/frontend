@@ -219,6 +219,7 @@ import { useJuStore } from '@/stores/ju'
 import { useUserStore } from '@/stores/userStore'
 
 import { useStoreCookieSync } from '@/components/useStoreCookieSync'
+import { apiHelpers } from '@/services/apiClient'
 
 import draggable from 'vuedraggable'
 
@@ -243,11 +244,7 @@ const fetchSoftwareForProfile = async (profileName: string) => {
   loading.value = true
   try {
     // Get profile details from admin API to fetch software items
-    const response = await fetch('/api/admin/profiles')
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
+    const data = await apiHelpers.get('/admin/profiles')
 
     // Find the profile by name
     const profile = data.data.find((p) => p.name === profileName)
@@ -308,11 +305,7 @@ watch(
 
 const fetchManufacturers = async () => {
   try {
-    const response = await fetch('/api/admin/software')
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
+    const data = await apiHelpers.get('/admin/software')
     // Extract unique manufacturers from software data
     const uniqueManufacturers = [...new Set(data.data.map((item) => item.manufacturer))]
     manufacturers.value = uniqueManufacturers.filter((manufacturer) => manufacturer) // Filter out null/undefined
@@ -331,11 +324,7 @@ const getAssignedSoftwareIds = () => {
 
 const fetchSoftwareByManufacturer = async (manufacturer: string) => {
   try {
-    const response = await fetch('/api/admin/software')
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
+    const data = await apiHelpers.get('/admin/software')
     // Filter software items by manufacturer and exclude already assigned items
     const assignedIds = getAssignedSoftwareIds()
     const filteredSoftware = data.data.filter(
@@ -505,11 +494,7 @@ const searchSoftware = async (query) => {
   }
 
   try {
-    const response = await fetch('/api/admin/software')
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
+    const data = await apiHelpers.get('/admin/software')
 
     // Filter software items by search query and exclude already assigned items
     const assignedIds = getAssignedSoftwareIds()
